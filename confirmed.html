@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Confirmed — AutoLog</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #f5f7fb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    .confirm-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .confirm-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 32px;
+    }
+
+    .confirm-logo-icon {
+      width: 40px;
+      height: 40px;
+      background: #1E7A8C;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .confirm-check {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+    }
+
+    .confirm-card h1 {
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .confirm-card .subtitle {
+      font-size: 0.9375rem;
+      color: #475569;
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    .confirm-note {
+      display: inline-block;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 40px;
+    }
+
+    .confirm-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 24px;
+    }
+
+    .confirm-footer p {
+      font-size: 0.8125rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .confirm-footer a {
+      font-size: 0.8125rem;
+      color: #1E7A8C;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .confirm-card { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="confirm-card">
+
+    <div class="confirm-logo">
+      <div class="confirm-logo-icon">🚗</div>
+      AutoLog
+    </div>
+
+    <!-- Green checkmark SVG -->
+    <svg class="confirm-check" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="36" cy="36" r="36" fill="#34C759" fill-opacity="0.12"/>
+      <circle cx="36" cy="36" r="28" fill="#34C759"/>
+      <path d="M23 36.5L31.5 45L49 27" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+
+    <h1>Email confirmed!</h1>
+    <p class="subtitle">Your AutoLog account is ready.<br>Download the app to get started.</p>
+
+    <div class="confirm-note">You can close this tab.</div>
+
+    <div class="confirm-footer">
+      <p>AutoLog · Digital Vehicle Records</p>
+      <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
