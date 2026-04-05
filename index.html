@@ -321,12 +321,16 @@
       display: flex;
       gap: 20px;
       overflow-x: auto;
-      padding: 16px 24px 32px;
+      padding: 16px 0 32px;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      justify-content: center;
     }
     .screenshots-track::-webkit-scrollbar { display: none; }
+    @media (max-width: 900px) {
+      .screenshots-track { justify-content: flex-start; padding: 16px 24px 32px; }
+    }
     .screenshot-card {
       flex-shrink: 0;
       scroll-snap-align: center;
@@ -370,7 +374,7 @@
     .screenshots-fade-right {
       position: absolute;
       top: 0; bottom: 0;
-      width: 80px;
+      width: 60px;
       pointer-events: none;
       z-index: 2;
     }
@@ -384,6 +388,7 @@
     }
     .screenshots-scroll-wrap {
       position: relative;
+      overflow: hidden;
     }
 
     /* ── Feature Spotlight ───────────────── */
