@@ -6,548 +6,170 @@
   <title>Sign In — AutoLog</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: #f8fafc;
-      color: #475569;
-      -webkit-font-smoothing: antialiased;
-      display: flex;
-      min-height: 100vh;
-    }
-
-    /* ── Split layout ── */
-    .auth-split {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      width: 100%;
-      min-height: 100vh;
-    }
-
-    /* ── Left panel ── */
-    .auth-panel {
-      background: #0f172a;
-      display: flex;
-      flex-direction: column;
-      padding: 48px;
-      position: relative;
-      overflow: hidden;
-    }
-    .auth-panel::before {
-      content: '';
-      position: absolute;
-      top: -100px; right: -100px;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(30,122,140,0.2) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    .auth-panel::after {
-      content: '';
-      position: absolute;
-      bottom: -80px; left: -80px;
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(30,122,140,0.1) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    .auth-panel-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
-    }
-    .auth-panel-logo img {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-    }
-    .auth-panel-logo span {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .auth-panel-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-      z-index: 1;
-    }
-    .auth-panel-content h1 {
-      font-size: clamp(1.75rem, 3vw, 2.5rem);
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 18px;
-    }
-    .auth-panel-content h1 span { color: #4DB8CC; }
-    .auth-panel-content p {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.7;
-      max-width: 380px;
-      margin-bottom: 36px;
-    }
-    .auth-features {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .auth-feature {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.875rem;
-      color: rgba(255,255,255,0.65);
-    }
-    .auth-feature-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(30,122,140,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-
-    /* ── Right panel (form) ── */
-    .auth-form-panel {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 40px;
-      background: #fff;
-    }
-    .auth-form-wrap {
-      width: 100%;
-      max-width: 400px;
-    }
-    .auth-form-header {
-      margin-bottom: 32px;
-    }
-    .auth-form-header h2 {
-      font-size: 1.625rem;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.02em;
-      margin-bottom: 6px;
-    }
-    .auth-form-header p {
-      font-size: 0.9rem;
-      color: #94a3b8;
-    }
-    .auth-form-header p a {
-      color: #1E7A8C;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .auth-form-header p a:hover { text-decoration: underline; }
-
-    /* ── Form ── */
-    .form-group { margin-bottom: 16px; }
-    .form-label {
-      display: block;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: #475569;
-      margin-bottom: 6px;
-    }
-    .form-input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid rgba(0,0,0,0.1);
-      border-radius: 10px;
-      font-size: 0.9375rem;
-      font-family: inherit;
-      color: #0f172a;
-      background: #fff;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      outline: none;
-    }
-    .form-input:focus {
-      border-color: #1E7A8C;
-      box-shadow: 0 0 0 3px rgba(30,122,140,0.1);
-    }
-    .form-input.error { border-color: #FF3B30; }
-    .form-error {
-      font-size: 0.8125rem;
-      color: #FF3B30;
-      margin-top: 5px;
-      display: none;
-    }
-    .form-error.show { display: block; }
-
-    .btn-auth {
-      width: 100%;
-      padding: 13px;
-      background: #1E7A8C;
-      color: #fff;
-      border: none;
-      border-radius: 11px;
-      font-size: 0.9375rem;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.18s, transform 0.1s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .btn-auth:hover { background: #155F6E; }
-    .btn-auth:active { transform: translateY(1px); }
-    .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .auth-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0;
-      color: #cbd5e1;
-      font-size: 0.8125rem;
-    }
-    .auth-divider::before, .auth-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(0,0,0,0.08);
-    }
-
-    .btn-magic {
-      width: 100%;
-      padding: 11px;
-      background: #f8fafc;
-      color: #475569;
-      border: 1.5px solid rgba(0,0,0,0.1);
-      border-radius: 11px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-magic:hover {
-      background: #E8F4F6;
-      border-color: #1E7A8C;
-      color: #1E7A8C;
-    }
-
-    .auth-footer-links {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      font-size: 0.8125rem;
-    }
-    .auth-footer-links a {
-      color: #94a3b8;
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-    .auth-footer-links a:hover { color: #1E7A8C; }
-
-    /* ── Alert ── */
-    .alert {
-      padding: 11px 14px;
-      border-radius: 10px;
-      font-size: 0.875rem;
-      margin-bottom: 16px;
-      display: none;
-      line-height: 1.5;
-    }
-    .alert.show { display: block; }
-    .alert-error { background: rgba(255,59,48,0.08); color: #cc1a12; border: 1px solid rgba(255,59,48,0.2); }
-    .alert-success { background: rgba(52,199,89,0.08); color: #1a9c3e; border: 1px solid rgba(52,199,89,0.2); }
-
-    /* ── Spinner ── */
-    .spinner-sm {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.35);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      display: none;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Mobile ── */
-    @media (max-width: 768px) {
-      .auth-split { grid-template-columns: 1fr; }
-      .auth-panel { display: none; }
-      .auth-form-panel { padding: 40px 24px; align-items: flex-start; padding-top: 60px; }
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+    body{background:#f8fafc;color:#475569;display:flex;min-height:100vh;}
+    .split{display:grid;grid-template-columns:1fr 1fr;width:100%;min-height:100vh;}
+    .panel{background:#0f172a;display:flex;flex-direction:column;padding:48px;position:relative;overflow:hidden;}
+    .panel::before{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(30,122,140,0.2) 0%,transparent 65%);pointer-events:none;}
+    .panel::after{content:'';position:absolute;bottom:-80px;left:-80px;width:400px;height:400px;background:radial-gradient(circle,rgba(30,122,140,0.1) 0%,transparent 65%);pointer-events:none;}
+    .panel-logo{display:flex;align-items:center;gap:10px;z-index:1;}
+    .panel-logo img{width:36px;height:36px;border-radius:9px;}
+    .panel-logo span{font-size:1.125rem;font-weight:700;color:#fff;}
+    .panel-content{flex:1;display:flex;flex-direction:column;justify-content:center;z-index:1;}
+    .panel-content h1{font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800;color:#fff;letter-spacing:-0.03em;line-height:1.1;margin-bottom:18px;}
+    .panel-content h1 span{color:#4DB8CC;}
+    .panel-content p{font-size:1rem;color:rgba(255,255,255,0.55);line-height:1.7;max-width:380px;margin-bottom:36px;}
+    .feature{display:flex;align-items:center;gap:12px;font-size:0.875rem;color:rgba(255,255,255,0.65);margin-bottom:14px;}
+    .feature-icon{width:32px;height:32px;border-radius:8px;background:rgba(30,122,140,0.25);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+    .form-panel{display:flex;align-items:center;justify-content:center;padding:48px 40px;background:#fff;}
+    .form-wrap{width:100%;max-width:400px;}
+    .form-header{margin-bottom:32px;}
+    .form-header h2{font-size:1.625rem;font-weight:800;color:#0f172a;letter-spacing:-0.02em;margin-bottom:6px;}
+    .form-header p{font-size:0.9rem;color:#94a3b8;}
+    .form-header a{color:#1E7A8C;font-weight:600;cursor:pointer;}
+    .form-header a:hover{text-decoration:underline;}
+    .group{margin-bottom:16px;}
+    label{display:block;font-size:0.8125rem;font-weight:600;color:#475569;margin-bottom:6px;}
+    input{width:100%;padding:11px 14px;border:1.5px solid rgba(0,0,0,0.1);border-radius:10px;font-size:0.9375rem;font-family:inherit;color:#0f172a;background:#fff;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+    input:focus{border-color:#1E7A8C;box-shadow:0 0 0 3px rgba(30,122,140,0.1);}
+    .btn{width:100%;padding:13px;background:#1E7A8C;color:#fff;border:none;border-radius:11px;font-size:0.9375rem;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;transition:background 0.18s;}
+    .btn:hover{background:#155F6E;}
+    .btn:disabled{opacity:0.6;cursor:not-allowed;}
+    .btn-alt{width:100%;padding:11px;background:#f8fafc;color:#475569;border:1.5px solid rgba(0,0,0,0.1);border-radius:11px;font-size:0.875rem;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.15s;}
+    .btn-alt:hover{background:#E8F4F6;border-color:#1E7A8C;color:#1E7A8C;}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#cbd5e1;font-size:0.8125rem;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,0,0,0.08);}
+    .links{display:flex;justify-content:space-between;margin-top:16px;font-size:0.8125rem;}
+    .links a{color:#94a3b8;cursor:pointer;transition:color 0.15s;}
+    .links a:hover{color:#1E7A8C;}
+    .alert{padding:11px 14px;border-radius:10px;font-size:0.875rem;margin-bottom:16px;display:none;}
+    .alert.show{display:block;}
+    .alert-err{background:rgba(255,59,48,0.08);color:#cc1a12;border:1px solid rgba(255,59,48,0.2);}
+    .alert-ok{background:rgba(52,199,89,0.08);color:#1a9c3e;border:1px solid rgba(52,199,89,0.2);}
+    .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:768px){.split{grid-template-columns:1fr}.panel{display:none}.form-panel{padding:40px 24px;align-items:flex-start;padding-top:60px}}
   </style>
 </head>
 <body>
-  <div class="auth-split">
-
-    <!-- Left — brand panel -->
-    <div class="auth-panel">
-      <div class="auth-panel-logo">
-        <img src="/assets/logo.png" alt="AutoLog">
-        <span>AutoLog</span>
-      </div>
-      <div class="auth-panel-content">
-        <h1>Your car,<br><span>fully under control.</span></h1>
-        <p>MOT, service history, fuel costs and documents — all in one place, connected to DVLA and DVSA.</p>
-        <div class="auth-features">
-          <div class="auth-feature">
-            <div class="auth-feature-icon">✓</div>
-            <span>DVLA &amp; DVSA connected — always accurate</span>
-          </div>
-          <div class="auth-feature">
-            <div class="auth-feature-icon">📄</div>
-            <span>Your full service history, anywhere</span>
-          </div>
-          <div class="auth-feature">
-            <div class="auth-feature-icon">🔒</div>
-            <span>Your data, encrypted, EU-hosted</span>
-          </div>
-        </div>
-      </div>
+<div class="split">
+  <div class="panel">
+    <div class="panel-logo">
+      <img src="/assets/logo.png" alt="AutoLog">
+      <span>AutoLog</span>
     </div>
-
-    <!-- Right — form panel -->
-    <div class="auth-form-panel">
-      <div class="auth-form-wrap">
-
-        <!-- Sign In view -->
-        <div id="view-signin">
-          <div class="auth-form-header">
-            <h2>Welcome back</h2>
-            <p>Don't have an account? <a onclick="showView('signup')">Sign up free</a></p>
-          </div>
-          <div class="alert alert-error" id="signin-error"></div>
-          <div class="form-group">
-            <label class="form-label" for="signin-email">Email</label>
-            <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signin-password">Password</label>
-            <input class="form-input" type="password" id="signin-password" placeholder="••••••••" autocomplete="current-password">
-          </div>
-          <button class="btn-auth" id="signin-btn" onclick="handleSignIn()">
-            <span class="spinner-sm" id="signin-spinner"></span>
-            <span id="signin-btn-text">Sign In</span>
-          </button>
-          <div class="auth-divider">or</div>
-          <button class="btn-magic" onclick="showView('magic')">
-            ✨ Send magic link instead
-          </button>
-          <div class="auth-footer-links">
-            <a onclick="showView('forgot')">Forgot password?</a>
-            <a href="/">← Back to site</a>
-          </div>
+    <div class="panel-content">
+      <h1>Your car,<br><span>fully under control.</span></h1>
+      <p>MOT, service history, fuel costs and documents — all in one place, connected to DVLA and DVSA.</p>
+      <div class="feature"><div class="feature-icon">✓</div><span>DVLA &amp; DVSA connected — always accurate</span></div>
+      <div class="feature"><div class="feature-icon">📄</div><span>Your full service history, anywhere</span></div>
+      <div class="feature"><div class="feature-icon">🔒</div><span>Your data, encrypted, EU-hosted</span></div>
+    </div>
+  </div>
+  <div class="form-panel">
+    <div class="form-wrap">
+      <div id="v-signin">
+        <div class="form-header">
+          <h2>Welcome back</h2>
+          <p>No account? <a onclick="show('v-signup')">Sign up free</a></p>
         </div>
-
-        <!-- Sign Up view -->
-        <div id="view-signup" style="display:none;">
-          <div class="auth-form-header">
-            <h2>Create account</h2>
-            <p>Already have one? <a onclick="showView('signin')">Sign in</a></p>
-          </div>
-          <div class="alert alert-error" id="signup-error"></div>
-          <div class="alert alert-success" id="signup-success"></div>
-          <div class="form-group">
-            <label class="form-label" for="signup-name">Full name</label>
-            <input class="form-input" type="text" id="signup-name" placeholder="Marius Williamson" autocomplete="name">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-email">Email</label>
-            <input class="form-input" type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password">Password</label>
-            <input class="form-input" type="password" id="signup-password" placeholder="8+ characters" autocomplete="new-password">
-          </div>
-          <button class="btn-auth" id="signup-btn" onclick="handleSignUp()">
-            <span class="spinner-sm" id="signup-spinner"></span>
-            <span id="signup-btn-text">Create Account</span>
-          </button>
-          <div class="auth-footer-links">
-            <span></span>
-            <a href="/">← Back to site</a>
-          </div>
+        <div class="alert alert-err" id="si-err"></div>
+        <div class="group"><label>Email</label><input type="email" id="si-email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="group"><label>Password</label><input type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="btn" id="si-btn" onclick="doSignIn()"><span class="spinner" id="si-spin"></span><span>Sign In</span></button>
+        <div class="divider">or</div>
+        <button class="btn-alt" onclick="show('v-magic')">✨ Send magic link instead</button>
+        <div class="links"><a onclick="show('v-forgot')">Forgot password?</a><a href="/">← Back to site</a></div>
+      </div>
+      <div id="v-signup" style="display:none">
+        <div class="form-header">
+          <h2>Create account</h2>
+          <p>Already have one? <a onclick="show('v-signin')">Sign in</a></p>
         </div>
-
-        <!-- Forgot password view -->
-        <div id="view-forgot" style="display:none;">
-          <div class="auth-form-header">
-            <h2>Reset password</h2>
-            <p>Remember it? <a onclick="showView('signin')">Sign in</a></p>
-          </div>
-          <div class="alert alert-error" id="forgot-error"></div>
-          <div class="alert alert-success" id="forgot-success"></div>
-          <div class="form-group">
-            <label class="form-label" for="forgot-email">Email address</label>
-            <input class="form-input" type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <button class="btn-auth" id="forgot-btn" onclick="handleForgot()">
-            <span class="spinner-sm" id="forgot-spinner"></span>
-            <span id="forgot-btn-text">Send Reset Link</span>
-          </button>
-          <div class="auth-footer-links">
-            <a onclick="showView('signin')">← Back to sign in</a>
-            <a href="/">← Back to site</a>
-          </div>
+        <div class="alert alert-err" id="su-err"></div>
+        <div class="alert alert-ok" id="su-ok"></div>
+        <div class="group"><label>Full name</label><input type="text" id="su-name" placeholder="Your name" autocomplete="name"></div>
+        <div class="group"><label>Email</label><input type="email" id="su-email" placeholder="you@example.com" autocomplete="email"></div>
+        <div class="group"><label>Password</label><input type="password" id="su-pass" placeholder="8+ characters" autocomplete="new-password"></div>
+        <button class="btn" id="su-btn" onclick="doSignUp()"><span class="spinner" id="su-spin"></span><span>Create Account</span></button>
+        <div class="links"><span></span><a href="/">← Back to site</a></div>
+      </div>
+      <div id="v-forgot" style="display:none">
+        <div class="form-header">
+          <h2>Reset password</h2>
+          <p>Remember it? <a onclick="show('v-signin')">Sign in</a></p>
         </div>
-
-        <!-- Magic link view -->
-        <div id="view-magic" style="display:none;">
-          <div class="auth-form-header">
-            <h2>Magic link</h2>
-            <p>Prefer a password? <a onclick="showView('signin')">Sign in</a></p>
-          </div>
-          <div class="alert alert-error" id="magic-error"></div>
-          <div class="alert alert-success" id="magic-success"></div>
-          <div class="form-group">
-            <label class="form-label" for="magic-email">Email address</label>
-            <input class="form-input" type="email" id="magic-email" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <p style="font-size:0.8125rem;color:#94a3b8;margin-bottom:16px;">We'll send a secure link to your inbox. Click it to sign in instantly — no password needed.</p>
-          <button class="btn-auth" id="magic-btn" onclick="handleMagic()">
-            <span class="spinner-sm" id="magic-spinner"></span>
-            <span id="magic-btn-text">Send Magic Link</span>
-          </button>
-          <div class="auth-footer-links">
-            <a onclick="showView('signin')">← Back to sign in</a>
-            <a href="/">← Back to site</a>
-          </div>
+        <div class="alert alert-err" id="fp-err"></div>
+        <div class="alert alert-ok" id="fp-ok"></div>
+        <div class="group"><label>Email address</label><input type="email" id="fp-email" placeholder="you@example.com" autocomplete="email"></div>
+        <button class="btn" id="fp-btn" onclick="doForgot()"><span class="spinner" id="fp-spin"></span><span>Send Reset Link</span></button>
+        <div class="links"><a onclick="show('v-signin')">← Back to sign in</a><a href="/">← Back to site</a></div>
+      </div>
+      <div id="v-magic" style="display:none">
+        <div class="form-header">
+          <h2>Magic link</h2>
+          <p>Prefer password? <a onclick="show('v-signin')">Sign in</a></p>
         </div>
-
+        <div class="alert alert-err" id="ml-err"></div>
+        <div class="alert alert-ok" id="ml-ok"></div>
+        <div class="group"><label>Email address</label><input type="email" id="ml-email" placeholder="you@example.com" autocomplete="email"></div>
+        <p style="font-size:0.8125rem;color:#94a3b8;margin-bottom:16px;">We'll send a secure link — click it to sign in instantly.</p>
+        <button class="btn" id="ml-btn" onclick="doMagic()"><span class="spinner" id="ml-spin"></span><span>Send Magic Link</span></button>
+        <div class="links"><a onclick="show('v-signin')">← Back to sign in</a><a href="/">← Back to site</a></div>
       </div>
     </div>
   </div>
-
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
-    const supabase = createClient(
-      'https://dkpvxlxarsmiljnvnbck.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
-    )
-
-    // Check already signed in
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/app/index.html'
-    })
-
-    // Handle auth state changes (magic link callback)
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        window.location.href = '/app/index.html'
-      }
-    })
-
-    window.showView = function(view) {
-      document.querySelectorAll('[id^="view-"]').forEach(el => el.style.display = 'none')
-      document.getElementById('view-' + view).style.display = 'block'
-    }
-
-    function setLoading(prefix, loading) {
-      const btn = document.getElementById(prefix + '-btn')
-      const spinner = document.getElementById(prefix + '-spinner')
-      const text = document.getElementById(prefix + '-btn-text')
-      btn.disabled = loading
-      spinner.style.display = loading ? 'block' : 'none'
-      text.style.opacity = loading ? '0.5' : '1'
-    }
-
-    function showError(prefix, msg) {
-      const el = document.getElementById(prefix + '-error')
-      el.textContent = msg
-      el.classList.add('show')
-      document.getElementById(prefix + '-success')?.classList.remove('show')
-    }
-
-    function showSuccess(prefix, msg) {
-      const el = document.getElementById(prefix + '-success')
-      el.textContent = msg
-      el.classList.add('show')
-      document.getElementById(prefix + '-error')?.classList.remove('show')
-    }
-
-    function clearAlerts(prefix) {
-      document.getElementById(prefix + '-error')?.classList.remove('show')
-      document.getElementById(prefix + '-success')?.classList.remove('show')
-    }
-
-    window.handleSignIn = async function() {
-      clearAlerts('signin')
-      const email = document.getElementById('signin-email').value.trim()
-      const password = document.getElementById('signin-password').value
-      if (!email || !password) { showError('signin', 'Please enter your email and password.'); return }
-      setLoading('signin', true)
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      setLoading('signin', false)
-      if (error) { showError('signin', error.message); return }
-      window.location.href = '/app/index.html'
-    }
-
-    window.handleSignUp = async function() {
-      clearAlerts('signup')
-      const name = document.getElementById('signup-name').value.trim()
-      const email = document.getElementById('signup-email').value.trim()
-      const password = document.getElementById('signup-password').value
-      if (!name) { showError('signup', 'Please enter your name.'); return }
-      if (!email) { showError('signup', 'Please enter your email.'); return }
-      if (password.length < 8) { showError('signup', 'Password must be at least 8 characters.'); return }
-      setLoading('signup', true)
-      const { error } = await supabase.auth.signUp({
-        email, password,
-        options: { data: { full_name: name }, emailRedirectTo: 'https://autologapp.co.uk/app/index.html' }
-      })
-      setLoading('signup', false)
-      if (error) { showError('signup', error.message); return }
-      showSuccess('signup', 'Account created! Check your email to confirm your address, then sign in.')
-    }
-
-    window.handleForgot = async function() {
-      clearAlerts('forgot')
-      const email = document.getElementById('forgot-email').value.trim()
-      if (!email) { showError('forgot', 'Please enter your email address.'); return }
-      setLoading('forgot', true)
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://autologapp.co.uk/app/login.html'
-      })
-      setLoading('forgot', false)
-      if (error) { showError('forgot', error.message); return }
-      showSuccess('forgot', 'Password reset link sent — check your inbox.')
-    }
-
-    window.handleMagic = async function() {
-      clearAlerts('magic')
-      const email = document.getElementById('magic-email').value.trim()
-      if (!email) { showError('magic', 'Please enter your email address.'); return }
-      setLoading('magic', true)
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: 'https://autologapp.co.uk/app/index.html' }
-      })
-      setLoading('magic', false)
-      if (error) { showError('magic', error.message); return }
-      showSuccess('magic', 'Magic link sent! Check your inbox and click the link to sign in.')
-    }
-
-    // Enter key support
-    document.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return
-      const active = document.querySelector('[id^="view-"]:not([style*="none"])')
-      if (!active) return
-      const id = active.id.replace('view-', '')
-      const handlers = { signin: window.handleSignIn, signup: window.handleSignUp, forgot: window.handleForgot, magic: window.handleMagic }
-      handlers[id]?.()
-    })
-  </script>
+</div>
+<script>
+const sb = supabase.createClient(
+  'https://dkpvxlxarsmiljnvnbck.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+)
+sb.auth.getSession().then(({data:{session}})=>{ if(session) location.href='/app/index.html' })
+sb.auth.onAuthStateChange((e,s)=>{ if(e==='SIGNED_IN'&&s) location.href='/app/index.html' })
+function show(id){ document.querySelectorAll('[id^="v-"]').forEach(e=>e.style.display='none'); document.getElementById(id).style.display='block' }
+function loading(p,on){ document.getElementById(p+'-btn').disabled=on; document.getElementById(p+'-spin').style.display=on?'block':'none' }
+function err(p,msg){ const e=document.getElementById(p+'-err'); if(e){e.textContent=msg;e.classList.add('show')} }
+function ok(p,msg){ const e=document.getElementById(p+'-ok'); if(e){e.textContent=msg;e.classList.add('show')} }
+function clear(p){ document.getElementById(p+'-err')?.classList.remove('show'); document.getElementById(p+'-ok')?.classList.remove('show') }
+async function doSignIn(){
+  clear('si'); loading('si',true)
+  const email=document.getElementById('si-email').value.trim(), pass=document.getElementById('si-pass').value
+  if(!email||!pass){ err('si','Please enter email and password.'); loading('si',false); return }
+  const {error}=await sb.auth.signInWithPassword({email,password:pass})
+  loading('si',false)
+  if(error) err('si',error.message); else location.href='/app/index.html'
+}
+async function doSignUp(){
+  clear('su'); loading('su',true)
+  const name=document.getElementById('su-name').value.trim(), email=document.getElementById('su-email').value.trim(), pass=document.getElementById('su-pass').value
+  if(!name){ err('su','Please enter your name.'); loading('su',false); return }
+  if(!email){ err('su','Please enter your email.'); loading('su',false); return }
+  if(pass.length<8){ err('su','Password must be at least 8 characters.'); loading('su',false); return }
+  const {error}=await sb.auth.signUp({email,password:pass,options:{data:{full_name:name},emailRedirectTo:'https://autologapp.co.uk/app/index.html'}})
+  loading('su',false)
+  if(error) err('su',error.message); else ok('su','Account created! Check your email to confirm, then sign in.')
+}
+async function doForgot(){
+  clear('fp'); loading('fp',true)
+  const email=document.getElementById('fp-email').value.trim()
+  if(!email){ err('fp','Please enter your email.'); loading('fp',false); return }
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://autologapp.co.uk/app/login.html'})
+  loading('fp',false)
+  if(error) err('fp',error.message); else ok('fp','Reset link sent — check your inbox.')
+}
+async function doMagic(){
+  clear('ml'); loading('ml',true)
+  const email=document.getElementById('ml-email').value.trim()
+  if(!email){ err('ml','Please enter your email.'); loading('ml',false); return }
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:'https://autologapp.co.uk/app/index.html'}})
+  loading('ml',false)
+  if(error) err('ml',error.message); else ok('ml','Magic link sent! Check your inbox.')
+}
+document.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; const v=document.querySelector('[id^="v-"]:not([style*="none"])'); if(!v) return; ({signin:doSignIn,signup:doSignUp,forgot:doForgot,magic:doMagic})[v.id.replace('v-','')]?.() })
+</script>
 </body>
 </html>

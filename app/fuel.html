@@ -1,264 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fuel Log — AutoLog</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuel Log — AutoLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#475569;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+h1,h2,h3,h4{color:#0f172a;font-weight:700;line-height:1.2}
+a{text-decoration:none;color:inherit}
+.sb{width:64px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.sb:hover{width:220px}
+.sb-logo{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);min-height:65px;overflow:hidden}
+.sb-logo img{width:32px;height:32px;border-radius:8px;flex-shrink:0}
+.sb-logo-t{font-size:.9375rem;font-weight:700;color:#fff;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s}
+.sb:hover .sb-logo-t{opacity:1;transform:translateX(0)}
+.sb-nav{flex:1;padding:10px 0;display:flex;flex-direction:column;overflow:hidden}
+.sb-a{display:flex;align-items:center;gap:13px;padding:11px 18px;color:rgba(255,255,255,.5);font-size:.875rem;font-weight:500;white-space:nowrap;transition:color .15s,background .15s;position:relative;text-decoration:none;border:none;background:none;font-family:inherit;cursor:pointer;width:100%}
+.sb-a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.sb-a.on{color:#fff;background:rgba(30,122,140,.28)}
+.sb-a.on::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:#1E7A8C;border-radius:0 3px 3px 0}
+.sb-ic{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sb-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.sb-lb{opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s;pointer-events:none}
+.sb:hover .sb-lb{opacity:1;transform:translateX(0)}
+.sb-foot{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}
+.sb-out:hover{color:#FF3B30!important;background:rgba(255,59,48,.08)!important}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}
+.sb-ov.on{display:block}
+.main{flex:1;margin-left:64px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:64px;background:#fff;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;gap:16px}
+.topbar-title{font-size:1rem;font-weight:700;color:#0f172a}
+.topbar-r{display:flex;align-items:center;gap:12px}
+.vpill{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:6px 12px;font-size:.875rem;font-weight:600;color:#0f172a}
+.vdot{width:8px;height:8px;border-radius:50%;background:#1E7A8C;flex-shrink:0}
+.content{flex:1;padding:28px;max-width:1200px;width:100%}
+.ph{margin-bottom:22px}
+.ph h1{font-size:1.5rem;letter-spacing:-.02em}
+.ph p{font-size:.875rem;color:#94a3b8;margin-top:4px}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:22px}
+.sc{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.sc-l{font-size:.6875rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.sc-v{font-size:1.375rem;font-weight:800;color:#0f172a;letter-spacing:-.02em}
+.card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.03);padding:20px 22px;margin-bottom:20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:.875rem;font-weight:600;font-family:inherit;cursor:pointer;border:2px solid transparent;transition:all .18s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:#1E7A8C;color:#fff;border-color:#1E7A8C}
+.btn-p:hover:not(:disabled){background:#155F6E;border-color:#155F6E}
+.btn-o{background:transparent;color:#1E7A8C;border-color:#1E7A8C}
+.btn-o:hover:not(:disabled){background:#E8F4F6}
+.btn-sm{padding:7px 14px;font-size:.8125rem;border-radius:8px}
+.btn-ico{width:34px;height:34px;padding:0;border-radius:8px;background:#f1f5f9;color:#64748b;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.btn-ico:hover{background:#E8F4F6;color:#1E7A8C}
+.btn-ico svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:10px 14px;font-size:.6875rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(0,0,0,.06)}
+.tbl td{padding:12px 14px;font-size:.875rem;color:#334155;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f8fafc}
+.tw{overflow-x:auto}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .15s ease}
+.mo{background:#fff;border-radius:20px;width:100%;max-width:520px;box-shadow:0 24px 80px rgba(0,0,0,.2);animation:su .2s ease;max-height:90vh;overflow-y:auto}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0}
+.mh h2{font-size:1.125rem}
+.mc{width:32px;height:32px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.mc:hover{background:#E8F4F6;color:#1E7A8C}
+.mb{padding:20px 24px 24px}
+.merr{background:rgba(255,59,48,.08);color:#cc1a12;border:1px solid rgba(255,59,48,.2);padding:11px 14px;border-radius:10px;font-size:.875rem;margin-bottom:16px;display:none}
+.merr.on{display:block}
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:.8125rem;font-weight:600;color:#475569;margin-bottom:6px}
+.fi{width:100%;padding:10px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:.9375rem;font-family:inherit;color:#0f172a;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.fi:focus{border-color:#1E7A8C;box-shadow:0 0 0 3px rgba(30,122,140,.1)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;color:#94a3b8;font-size:.875rem;width:100%}
+.spin{width:32px;height:32px;border:3px solid rgba(30,122,140,.15);border-top-color:#1E7A8C;border-radius:50%;animation:sp .7s linear infinite}
+.es{text-align:center;padding:48px 24px;color:#94a3b8}
+.es-ic{font-size:3rem;margin-bottom:14px;opacity:.4}
+.es h3{font-size:1rem;color:#475569;margin-bottom:8px}
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#0f172a;color:#fff;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);max-width:320px;animation:su .25s ease;display:none}
+.mob-btn{display:none;width:36px;height:36px;background:#f1f5f9;border:none;border-radius:9px;cursor:pointer;align-items:center;justify-content:center;color:#0f172a}
+.mob-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){
+  .sb{transform:translateX(-100%);width:220px!important;transition:transform .25s cubic-bezier(.4,0,.2,1)}
+  .sb.open{transform:translateX(0)}
+  .sb .sb-lb,.sb .sb-logo-t{opacity:1!important;transform:none!important}
+  .sb-ov.on{display:block}
+  .main{margin-left:0}
+  .mob-btn{display:flex}
+  .content{padding:20px 16px 32px}
+  .fr{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-<script type="module">
-import { supabase, requireAuth, getProfile, getVehicleDisplayName, getSelectedVehicleId, setSelectedVehicleId, formatMileage, formatCurrency, formatDate, showToast, renderSidebar, injectAppStyles, initSidebar } from './app.js'
-
-injectAppStyles()
-
-let vehicle = null
-let allVehicles = []
-let userId = null
-
-async function init() {
-  const session = await requireAuth()
-  if (!session) return
-  userId = session.user.id
-
-  const { data: vehicles } = await supabase
-    .from('vehicles').select('*').eq('owner_id', userId).eq('is_active', true).order('created_at', { ascending: true })
-  allVehicles = vehicles || []
-
-  let selectedId = getSelectedVehicleId()
-  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) {
-    selectedId = allVehicles[0]?.id || null
-    if (selectedId) setSelectedVehicleId(selectedId)
-  }
-  vehicle = allVehicles.find(v => v.id === selectedId)
-
-  document.body.innerHTML = `
-    ${renderSidebar('fuel')}
-    <div class="app-main">
-      <div class="app-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="mobile-menu-btn" id="mobile-menu-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
-          <span class="app-topbar-title">Fuel Log</span>
-        </div>
-        <div class="app-topbar-right">
-          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
-          <button class="btn btn-primary btn-sm" id="add-fuel-btn">+ Add Fill-up</button>
-        </div>
-      </div>
-      <div class="app-content" id="main-content">
-        <div class="loading-state"><div class="spinner"></div><span>Loading fuel log…</span></div>
-      </div>
+<aside class="sb" id="sb">
+  <div class="sb-logo"><img src="/assets/logo.png" alt=""><span class="sb-logo-t">AutoLog</span></div>
+  <nav class="sb-nav" id="sb-nav"></nav>
+  <div class="sb-foot"><button class="sb-a sb-out" onclick="signOut()"><span class="sb-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="sb-lb">Sign Out</span></button></div>
+</aside>
+<div class="sb-ov" id="sb-ov"></div>
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="mob-btn" id="mob-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <span class="topbar-title">Fuel Log</span>
     </div>
-  `
-  initSidebar()
-  document.getElementById('add-fuel-btn').addEventListener('click', () => showAddModal())
+    <div class="topbar-r" id="topbar-r">
+      <button class="btn btn-p btn-sm" id="add-btn">+ Add Fill-up</button>
+    </div>
+  </div>
+  <div class="content" id="content"><div class="ld"><div class="spin"></div><span>Loading…</span></div></div>
+</div>
+<div id="toast"></div>
+<script>
+const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co'
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+const sb=supabase.createClient(SURL,SKEY)
+const NAV=[
+  {id:'dashboard',label:'Dashboard',href:'/app/index.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>'},
+  {id:'fuel',label:'Fuel Log',href:'/app/fuel.html',icon:'<svg viewBox="0 0 24 24"><path d="M3 22V8a2 2 0 012-2h8a2 2 0 012 2v14M3 22h14M7 22V12h4v10"/><path d="M19 8l2 2-2 2M19 10h-2V6a2 2 0 00-2-2"/></svg>'},
+  {id:'service',label:'Service',href:'/app/service.html',icon:'<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>'},
+  {id:'maintenance',label:'Maintenance',href:'/app/maintenance.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},
+  {id:'documents',label:'Documents',href:'/app/documents.html',icon:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'},
+  {id:'trips',label:'Trips',href:'/app/trips.html',icon:'<svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>'},
+  {id:'settings',label:'Settings',href:'/app/settings.html',icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'},
+]
+document.getElementById('sb-nav').innerHTML=NAV.map(p=>`<a href="${p.href}" class="sb-a${p.id==='fuel'?' on':''}"><span class="sb-ic">${p.icon}</span><span class="sb-lb">${p.label}</span></a>`).join('')
+const sbEl=document.getElementById('sb'),sbOv=document.getElementById('sb-ov')
+document.getElementById('mob-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
+sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
+function signOut(){sb.auth.signOut().then(()=>location.href='/app/login.html')}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function fmtMi(n){return n!=null?Number(n).toLocaleString('en-GB')+' mi':'—'}
+function vName(v){return v.nickname||[v.year,v.make,v.model].filter(Boolean).join(' ')||v.registration||'Vehicle'}
+function toast(msg,err){const el=document.getElementById('toast');el.textContent=msg;el.style.borderLeft='3px solid '+(err?'#FF3B30':'#34C759');el.style.display='block';setTimeout(()=>el.style.display='none',3500)}
+
+let vehicle=null,userId=null
+
+;(async()=>{
+  const{data:{session}}=await sb.auth.getSession()
+  if(!session){location.href='/app/login.html';return}
+  userId=session.user.id
+  const{data:vehicles}=await sb.from('vehicles').select('*').eq('owner_id',userId).eq('is_active',true).order('created_at',{ascending:true})
+  const all=vehicles||[]
+  let selId=localStorage.getItem('al_vid')
+  if(!selId||!all.find(v=>v.id===selId)){selId=all[0]?.id||null;if(selId)localStorage.setItem('al_vid',selId)}
+  vehicle=all.find(x=>x.id===selId)
+  if(vehicle){document.getElementById('topbar-r').innerHTML=`<div class="vpill"><div class="vdot"></div><span>${vName(vehicle)}</span></div><button class="btn btn-p btn-sm" id="add-btn">+ Add Fill-up</button>`}
+  document.getElementById('add-btn')?.addEventListener('click',showAdd)
   await loadEntries()
-}
+})()
 
-async function loadEntries() {
-  if (!vehicle) {
-    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⛽</div><h3>No vehicle selected</h3><p>Add a vehicle in the AutoLog iPhone app.</p></div>`
-    return
-  }
-
-  const { data: entries } = await supabase
-    .from('fuel_entries').select('*')
-    .eq('vehicle_id', vehicle.id)
-    .order('mileage_at_fill', { ascending: false })
-
-  const all = entries || []
-  const totalSpend = all.reduce((s, e) => s + Number(e.total_cost || 0), 0)
-  const totalLitres = all.reduce((s, e) => s + Number(e.litres || 0), 0)
-  const mpgVals = all.filter(e => e.mpg).map(e => Number(e.mpg))
-  const avgMpg = mpgVals.length ? mpgVals.reduce((a, b) => a + b, 0) / mpgVals.length : null
-
-  document.getElementById('main-content').innerHTML = `
-    <div class="page-header">
-      <h1>Fuel Log</h1>
-      <p>${getVehicleDisplayName(vehicle)}</p>
+async function loadEntries(){
+  if(!vehicle){document.getElementById('content').innerHTML=`<div class="es"><div class="es-ic">⛽</div><h3>No vehicle selected</h3></div>`;return}
+  const{data:entries}=await sb.from('fuel_entries').select('*').eq('vehicle_id',vehicle.id).order('mileage_at_fill',{ascending:false})
+  const all=entries||[]
+  const totalSpend=all.reduce((s,e)=>s+Number(e.total_cost||0),0)
+  const totalL=all.reduce((s,e)=>s+Number(e.litres||0),0)
+  const mpgs=all.filter(e=>e.mpg).map(e=>Number(e.mpg))
+  const avgMpg=mpgs.length?mpgs.reduce((a,b)=>a+b,0)/mpgs.length:null
+  document.getElementById('content').innerHTML=`
+    <div class="ph"><h1>Fuel Log</h1><p>${vName(vehicle)}</p></div>
+    <div class="sg">
+      <div class="sc"><div class="sc-l">Total Spend</div><div class="sc-v">£${totalSpend.toFixed(0)}</div></div>
+      <div class="sc"><div class="sc-l">Total Litres</div><div class="sc-v">${totalL.toFixed(0)}L</div></div>
+      ${avgMpg?`<div class="sc"><div class="sc-l">Avg MPG</div><div class="sc-v">${avgMpg.toFixed(1)}</div></div>`:''}
+      <div class="sc"><div class="sc-l">Fill-ups</div><div class="sc-v">${all.length}</div></div>
     </div>
-
-    <div class="stats-grid" style="margin-bottom:24px;">
-      <div class="stat-card">
-        <div class="stat-card-label">Total Spend</div>
-        <div class="stat-card-value">£${totalSpend.toFixed(0)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Total Litres</div>
-        <div class="stat-card-value">${totalLitres.toFixed(0)}L</div>
-      </div>
-      ${avgMpg ? `<div class="stat-card"><div class="stat-card-label">Avg MPG</div><div class="stat-card-value">${avgMpg.toFixed(1)}</div></div>` : ''}
-      <div class="stat-card">
-        <div class="stat-card-label">Fill-ups</div>
-        <div class="stat-card-value">${all.length}</div>
-      </div>
-    </div>
-
     <div class="card">
-      ${all.length === 0 ? `
-        <div class="empty-state">
-          <div class="empty-state-icon">⛽</div>
-          <h3>No fuel entries yet</h3>
-          <p>Log your first fill-up to start tracking costs and economy.</p>
-          <button class="btn btn-primary" style="margin-top:16px;" onclick="document.getElementById('add-fuel-btn').click()">Log First Fill-up</button>
-        </div>
-      ` : `
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Mileage</th>
-              <th>Litres</th>
-              <th>MPG</th>
-              <th>Station</th>
-              <th style="text-align:right;">Cost</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${all.map(e => `
-              <tr>
-                <td>${formatDate(e.date)}</td>
-                <td>${formatMileage(e.mileage_at_fill)}</td>
-                <td>${e.litres ? Number(e.litres).toFixed(2) + 'L' : '—'}</td>
-                <td style="color:${e.mpg ? '#1E7A8C' : '#94a3b8'};font-weight:${e.mpg ? '600' : '400'};">${e.mpg ? Number(e.mpg).toFixed(1) : '—'}</td>
-                <td style="color:#94a3b8;">${e.station_name || '—'}</td>
-                <td style="text-align:right;font-weight:700;color:#0f172a;">${e.total_cost ? '£' + Number(e.total_cost).toFixed(2) : '—'}</td>
-                <td>
-                  <button class="btn-icon" onclick="deleteEntry('${e.id}')" title="Delete">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                  </button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `}
-    </div>
-  `
-  window.deleteEntry = deleteEntry
+      ${all.length===0?`<div class="es"><div class="es-ic">⛽</div><h3>No entries yet</h3><p>Log your first fill-up to start tracking costs.</p><button class="btn btn-p" style="margin-top:16px" onclick="showAdd()">Log Fill-up</button></div>`:`
+      <div class="tw"><table class="tbl">
+        <thead><tr><th>Date</th><th>Mileage</th><th>Litres</th><th>MPG</th><th>Station</th><th style="text-align:right">Cost</th><th></th></tr></thead>
+        <tbody>${all.map(e=>`<tr>
+          <td>${fmtDate(e.date)}</td>
+          <td>${fmtMi(e.mileage_at_fill)}</td>
+          <td>${e.litres?Number(e.litres).toFixed(2)+'L':'—'}</td>
+          <td style="color:${e.mpg?'#1E7A8C':'#94a3b8'};font-weight:${e.mpg?600:400}">${e.mpg?Number(e.mpg).toFixed(1):'—'}</td>
+          <td style="color:#94a3b8">${e.station_name||'—'}</td>
+          <td style="text-align:right;font-weight:700;color:#0f172a">${e.total_cost?'£'+Number(e.total_cost).toFixed(2):'—'}</td>
+          <td><button class="btn-ico" onclick="delEntry('${e.id}')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`}
+    </div>`
 }
 
-function showAddModal() {
-  const backdrop = document.createElement('div')
-  backdrop.className = 'modal-backdrop'
-  backdrop.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Log Fill-up</h2>
-        <button class="modal-close" id="modal-close">✕</button>
+function showAdd(){
+  const bg=document.createElement('div');bg.className='mbg'
+  bg.innerHTML=`<div class="mo">
+    <div class="mh"><h2>Log Fill-up</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div>
+    <div class="mb">
+      <div class="merr" id="merr"></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Date</label><input class="fi" type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="fg"><label class="fl">Mileage at Fill</label><input class="fi" type="number" id="f-mi" placeholder="${vehicle?.current_mileage||''}" value="${vehicle?.current_mileage||''}"></div>
       </div>
-      <div class="modal-body">
-        <div class="alert" id="modal-error" style="display:none;background:rgba(255,59,48,0.08);color:#cc1a12;border:1px solid rgba(255,59,48,0.2);padding:11px 14px;border-radius:10px;font-size:0.875rem;margin-bottom:16px;"></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Date</label>
-            <input class="form-input" type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mileage at Fill</label>
-            <input class="form-input" type="number" id="f-mileage" placeholder="${vehicle?.current_mileage || ''}" value="${vehicle?.current_mileage || ''}">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Litres</label>
-            <input class="form-input" type="number" step="0.01" id="f-litres" placeholder="e.g. 45.23">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Total Cost (£)</label>
-            <input class="form-input" type="number" step="0.01" id="f-cost" placeholder="e.g. 68.50">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Cost per Litre (£)</label>
-            <input class="form-input" type="number" step="0.001" id="f-cpl" placeholder="e.g. 1.489">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Station (optional)</label>
-            <input class="form-input" type="text" id="f-station" placeholder="e.g. BP, Tesco">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Notes (optional)</label>
-          <input class="form-input" type="text" id="f-notes" placeholder="Any notes…">
-        </div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
-          <button class="btn btn-outline" id="modal-cancel">Cancel</button>
-          <button class="btn btn-primary" id="modal-save">Save Fill-up</button>
-        </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Litres</label><input class="fi" type="number" step="0.01" id="f-lit" placeholder="e.g. 45.23"></div>
+        <div class="fg"><label class="fl">Total Cost (£)</label><input class="fi" type="number" step="0.01" id="f-cost" placeholder="e.g. 68.50"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Cost per Litre (£)</label><input class="fi" type="number" step="0.001" id="f-cpl" placeholder="e.g. 1.489"></div>
+        <div class="fg"><label class="fl">Station (optional)</label><input class="fi" type="text" id="f-st" placeholder="e.g. BP, Tesco"></div>
+      </div>
+      <div class="fg"><label class="fl">Notes (optional)</label><input class="fi" type="text" id="f-notes"></div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-o btn-sm" onclick="this.closest('.mbg').remove()">Cancel</button>
+        <button class="btn btn-p btn-sm" id="f-save">Save Fill-up</button>
       </div>
     </div>
-  `
-  document.body.appendChild(backdrop)
-
-  // Auto-calc cost per litre
-  const litresInput = backdrop.querySelector('#f-litres')
-  const costInput = backdrop.querySelector('#f-cost')
-  const cplInput = backdrop.querySelector('#f-cpl')
-  const calcCpl = () => {
-    const l = parseFloat(litresInput.value), c = parseFloat(costInput.value)
-    if (l > 0 && c > 0) cplInput.value = (c / l).toFixed(3)
-  }
-  litresInput.addEventListener('input', calcCpl)
-  costInput.addEventListener('input', calcCpl)
-
-  backdrop.querySelector('#modal-close').addEventListener('click', () => backdrop.remove())
-  backdrop.querySelector('#modal-cancel').addEventListener('click', () => backdrop.remove())
-  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove() })
-
-  backdrop.querySelector('#modal-save').addEventListener('click', async () => {
-    const mileage = parseInt(backdrop.querySelector('#f-mileage').value)
-    if (!mileage) {
-      const err = backdrop.querySelector('#modal-error')
-      err.textContent = 'Please enter the mileage at fill.'
-      err.style.display = 'block'
-      return
-    }
-    const btn = backdrop.querySelector('#modal-save')
-    btn.disabled = true
-    btn.textContent = 'Saving…'
-
-    const { error } = await supabase.from('fuel_entries').insert({
-      vehicle_id: vehicle.id,
-      user_id: userId,
-      date: backdrop.querySelector('#f-date').value,
-      mileage_at_fill: mileage,
-      litres: parseFloat(backdrop.querySelector('#f-litres').value) || null,
-      total_cost: parseFloat(backdrop.querySelector('#f-cost').value) || null,
-      cost_per_litre: parseFloat(backdrop.querySelector('#f-cpl').value) || null,
-      station_name: backdrop.querySelector('#f-station').value || null,
-      notes: backdrop.querySelector('#f-notes').value || null,
-      source: 'manual',
-    })
-
-    if (error) {
-      const err = backdrop.querySelector('#modal-error')
-      err.textContent = error.message
-      err.style.display = 'block'
-      btn.disabled = false
-      btn.textContent = 'Save Fill-up'
-      return
-    }
-    backdrop.remove()
-    showToast('Fill-up logged ✓')
-    await loadEntries()
+  </div>`
+  document.body.appendChild(bg)
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
+  const lit=bg.querySelector('#f-lit'),cost=bg.querySelector('#f-cost'),cpl=bg.querySelector('#f-cpl')
+  const calc=()=>{const l=parseFloat(lit.value),c=parseFloat(cost.value);if(l>0&&c>0)cpl.value=(c/l).toFixed(3)}
+  lit.addEventListener('input',calc);cost.addEventListener('input',calc)
+  bg.querySelector('#f-save').addEventListener('click',async()=>{
+    const mi=parseInt(bg.querySelector('#f-mi').value)
+    if(!mi){const e=bg.querySelector('#merr');e.textContent='Please enter the mileage.';e.classList.add('on');return}
+    const btn=bg.querySelector('#f-save');btn.disabled=true;btn.textContent='Saving…'
+    const{error}=await sb.from('fuel_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#f-date').value,mileage_at_fill:mi,litres:parseFloat(bg.querySelector('#f-lit').value)||null,total_cost:parseFloat(bg.querySelector('#f-cost').value)||null,cost_per_litre:parseFloat(cpl.value)||null,station_name:bg.querySelector('#f-st').value||null,notes:bg.querySelector('#f-notes').value||null,source:'manual'})
+    if(error){const e=bg.querySelector('#merr');e.textContent=error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Fill-up';return}
+    bg.remove();toast('Fill-up logged ✓');await loadEntries()
   })
 }
-
-async function deleteEntry(id) {
-  if (!confirm('Delete this fuel entry?')) return
-  await supabase.from('fuel_entries').delete().eq('id', id)
-  await supabase.from('cost_entries').delete().eq('source_id', id).eq('source_table', 'fuel_entries')
-  showToast('Entry deleted', 'error')
-  await loadEntries()
+async function delEntry(id){
+  if(!confirm('Delete this entry?'))return
+  await sb.from('fuel_entries').delete().eq('id',id)
+  await sb.from('cost_entries').delete().eq('source_id',id).eq('source_table','fuel_entries')
+  toast('Deleted',true);await loadEntries()
 }
-
-init()
 </script>
 </body>
 </html>

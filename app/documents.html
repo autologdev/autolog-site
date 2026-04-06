@@ -1,270 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Documents — AutoLog</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents — AutoLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#475569;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+h1,h2,h3{color:#0f172a;font-weight:700;line-height:1.2}a{text-decoration:none;color:inherit}
+.sb{width:64px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}.sb:hover{width:220px}
+.sb-logo{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);min-height:65px;overflow:hidden}.sb-logo img{width:32px;height:32px;border-radius:8px;flex-shrink:0}
+.sb-logo-t{font-size:.9375rem;font-weight:700;color:#fff;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s}.sb:hover .sb-logo-t{opacity:1;transform:translateX(0)}
+.sb-nav{flex:1;padding:10px 0;display:flex;flex-direction:column;overflow:hidden}
+.sb-a{display:flex;align-items:center;gap:13px;padding:11px 18px;color:rgba(255,255,255,.5);font-size:.875rem;font-weight:500;white-space:nowrap;transition:color .15s,background .15s;position:relative;text-decoration:none;border:none;background:none;font-family:inherit;cursor:pointer;width:100%}
+.sb-a:hover{color:#fff;background:rgba(255,255,255,.06)}.sb-a.on{color:#fff;background:rgba(30,122,140,.28)}.sb-a.on::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:#1E7A8C;border-radius:0 3px 3px 0}
+.sb-ic{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.sb-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.sb-lb{opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s;pointer-events:none}.sb:hover .sb-lb{opacity:1;transform:translateX(0)}
+.sb-foot{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}.sb-out:hover{color:#FF3B30!important;background:rgba(255,59,48,.08)!important}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}.sb-ov.on{display:block}
+.main{flex:1;margin-left:64px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:64px;background:#fff;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;gap:16px}
+.topbar-title{font-size:1rem;font-weight:700;color:#0f172a}.topbar-r{display:flex;align-items:center;gap:12px}
+.vpill{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:6px 12px;font-size:.875rem;font-weight:600;color:#0f172a}
+.vdot{width:8px;height:8px;border-radius:50%;background:#1E7A8C;flex-shrink:0}
+.content{flex:1;padding:28px;max-width:1200px;width:100%}.ph{margin-bottom:22px}.ph h1{font-size:1.5rem;letter-spacing:-.02em}.ph p{font-size:.875rem;color:#94a3b8;margin-top:4px}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.doc-card{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;transition:box-shadow .15s}.doc-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:.875rem;font-weight:600;font-family:inherit;cursor:pointer;border:2px solid transparent;transition:all .18s}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:#1E7A8C;color:#fff;border-color:#1E7A8C}.btn-p:hover:not(:disabled){background:#155F6E}.btn-o{background:transparent;color:#1E7A8C;border-color:#1E7A8C}.btn-o:hover:not(:disabled){background:#E8F4F6}.btn-sm{padding:7px 14px;font-size:.8125rem;border-radius:8px}
+.btn-ico{width:34px;height:34px;padding:0;border-radius:8px;background:#f1f5f9;color:#64748b;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.btn-ico:hover{background:rgba(255,59,48,.1);color:#FF3B30}.btn-ico svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .15s ease}.mo{background:#fff;border-radius:20px;width:100%;max-width:480px;box-shadow:0 24px 80px rgba(0,0,0,.2);animation:su .2s ease;max-height:90vh;overflow-y:auto}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0}.mh h2{font-size:1.125rem}.mc{width:32px;height:32px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;font-size:1.1rem}.mc:hover{background:#E8F4F6;color:#1E7A8C}.mb{padding:20px 24px 24px}
+.merr{background:rgba(255,59,48,.08);color:#cc1a12;border:1px solid rgba(255,59,48,.2);padding:11px 14px;border-radius:10px;font-size:.875rem;margin-bottom:16px;display:none}.merr.on{display:block}
+.fg{margin-bottom:16px}.fl{display:block;font-size:.8125rem;font-weight:600;color:#475569;margin-bottom:6px}
+.fi{width:100%;padding:10px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:.9375rem;font-family:inherit;color:#0f172a;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}.fi:focus{border-color:#1E7A8C;box-shadow:0 0 0 3px rgba(30,122,140,.1)}
+.drop-zone{border:2px dashed rgba(30,122,140,.3);border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:#f8fafc;transition:all .15s}.drop-zone:hover,.drop-zone.over{border-color:#1E7A8C;background:#E8F4F6}
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;color:#94a3b8;font-size:.875rem;width:100%}
+.spin{width:32px;height:32px;border:3px solid rgba(30,122,140,.15);border-top-color:#1E7A8C;border-radius:50%;animation:sp .7s linear infinite}
+.es{text-align:center;padding:48px 24px;color:#94a3b8}.es-ic{font-size:3rem;margin-bottom:14px;opacity:.4}.es h3{font-size:1rem;color:#475569;margin-bottom:8px}
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#0f172a;color:#fff;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);max-width:320px;display:none}
+.mob-btn{display:none;width:36px;height:36px;background:#f1f5f9;border:none;border-radius:9px;cursor:pointer;align-items:center;justify-content:center;color:#0f172a}.mob-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5}
+@keyframes sp{to{transform:rotate(360deg)}}@keyframes fi{from{opacity:0}to{opacity:1}}@keyframes su{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.sb{transform:translateX(-100%);width:220px!important;transition:transform .25s cubic-bezier(.4,0,.2,1)}.sb.open{transform:translateX(0)}.sb .sb-lb,.sb .sb-logo-t{opacity:1!important;transform:none!important}.sb-ov.on{display:block}.main{margin-left:0}.mob-btn{display:flex}.content{padding:20px 16px 32px}}
+</style>
 </head>
 <body>
-<script type="module">
-import { supabase, requireAuth, getVehicleDisplayName, getSelectedVehicleId, formatDate, showToast, renderSidebar, injectAppStyles, initSidebar } from './app.js'
-
-injectAppStyles()
-
-let vehicle = null
-let userId = null
-
-const DOC_TYPES = {
-  mot_certificate: { label: 'MOT Certificate', icon: '✅' },
-  service_invoice: { label: 'Service Invoice', icon: '🔧' },
-  fuel_receipt: { label: 'Fuel Receipt', icon: '⛽' },
-  insurance: { label: 'Insurance', icon: '🛡️' },
-  v5c: { label: 'V5C Logbook', icon: '📋' },
-  warranty: { label: 'Warranty', icon: '🏅' },
-  purchase_receipt: { label: 'Purchase Receipt', icon: '🏷️' },
-  recall_notice: { label: 'Recall Notice', icon: '⚠️' },
-  repair_invoice: { label: 'Repair Invoice', icon: '🛠️' },
-  tyre_receipt: { label: 'Tyre Receipt', icon: '🔵' },
-  other: { label: 'Other', icon: '📄' },
-}
-
-async function init() {
-  const session = await requireAuth()
-  if (!session) return
-  userId = session.user.id
-
-  const { data: vehicles } = await supabase
-    .from('vehicles').select('*').eq('owner_id', userId).eq('is_active', true).order('created_at', { ascending: true })
-  const allVehicles = vehicles || []
-  let selectedId = getSelectedVehicleId()
-  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) selectedId = allVehicles[0]?.id || null
-  vehicle = allVehicles.find(v => v.id === selectedId)
-
-  document.body.innerHTML = `
-    ${renderSidebar('documents')}
-    <div class="app-main">
-      <div class="app-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="mobile-menu-btn" id="mobile-menu-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
-          <span class="app-topbar-title">Documents</span>
-        </div>
-        <div class="app-topbar-right">
-          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
-          <button class="btn btn-primary btn-sm" id="upload-btn">+ Upload</button>
-        </div>
-      </div>
-      <div class="app-content" id="main-content">
-        <div class="loading-state"><div class="spinner"></div><span>Loading documents…</span></div>
-      </div>
-    </div>
-    <!-- Hidden file input -->
-    <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none;">
-  `
-  initSidebar()
-  document.getElementById('upload-btn').addEventListener('click', () => showUploadModal())
-  await loadDocuments()
-}
-
-async function loadDocuments() {
-  if (!vehicle) {
-    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📄</div><h3>No vehicle selected</h3></div>`
-    return
-  }
-
-  const { data: docs } = await supabase
-    .from('documents').select('*').eq('vehicle_id', vehicle.id).order('created_at', { ascending: false })
-
-  const all = docs || []
-
-  // Group by type
-  const groups = {}
-  all.forEach(d => {
-    const t = d.document_type || 'other'
-    if (!groups[t]) groups[t] = []
-    groups[t].push(d)
-  })
-
-  document.getElementById('main-content').innerHTML = `
-    <div class="page-header">
-      <h1>Documents</h1>
-      <p>${getVehicleDisplayName(vehicle)} · ${all.length} document${all.length !== 1 ? 's' : ''}</p>
-    </div>
-
-    ${all.length === 0 ? `
-      <div class="empty-state">
-        <div class="empty-state-icon">📄</div>
-        <h3>No documents yet</h3>
-        <p>Upload MOT certificates, service invoices, insurance documents and more.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="document.getElementById('upload-btn').click()">Upload Document</button>
-      </div>
-    ` : Object.entries(groups).map(([type, docs]) => {
-      const typeInfo = DOC_TYPES[type] || DOC_TYPES.other
-      return `
-        <div style="margin-bottom:24px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <span style="font-size:1.1rem;">${typeInfo.icon}</span>
-            <span style="font-size:0.9rem;font-weight:700;color:#0f172a;">${typeInfo.label}</span>
-            <span style="font-size:0.75rem;color:#94a3b8;">${docs.length}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
-            ${docs.map(doc => `
-              <div style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);cursor:pointer;transition:box-shadow 0.15s;" onclick="viewDocument('${doc.id}','${doc.storage_path}')" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.06)'">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                  <div>
-                    <div style="font-size:0.875rem;font-weight:600;color:#0f172a;margin-bottom:4px;">${doc.file_name || typeInfo.label}</div>
-                    <div style="font-size:0.75rem;color:#94a3b8;">${formatDate(doc.document_date || doc.created_at)}</div>
-                    ${doc.page_count > 1 ? `<div style="font-size:0.7rem;color:#1E7A8C;margin-top:3px;">${doc.page_count} pages</div>` : ''}
-                  </div>
-                  <button class="btn-icon" style="flex-shrink:0;" onclick="event.stopPropagation();deleteDoc('${doc.id}','${doc.storage_path}')" title="Delete">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                  </button>
-                </div>
+<aside class="sb" id="sb"><div class="sb-logo"><img src="/assets/logo.png" alt=""><span class="sb-logo-t">AutoLog</span></div><nav class="sb-nav" id="sb-nav"></nav><div class="sb-foot"><button class="sb-a sb-out" onclick="signOut()"><span class="sb-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="sb-lb">Sign Out</span></button></div></aside>
+<div class="sb-ov" id="sb-ov"></div>
+<div class="main">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="mob-btn" id="mob-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="topbar-title">Documents</span></div><div class="topbar-r" id="topbar-r"><button class="btn btn-p btn-sm" id="upload-btn">+ Upload</button></div></div>
+  <div class="content" id="content"><div class="ld"><div class="spin"></div><span>Loading…</span></div></div>
+</div>
+<div id="toast"></div>
+<script>
+const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co',SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+const sb=supabase.createClient(SURL,SKEY)
+const NAV=[{id:'dashboard',label:'Dashboard',href:'/app/index.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>'},{id:'fuel',label:'Fuel Log',href:'/app/fuel.html',icon:'<svg viewBox="0 0 24 24"><path d="M3 22V8a2 2 0 012-2h8a2 2 0 012 2v14M3 22h14M7 22V12h4v10"/><path d="M19 8l2 2-2 2M19 10h-2V6a2 2 0 00-2-2"/></svg>'},{id:'service',label:'Service',href:'/app/service.html',icon:'<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>'},{id:'maintenance',label:'Maintenance',href:'/app/maintenance.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},{id:'documents',label:'Documents',href:'/app/documents.html',icon:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'},{id:'trips',label:'Trips',href:'/app/trips.html',icon:'<svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>'},{id:'settings',label:'Settings',href:'/app/settings.html',icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'}]
+document.getElementById('sb-nav').innerHTML=NAV.map(p=>`<a href="${p.href}" class="sb-a${p.id==='documents'?' on':''}"><span class="sb-ic">${p.icon}</span><span class="sb-lb">${p.label}</span></a>`).join('')
+const sbEl=document.getElementById('sb'),sbOv=document.getElementById('sb-ov')
+document.getElementById('mob-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
+sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
+function signOut(){sb.auth.signOut().then(()=>location.href='/app/login.html')}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function vName(v){return v.nickname||[v.year,v.make,v.model].filter(Boolean).join(' ')||v.registration||'Vehicle'}
+function toast(msg,err){const el=document.getElementById('toast');el.textContent=msg;el.style.borderLeft='3px solid '+(err?'#FF3B30':'#34C759');el.style.display='block';setTimeout(()=>el.style.display='none',3500)}
+const DTYPES={mot_certificate:{label:'MOT Certificate',icon:'✅'},service_invoice:{label:'Service Invoice',icon:'🔧'},fuel_receipt:{label:'Fuel Receipt',icon:'⛽'},insurance:{label:'Insurance',icon:'🛡️'},v5c:{label:'V5C Logbook',icon:'📋'},warranty:{label:'Warranty',icon:'🏅'},purchase_receipt:{label:'Purchase Receipt',icon:'🏷️'},recall_notice:{label:'Recall Notice',icon:'⚠️'},repair_invoice:{label:'Repair Invoice',icon:'🛠️'},tyre_receipt:{label:'Tyre Receipt',icon:'🔵'},other:{label:'Other',icon:'📄'}}
+let vehicle=null,userId=null
+;(async()=>{
+  const{data:{session}}=await sb.auth.getSession()
+  if(!session){location.href='/app/login.html';return}
+  userId=session.user.id
+  const{data:vehicles}=await sb.from('vehicles').select('*').eq('owner_id',userId).eq('is_active',true).order('created_at',{ascending:true})
+  const all=vehicles||[]
+  let selId=localStorage.getItem('al_vid')
+  if(!selId||!all.find(v=>v.id===selId)){selId=all[0]?.id||null;if(selId)localStorage.setItem('al_vid',selId)}
+  vehicle=all.find(x=>x.id===selId)
+  if(vehicle){const tr=document.getElementById('topbar-r');tr.innerHTML=`<div class="vpill"><div class="vdot"></div><span>${vName(vehicle)}</span></div><button class="btn btn-p btn-sm" id="upload-btn">+ Upload</button>`}
+  document.getElementById('upload-btn')?.addEventListener('click',showUpload)
+  await loadDocs()
+})()
+async function loadDocs(){
+  if(!vehicle){document.getElementById('content').innerHTML=`<div class="es"><div class="es-ic">📄</div><h3>No vehicle selected</h3></div>`;return}
+  const{data:docs}=await sb.from('documents').select('*').eq('vehicle_id',vehicle.id).order('created_at',{ascending:false})
+  const all=docs||[]
+  const groups={}
+  all.forEach(d=>{const t=d.document_type||'other';if(!groups[t])groups[t]=[];groups[t].push(d)})
+  document.getElementById('content').innerHTML=`
+    <div class="ph"><h1>Documents</h1><p>${vName(vehicle)} · ${all.length} document${all.length!==1?'s':''}</p></div>
+    ${all.length===0?`<div class="es"><div class="es-ic">📄</div><h3>No documents yet</h3><p>Upload MOT certificates, invoices, insurance and more.</p><button class="btn btn-p" style="margin-top:16px" onclick="showUpload()">Upload Document</button></div>`
+    :Object.entries(groups).map(([type,docs])=>{
+      const ti=DTYPES[type]||DTYPES.other
+      return`<div style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:1.1rem">${ti.icon}</span><span style="font-size:.9rem;font-weight:700;color:#0f172a">${ti.label}</span><span style="font-size:.75rem;color:#94a3b8">${docs.length}</span></div>
+        <div class="doc-grid">${docs.map(doc=>`
+          <div class="doc-card" onclick="viewDoc('${doc.storage_path}')">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-size:.875rem;font-weight:600;color:#0f172a;margin-bottom:4px">${doc.file_name||ti.label}</div>
+                <div style="font-size:.75rem;color:#94a3b8">${fmtDate(doc.document_date||doc.created_at)}</div>
+                ${doc.page_count>1?`<div style="font-size:.7rem;color:#1E7A8C;margin-top:3px">${doc.page_count} pages</div>`:''}
               </div>
-            `).join('')}
-          </div>
+              <button class="btn-ico" onclick="event.stopPropagation();delDoc('${doc.id}','${doc.storage_path}')" title="Delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+            </div>
+          </div>`).join('')}
         </div>
-      `
-    }).join('')}
+      </div>`}).join('')}
   `
-  window.viewDocument = viewDocument
-  window.deleteDoc = deleteDoc
 }
-
-async function viewDocument(id, path) {
-  const { data } = await supabase.storage.from('vehicle-documents').createSignedUrl(path, 60)
-  if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+async function viewDoc(path){
+  const{data}=await sb.storage.from('vehicle-documents').createSignedUrl(path,60)
+  if(data?.signedUrl)window.open(data.signedUrl,'_blank')
+  else toast('Could not open document',true)
 }
-
-function showUploadModal() {
-  const backdrop = document.createElement('div')
-  backdrop.className = 'modal-backdrop'
-  backdrop.innerHTML = `
-    <div class="modal">
-      <div class="modal-header">
-        <h2>Upload Document</h2>
-        <button class="modal-close" id="modal-close">✕</button>
+async function delDoc(id,path){
+  if(!confirm('Delete this document permanently?'))return
+  await sb.storage.from('vehicle-documents').remove([path])
+  await sb.from('documents').delete().eq('id',id)
+  toast('Deleted',true);await loadDocs()
+}
+function showUpload(){
+  const bg=document.createElement('div');bg.className='mbg'
+  bg.innerHTML=`<div class="mo"><div class="mh"><h2>Upload Document</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
+    <div class="merr" id="merr"></div>
+    <div class="fg"><label class="fl">Document Type</label><select class="fi" id="u-type">${Object.entries(DTYPES).map(([v,{label}])=>`<option value="${v}">${label}</option>`).join('')}</select></div>
+    <div class="fg"><label class="fl">Date (optional)</label><input class="fi" type="date" id="u-date"></div>
+    <div class="fg"><label class="fl">File</label>
+      <div class="drop-zone" id="drop" onclick="document.getElementById('u-file').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="handleDrop(event)">
+        <div style="font-size:2rem;margin-bottom:8px">📎</div>
+        <div style="font-size:.875rem;font-weight:600;color:#475569">Click to choose or drag & drop</div>
+        <div style="font-size:.75rem;color:#94a3b8;margin-top:4px">Images or PDF</div>
       </div>
-      <div class="modal-body">
-        <div class="alert" id="modal-error" style="display:none;background:rgba(255,59,48,0.08);color:#cc1a12;border:1px solid rgba(255,59,48,0.2);padding:11px 14px;border-radius:10px;font-size:0.875rem;margin-bottom:16px;"></div>
-        <div class="form-group">
-          <label class="form-label">Document Type</label>
-          <select class="form-input" id="u-type">
-            ${Object.entries(DOC_TYPES).map(([val, {label}]) => `<option value="${val}">${label}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Document Date (optional)</label>
-          <input class="form-input" type="date" id="u-date">
-        </div>
-        <div class="form-group">
-          <label class="form-label">File (image or PDF)</label>
-          <div id="upload-zone" style="
-            border: 2px dashed rgba(30,122,140,0.3);
-            border-radius: 12px;
-            padding: 32px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.15s;
-            background: #f8fafc;
-          " onclick="document.getElementById('u-file').click()" ondragover="event.preventDefault();this.style.borderColor='#1E7A8C';this.style.background='#E8F4F6'" ondragleave="this.style.borderColor='rgba(30,122,140,0.3)';this.style.background='#f8fafc'" ondrop="handleDrop(event)">
-            <div style="font-size:2rem;margin-bottom:8px;">📎</div>
-            <div style="font-size:0.875rem;font-weight:600;color:#475569;">Click to choose file or drag & drop</div>
-            <div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">Images (JPG, PNG) or PDF</div>
-          </div>
-          <input type="file" id="u-file" accept="image/*,application/pdf" style="display:none;">
-          <div id="file-preview" style="display:none;margin-top:10px;"></div>
-        </div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
-          <button class="btn btn-outline" id="modal-cancel">Cancel</button>
-          <button class="btn btn-primary" id="modal-save" disabled>Upload</button>
-        </div>
-      </div>
+      <input type="file" id="u-file" accept="image/*,application/pdf" style="display:none">
+      <div id="u-preview" style="display:none;margin-top:10px;font-size:.875rem;color:#0f172a;font-weight:500"></div>
     </div>
-  `
-  document.body.appendChild(backdrop)
-
-  let selectedFile = null
-
-  const fileInput = backdrop.querySelector('#u-file')
-  const preview = backdrop.querySelector('#file-preview')
-  const saveBtn = backdrop.querySelector('#modal-save')
-
-  const handleFile = (file) => {
-    if (!file) return
-    selectedFile = file
-    preview.style.display = 'flex'
-    preview.style.alignItems = 'center'
-    preview.style.gap = '8px'
-    preview.innerHTML = `
-      <span style="font-size:1.25rem;">${file.type.includes('pdf') ? '📋' : '🖼️'}</span>
-      <span style="font-size:0.875rem;color:#0f172a;font-weight:500;">${file.name}</span>
-      <span style="font-size:0.75rem;color:#94a3b8;">(${(file.size / 1024).toFixed(0)} KB)</span>
-    `
-    saveBtn.disabled = false
-  }
-
-  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]))
-  window.handleDrop = (e) => {
-    e.preventDefault()
-    backdrop.querySelector('#upload-zone').style.borderColor = 'rgba(30,122,140,0.3)'
-    backdrop.querySelector('#upload-zone').style.background = '#f8fafc'
-    handleFile(e.dataTransfer.files[0])
-  }
-
-  backdrop.querySelector('#modal-close').addEventListener('click', () => backdrop.remove())
-  backdrop.querySelector('#modal-cancel').addEventListener('click', () => backdrop.remove())
-  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove() })
-
-  saveBtn.addEventListener('click', async () => {
-    if (!selectedFile) return
-    saveBtn.disabled = true
-    saveBtn.textContent = 'Uploading…'
-
-    const ext = selectedFile.name.split('.').pop()
-    const path = `${userId}/${vehicle.id}/${Date.now()}.${ext}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('vehicle-documents')
-      .upload(path, selectedFile, { contentType: selectedFile.type })
-
-    if (uploadError) {
-      const err = backdrop.querySelector('#modal-error')
-      err.textContent = uploadError.message; err.style.display = 'block'
-      saveBtn.disabled = false; saveBtn.textContent = 'Upload'
-      return
-    }
-
-    await supabase.from('documents').insert({
-      vehicle_id: vehicle.id,
-      user_id: userId,
-      storage_path: path,
-      file_name: selectedFile.name,
-      file_type: selectedFile.type,
-      file_size_bytes: selectedFile.size,
-      document_type: backdrop.querySelector('#u-type').value,
-      document_date: backdrop.querySelector('#u-date').value || null,
-      ocr_status: 'pending',
-    })
-
-    backdrop.remove()
-    showToast('Document uploaded ✓')
-    await loadDocuments()
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px"><button class="btn btn-o btn-sm" onclick="this.closest('.mbg').remove()">Cancel</button><button class="btn btn-p btn-sm" id="u-save" disabled>Upload</button></div>
+  </div></div>`
+  document.body.appendChild(bg)
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
+  let file=null
+  const setFile=f=>{file=f;const p=bg.querySelector('#u-preview');p.style.display='flex';p.innerHTML=`<span style="font-size:1.2rem;margin-right:8px">${f.type.includes('pdf')?'📋':'🖼️'}</span><span>${f.name} (${(f.size/1024).toFixed(0)}KB)</span>`;bg.querySelector('#u-save').disabled=false}
+  bg.querySelector('#u-file').addEventListener('change',e=>{if(e.target.files[0])setFile(e.target.files[0])})
+  window.handleDrop=e=>{e.preventDefault();bg.querySelector('#drop').classList.remove('over');if(e.dataTransfer.files[0])setFile(e.dataTransfer.files[0])}
+  bg.querySelector('#u-save').addEventListener('click',async()=>{
+    if(!file)return
+    const btn=bg.querySelector('#u-save');btn.disabled=true;btn.textContent='Uploading…'
+    const ext=file.name.split('.').pop()
+    const path=`${userId}/${vehicle.id}/${Date.now()}.${ext}`
+    const{error:ue}=await sb.storage.from('vehicle-documents').upload(path,file,{contentType:file.type})
+    if(ue){const e=bg.querySelector('#merr');e.textContent=ue.message;e.classList.add('on');btn.disabled=false;btn.textContent='Upload';return}
+    await sb.from('documents').insert({vehicle_id:vehicle.id,user_id:userId,storage_path:path,file_name:file.name,file_type:file.type,file_size_bytes:file.size,document_type:bg.querySelector('#u-type').value,document_date:bg.querySelector('#u-date').value||null,ocr_status:'pending'})
+    bg.remove();toast('Document uploaded ✓');await loadDocs()
   })
 }
-
-async function deleteDoc(id, path) {
-  if (!confirm('Delete this document? This cannot be undone.')) return
-  await supabase.storage.from('vehicle-documents').remove([path])
-  await supabase.from('documents').delete().eq('id', id)
-  showToast('Document deleted', 'error')
-  await loadDocuments()
-}
-
-init()
 </script>
 </body>
 </html>

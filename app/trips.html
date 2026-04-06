@@ -1,172 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trips — AutoLog</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trips — AutoLog</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#475569;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
+h1,h2,h3{color:#0f172a;font-weight:700;line-height:1.2}a{text-decoration:none;color:inherit}
+.sb{width:64px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}.sb:hover{width:220px}
+.sb-logo{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);min-height:65px;overflow:hidden}.sb-logo img{width:32px;height:32px;border-radius:8px;flex-shrink:0}
+.sb-logo-t{font-size:.9375rem;font-weight:700;color:#fff;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s}.sb:hover .sb-logo-t{opacity:1;transform:translateX(0)}
+.sb-nav{flex:1;padding:10px 0;display:flex;flex-direction:column;overflow:hidden}
+.sb-a{display:flex;align-items:center;gap:13px;padding:11px 18px;color:rgba(255,255,255,.5);font-size:.875rem;font-weight:500;white-space:nowrap;transition:color .15s,background .15s;position:relative;text-decoration:none;border:none;background:none;font-family:inherit;cursor:pointer;width:100%}
+.sb-a:hover{color:#fff;background:rgba(255,255,255,.06)}.sb-a.on{color:#fff;background:rgba(30,122,140,.28)}.sb-a.on::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:#1E7A8C;border-radius:0 3px 3px 0}
+.sb-ic{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.sb-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+.sb-lb{opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s;pointer-events:none}.sb:hover .sb-lb{opacity:1;transform:translateX(0)}
+.sb-foot{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}.sb-out:hover{color:#FF3B30!important;background:rgba(255,59,48,.08)!important}
+.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}.sb-ov.on{display:block}
+.main{flex:1;margin-left:64px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:64px;background:#fff;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;gap:16px}
+.topbar-title{font-size:1rem;font-weight:700;color:#0f172a}.topbar-r{display:flex;align-items:center;gap:12px}
+.vpill{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:6px 12px;font-size:.875rem;font-weight:600;color:#0f172a}
+.vdot{width:8px;height:8px;border-radius:50%;background:#1E7A8C;flex-shrink:0}
+.content{flex:1;padding:28px;max-width:1200px;width:100%}.ph{margin-bottom:22px}.ph h1{font-size:1.5rem;letter-spacing:-.02em}.ph p{font-size:.875rem;color:#94a3b8;margin-top:4px}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:22px}.sc{background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.06)}.sc-l{font-size:.6875rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}.sc-v{font-size:1.375rem;font-weight:800;color:#0f172a}.sc-s{font-size:.75rem;color:#94a3b8;margin-top:2px}
+.trip-card{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;color:#94a3b8;font-size:.875rem;width:100%}
+.spin{width:32px;height:32px;border:3px solid rgba(30,122,140,.15);border-top-color:#1E7A8C;border-radius:50%;animation:sp .7s linear infinite}
+.es{text-align:center;padding:48px 24px;color:#94a3b8}.es-ic{font-size:3rem;margin-bottom:14px;opacity:.4}.es h3{font-size:1rem;color:#475569;margin-bottom:8px}
+.mob-btn{display:none;width:36px;height:36px;background:#f1f5f9;border:none;border-radius:9px;cursor:pointer;align-items:center;justify-content:center;color:#0f172a}.mob-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-width:768px){.sb{transform:translateX(-100%);width:220px!important;transition:transform .25s cubic-bezier(.4,0,.2,1)}.sb.open{transform:translateX(0)}.sb .sb-lb,.sb .sb-logo-t{opacity:1!important;transform:none!important}.sb-ov.on{display:block}.main{margin-left:0}.mob-btn{display:flex}.content{padding:20px 16px 32px}}
+</style>
 </head>
 <body>
-<script type="module">
-import { supabase, requireAuth, getVehicleDisplayName, getSelectedVehicleId, formatDate, renderSidebar, injectAppStyles, initSidebar } from './app.js'
-
-injectAppStyles()
-
-async function init() {
-  const session = await requireAuth()
-  if (!session) return
-
-  const { data: vehicles } = await supabase
-    .from('vehicles').select('*').eq('owner_id', session.user.id).eq('is_active', true).order('created_at', { ascending: true })
-  const allVehicles = vehicles || []
-  let selectedId = getSelectedVehicleId()
-  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) selectedId = allVehicles[0]?.id || null
-  const vehicle = allVehicles.find(v => v.id === selectedId)
-
-  document.body.innerHTML = `
-    ${renderSidebar('trips')}
-    <div class="app-main">
-      <div class="app-topbar">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="mobile-menu-btn" id="mobile-menu-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
-          <span class="app-topbar-title">Trips</span>
-        </div>
-        <div class="app-topbar-right">
-          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
-        </div>
-      </div>
-      <div class="app-content" id="main-content">
-        <div class="loading-state"><div class="spinner"></div><span>Loading trips…</span></div>
-      </div>
+<aside class="sb" id="sb"><div class="sb-logo"><img src="/assets/logo.png" alt=""><span class="sb-logo-t">AutoLog</span></div><nav class="sb-nav" id="sb-nav"></nav><div class="sb-foot"><button class="sb-a sb-out" onclick="signOut()"><span class="sb-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="sb-lb">Sign Out</span></button></div></aside>
+<div class="sb-ov" id="sb-ov"></div>
+<div class="main">
+  <div class="topbar"><div style="display:flex;align-items:center;gap:12px"><button class="mob-btn" id="mob-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="topbar-title">Trips</span></div><div class="topbar-r" id="topbar-r"></div></div>
+  <div class="content" id="content"><div class="ld"><div class="spin"></div><span>Loading…</span></div></div>
+</div>
+<script>
+const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co',SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+const sb=supabase.createClient(SURL,SKEY)
+const NAV=[{id:'dashboard',label:'Dashboard',href:'/app/index.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>'},{id:'fuel',label:'Fuel Log',href:'/app/fuel.html',icon:'<svg viewBox="0 0 24 24"><path d="M3 22V8a2 2 0 012-2h8a2 2 0 012 2v14M3 22h14M7 22V12h4v10"/><path d="M19 8l2 2-2 2M19 10h-2V6a2 2 0 00-2-2"/></svg>'},{id:'service',label:'Service',href:'/app/service.html',icon:'<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>'},{id:'maintenance',label:'Maintenance',href:'/app/maintenance.html',icon:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},{id:'documents',label:'Documents',href:'/app/documents.html',icon:'<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'},{id:'trips',label:'Trips',href:'/app/trips.html',icon:'<svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>'},{id:'settings',label:'Settings',href:'/app/settings.html',icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>'}]
+document.getElementById('sb-nav').innerHTML=NAV.map(p=>`<a href="${p.href}" class="sb-a${p.id==='trips'?' on':''}"><span class="sb-ic">${p.icon}</span><span class="sb-lb">${p.label}</span></a>`).join('')
+const sbEl=document.getElementById('sb'),sbOv=document.getElementById('sb-ov')
+document.getElementById('mob-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
+sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
+function signOut(){sb.auth.signOut().then(()=>location.href='/app/login.html')}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function vName(v){return v.nickname||[v.year,v.make,v.model].filter(Boolean).join(' ')||v.registration||'Vehicle'}
+;(async()=>{
+  const{data:{session}}=await sb.auth.getSession()
+  if(!session){location.href='/app/login.html';return}
+  const{data:vehicles}=await sb.from('vehicles').select('*').eq('owner_id',session.user.id).eq('is_active',true).order('created_at',{ascending:true})
+  const all=vehicles||[]
+  let selId=localStorage.getItem('al_vid')
+  if(!selId||!all.find(v=>v.id===selId)){selId=all[0]?.id||null;if(selId)localStorage.setItem('al_vid',selId)}
+  const vehicle=all.find(x=>x.id===selId)
+  if(vehicle) document.getElementById('topbar-r').innerHTML=`<div class="vpill"><div class="vdot"></div><span>${vName(vehicle)}</span></div>`
+  if(!vehicle){document.getElementById('content').innerHTML=`<div class="es"><div class="es-ic">🗺️</div><h3>No vehicle selected</h3></div>`;return}
+  const now=new Date()
+  const sYear=new Date(now.getFullYear(),0,1).toISOString().split('T')[0]
+  const sMon=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0]
+  const{data:trips}=await sb.from('trips').select('*').eq('vehicle_id',vehicle.id).order('start_time',{ascending:false})
+  const t=trips||[]
+  const thisYear=t.filter(x=>x.date>=sYear),thisMon=t.filter(x=>x.date>=sMon)
+  const miYear=thisYear.reduce((s,x)=>s+Number(x.distance||0),0)
+  const miMon=thisMon.reduce((s,x)=>s+Number(x.distance||0),0)
+  const bizMi=thisYear.filter(x=>x.purpose==='business').reduce((s,x)=>s+Number(x.distance||0),0)
+  const hmrc=bizMi*0.45
+  const grouped={}
+  t.forEach(x=>{const m=new Date(x.date||x.start_time).toLocaleDateString('en-GB',{month:'long',year:'numeric'});if(!grouped[m])grouped[m]=[];grouped[m].push(x)})
+  const pc={personal:'#94a3b8',business:'#1E7A8C',commute:'#FF9500',other:'#94a3b8'}
+  const pl={personal:'Personal',business:'Business',commute:'Commute',other:'Other'}
+  function dur(s,e){if(!s||!e)return null;const m=Math.round((new Date(e)-new Date(s))/60000);return m<60?m+'m':Math.floor(m/60)+'h '+m%60+'m'}
+  document.getElementById('content').innerHTML=`
+    <div class="ph"><h1>Trips</h1><p>${vName(vehicle)}</p></div>
+    <div class="sg">
+      <div class="sc"><div class="sc-l">This Month</div><div class="sc-v">${miMon.toFixed(0)}</div><div class="sc-s">miles</div></div>
+      <div class="sc"><div class="sc-l">This Year</div><div class="sc-v">${miYear.toFixed(0)}</div><div class="sc-s">miles</div></div>
+      ${bizMi>0?`<div class="sc"><div class="sc-l">Business Miles</div><div class="sc-v">${bizMi.toFixed(0)}</div><div class="sc-s">this year</div></div><div class="sc"><div class="sc-l">HMRC Claimable</div><div class="sc-v" style="color:#34C759">£${hmrc.toFixed(0)}</div><div class="sc-s">@ 45p/mi</div></div>`:''}
+      <div class="sc"><div class="sc-l">Total Trips</div><div class="sc-v">${t.length}</div></div>
     </div>
+    <div style="background:#E8F4F6;border-radius:10px;padding:11px 14px;font-size:.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px">🚗 Trips are recorded automatically via the AutoLog iPhone app.</div>
+    ${t.length===0?`<div class="es"><div class="es-ic">🗺️</div><h3>No trips yet</h3><p>Trips are tracked automatically via the iPhone app using Bluetooth or GPS.</p></div>`
+    :Object.entries(grouped).map(([month,rows])=>{
+      const mMi=rows.reduce((s,x)=>s+Number(x.distance||0),0)
+      return`<div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:.875rem;font-weight:700;color:#64748b">${month}</span>
+          <span style="font-size:.8125rem;color:#94a3b8">${mMi.toFixed(0)} mi</span>
+        </div>
+        ${rows.map(x=>{
+          const p=x.purpose||'personal',c=pc[p]||'#94a3b8',d=dur(x.start_time,x.end_time)
+          return`<div class="trip-card">
+            <div style="width:38px;height:38px;border-radius:10px;background:${c}18;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:.875rem;font-weight:700;color:#0f172a">${pl[p]||'Trip'}</div>
+              <div style="font-size:.75rem;color:#94a3b8;margin-top:2px">${fmtDate(x.date||x.start_time)}${d?' · '+d:''}</div>
+            </div>
+            <div style="text-align:right">
+              ${x.distance?`<div style="font-size:.9375rem;font-weight:800;color:#0f172a">${Number(x.distance).toFixed(1)} mi</div>`:'—'}
+              ${x.purpose==='business'&&x.distance?`<div style="font-size:.7rem;color:#34C759;margin-top:1px">£${(Number(x.distance)*.45).toFixed(2)} claimable</div>`:''}
+            </div>
+          </div>`}).join('')}
+      </div>`}).join('')}
   `
-  initSidebar()
-
-  if (!vehicle) {
-    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗺️</div><h3>No vehicle selected</h3></div>`
-    return
-  }
-
-  const now = new Date()
-  const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-
-  const { data: trips } = await supabase
-    .from('trips').select('*').eq('vehicle_id', vehicle.id).order('start_time', { ascending: false })
-
-  const all = trips || []
-  const thisYear = all.filter(t => t.date >= startOfYear)
-  const thisMonth = all.filter(t => t.date >= startOfMonth)
-  const totalYearMiles = thisYear.reduce((s, t) => s + Number(t.distance || 0), 0)
-  const totalMonthMiles = thisMonth.reduce((s, t) => s + Number(t.distance || 0), 0)
-  const businessMiles = thisYear.filter(t => t.purpose === 'business').reduce((s, t) => s + Number(t.distance || 0), 0)
-  const hmrcRate = 0.45
-  const hmrcClaim = businessMiles * hmrcRate
-
-  // Group by month
-  const grouped = {}
-  all.forEach(t => {
-    const month = new Date(t.date || t.start_time).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
-    if (!grouped[month]) grouped[month] = []
-    grouped[month].push(t)
-  })
-
-  const purposeColour = { personal: '#94a3b8', business: '#1E7A8C', commute: '#FF9500', other: '#94a3b8' }
-  const purposeLabel = { personal: 'Personal', business: 'Business', commute: 'Commute', other: 'Other' }
-
-  function formatDuration(start, end) {
-    if (!start || !end) return null
-    const mins = Math.round((new Date(end) - new Date(start)) / 60000)
-    if (mins < 60) return `${mins}m`
-    return `${Math.floor(mins/60)}h ${mins%60}m`
-  }
-
-  document.getElementById('main-content').innerHTML = `
-    <div class="page-header">
-      <h1>Trips</h1>
-      <p>${getVehicleDisplayName(vehicle)}</p>
-    </div>
-
-    <div class="stats-grid" style="margin-bottom:24px;">
-      <div class="stat-card">
-        <div class="stat-card-label">This Month</div>
-        <div class="stat-card-value">${totalMonthMiles.toFixed(0)}</div>
-        <div class="stat-card-sub">miles</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">This Year</div>
-        <div class="stat-card-value">${totalYearMiles.toFixed(0)}</div>
-        <div class="stat-card-sub">miles</div>
-      </div>
-      ${businessMiles > 0 ? `
-        <div class="stat-card">
-          <div class="stat-card-label">Business Miles</div>
-          <div class="stat-card-value">${businessMiles.toFixed(0)}</div>
-          <div class="stat-card-sub">this tax year</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">HMRC Claimable</div>
-          <div class="stat-card-value" style="color:#34C759;">£${hmrcClaim.toFixed(0)}</div>
-          <div class="stat-card-sub">@ 45p/mile</div>
-        </div>
-      ` : ''}
-      <div class="stat-card">
-        <div class="stat-card-label">Total Trips</div>
-        <div class="stat-card-value">${all.length}</div>
-      </div>
-    </div>
-
-    <div style="background:#E8F4F6;border-radius:10px;padding:11px 14px;font-size:0.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px;">
-      🚗 Trip recording requires the AutoLog iPhone app with Bluetooth or GPS. View and export your trip history here.
-    </div>
-
-    ${all.length === 0 ? `
-      <div class="empty-state">
-        <div class="empty-state-icon">🗺️</div>
-        <h3>No trips recorded yet</h3>
-        <p>Trips are tracked automatically via the AutoLog iPhone app using Bluetooth or GPS.</p>
-      </div>
-    ` : Object.entries(grouped).map(([month, monthTrips]) => {
-      const monthMiles = monthTrips.reduce((s, t) => s + Number(t.distance || 0), 0)
-      return `
-        <div style="margin-bottom:24px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <span style="font-size:0.875rem;font-weight:700;color:#64748b;">${month}</span>
-            <span style="font-size:0.8125rem;color:#94a3b8;">${monthMiles.toFixed(0)} miles</span>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${monthTrips.map(t => {
-              const purpose = t.purpose || 'personal'
-              const colour = purposeColour[purpose] || '#94a3b8'
-              const duration = formatDuration(t.start_time, t.end_time)
-              return `
-                <div style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px;">
-                  <div style="width:38px;height:38px;border-radius:10px;background:${colour}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${colour}" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-                  </div>
-                  <div style="flex:1;">
-                    <div style="font-size:0.875rem;font-weight:700;color:#0f172a;">${purposeLabel[purpose] || 'Trip'}</div>
-                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">${formatDate(t.date || t.start_time)}${duration ? ' · ' + duration : ''}</div>
-                  </div>
-                  <div style="text-align:right;">
-                    ${t.distance ? `<div style="font-size:0.9375rem;font-weight:800;color:#0f172a;">${Number(t.distance).toFixed(1)} mi</div>` : '—'}
-                    ${t.purpose === 'business' && t.distance ? `<div style="font-size:0.7rem;color:#34C759;margin-top:1px;">£${(Number(t.distance) * hmrcRate).toFixed(2)} claimable</div>` : ''}
-                  </div>
-                </div>
-              `
-            }).join('')}
-          </div>
-        </div>
-      `
-    }).join('')}
-  `
-}
-
-init()
+})()
 </script>
 </body>
 </html>
-</content>
