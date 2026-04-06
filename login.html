@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoLog — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── Background ── */
+body{
+  background:#080d14;
+  color:#e2e8f0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+}
+
+/* Ambient glows */
+body::before{
+  content:'';
+  position:fixed;
+  top:-20%;left:-10%;
+  width:60vw;height:60vw;
+  background:radial-gradient(ellipse,rgba(30,122,140,0.13) 0%,transparent 65%);
+  pointer-events:none;
+  z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;
+  bottom:-20%;right:-10%;
+  width:50vw;height:50vw;
+  background:radial-gradient(ellipse,rgba(77,184,204,0.07) 0%,transparent 65%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Grid texture overlay */
+.bg-grid{
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Floating orb accents */
+.orb{
+  position:fixed;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:0;
+  filter:blur(1px);
+}
+.orb-1{width:3px;height:3px;background:#4DB8CC;top:18%;left:22%;box-shadow:0 0 12px 4px rgba(77,184,204,0.5);animation:pulse 4s ease-in-out infinite}
+.orb-2{width:2px;height:2px;background:#1E7A8C;top:65%;left:8%;box-shadow:0 0 10px 3px rgba(30,122,140,0.6);animation:pulse 5s ease-in-out infinite 1s}
+.orb-3{width:2px;height:2px;background:#4DB8CC;top:30%;right:15%;box-shadow:0 0 8px 3px rgba(77,184,204,0.4);animation:pulse 3.5s ease-in-out infinite 0.5s}
+.orb-4{width:3px;height:3px;background:#1E7A8C;bottom:25%;right:20%;box-shadow:0 0 12px 4px rgba(30,122,140,0.5);animation:pulse 4.5s ease-in-out infinite 2s}
+@keyframes pulse{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+
+/* ── Card ── */
+.card{
+  position:relative;
+  z-index:10;
+  width:100%;
+  max-width:420px;
+  background:rgba(15,23,42,0.85);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:24px;
+  padding:40px;
+  backdrop-filter:blur(20px);
+  box-shadow:0 32px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.03) inset;
+  animation:cardIn .4s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Logo ── */
+.logo{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:36px;
+}
+.logo-icon{
+  width:40px;height:40px;border-radius:11px;
+  background:linear-gradient(135deg,#1E7A8C,#0d5466);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(30,122,140,0.4);
+  flex-shrink:0;
+}
+.logo-icon svg{width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2}
+.logo-name{font-size:1.0625rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+.logo-name span{color:#4DB8CC}
+
+/* ── Views ── */
+.view{display:none}
+.view.active{display:block;animation:viewIn .25s cubic-bezier(.16,1,.3,1) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Headings ── */
+.view-title{
+  font-size:1.5rem;font-weight:800;color:#fff;
+  letter-spacing:-.03em;line-height:1.15;
+  margin-bottom:6px;
+}
+.view-sub{
+  font-size:.875rem;color:rgba(255,255,255,.38);
+  margin-bottom:28px;line-height:1.5;
+}
+.view-sub a{color:#4DB8CC;font-weight:600;cursor:pointer;transition:color .15s}
+.view-sub a:hover{color:#7dd3e0}
+
+/* ── Alert ── */
+.alert{
+  padding:11px 14px;border-radius:10px;
+  font-size:.8125rem;font-weight:500;
+  margin-bottom:18px;display:none;
+  border:1px solid transparent;
+}
+.alert.show{display:block;animation:viewIn .2s ease both}
+.alert-err{background:rgba(239,68,68,.1);color:#fca5a5;border-color:rgba(239,68,68,.2)}
+.alert-ok{background:rgba(16,185,129,.1);color:#6ee7b7;border-color:rgba(16,185,129,.2)}
+
+/* ── Form fields ── */
+.fg{margin-bottom:14px}
+.fl{
+  display:block;font-size:.75rem;font-weight:600;
+  color:rgba(255,255,255,.45);
+  letter-spacing:.04em;text-transform:uppercase;
+  margin-bottom:7px;
+}
+.fi{
+  width:100%;
+  padding:12px 16px;
+  background:rgba(255,255,255,.05);
+  border:1.5px solid rgba(255,255,255,.09);
+  border-radius:11px;
+  font-size:.9375rem;font-family:inherit;
+  color:#fff;outline:none;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+  -webkit-appearance:none;
+}
+.fi::placeholder{color:rgba(255,255,255,.2)}
+.fi:focus{
+  border-color:rgba(77,184,204,.5);
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px rgba(77,184,204,.1);
+}
+.fi:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Buttons ── */
+.btn-primary{
+  width:100%;
+  padding:13px 20px;
+  background:linear-gradient(135deg,#1E7A8C,#155F6E);
+  color:#fff;border:none;border-radius:11px;
+  font-size:.9375rem;font-weight:700;font-family:inherit;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .18s;
+  box-shadow:0 4px 20px rgba(30,122,140,.35);
+  margin-top:4px;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);
+  opacity:0;transition:opacity .15s;
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(30,122,140,.5)}
+.btn-primary:hover::before{opacity:1}
+.btn-primary:active{transform:translateY(0);box-shadow:0 4px 12px rgba(30,122,140,.3)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+.btn-ghost{
+  width:100%;
+  padding:12px 20px;
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.6);
+  border:1.5px solid rgba(255,255,255,.08);
+  border-radius:11px;
+  font-size:.875rem;font-weight:600;font-family:inherit;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;
+  margin-top:10px;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff}
+
+/* ── Divider ── */
+.div{
+  display:flex;align-items:center;gap:12px;
+  margin:18px 0;
+  color:rgba(255,255,255,.15);font-size:.75rem;letter-spacing:.05em;
+}
+.div::before,.div::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+
+/* ── Spinner ── */
+.spin{
+  width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.25);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:sp .65s linear infinite;
+  display:none;flex-shrink:0;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── Footer links ── */
+.foot{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:20px;
+}
+.foot a{
+  font-size:.8125rem;color:rgba(255,255,255,.3);
+  cursor:pointer;transition:color .15s;
+}
+.foot a:hover{color:rgba(255,255,255,.7)}
+
+/* ── Success state ── */
+.success-wrap{text-align:center;padding:8px 0}
+.success-icon{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.05));
+  border:1px solid rgba(16,185,129,.25);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;
+  font-size:1.5rem;
+  box-shadow:0 4px 24px rgba(16,185,129,.15);
+}
+.success-title{font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:8px}
+.success-body{font-size:.875rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:24px}
+
+/* ── Magic link hint ── */
+.magic-hint{
+  background:rgba(77,184,204,.06);
+  border:1px solid rgba(77,184,204,.12);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:.8125rem;color:rgba(77,184,204,.8);
+  margin-bottom:18px;line-height:1.5;
+}
+.magic-hint strong{color:#4DB8CC}
+
+/* ── Back to site ── */
+.back-site{
+  position:fixed;top:24px;left:24px;z-index:20;
+  display:flex;align-items:center;gap:7px;
+  font-size:.8125rem;font-weight:500;
+  color:rgba(255,255,255,.3);
+  text-decoration:none;
+  transition:color .15s;
+  padding:8px 12px;
+  border-radius:9px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+}
+.back-site:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.06)}
+.back-site svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+/* ── Responsive ── */
+@media(max-width:480px){
+  body{padding:16px;align-items:flex-start;padding-top:72px}
+  .card{padding:28px 24px;border-radius:20px}
+  .back-site{top:16px;left:16px}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div class="orb orb-4"></div>
+
+<a href="/" class="back-site">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  autologapp.co.uk
+</a>
+
+<div class="card">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>
+    </div>
+    <div class="logo-name">Auto<span>Log</span></div>
+  </div>
+
+  <!-- ── Sign In ── -->
+  <div class="view active" id="v-signin">
+    <div class="view-title">Welcome back</div>
+    <div class="view-sub">No account? <a onclick="show('v-signup')">Create one free</a></div>
+    <div class="alert alert-err" id="si-err"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="si-email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="si-pass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-primary" id="si-btn" onclick="doSignIn()">
+      <div class="spin" id="si-spin"></div><span id="si-label">Sign In</span>
+    </button>
+    <div class="div">or</div>
+    <button class="btn-ghost" onclick="show('v-magic')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 006 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/></svg>
+      Sign in with magic link
+    </button>
+    <div class="foot">
+      <a onclick="show('v-forgot')">Forgot password?</a>
+      <a onclick="show('v-signup')">Create account →</a>
+    </div>
+  </div>
+
+  <!-- ── Sign Up ── -->
+  <div class="view" id="v-signup">
+    <div class="view-title">Create your account</div>
+    <div class="view-sub">Already have one? <a onclick="show('v-signin')">Sign in</a></div>
+    <div class="alert alert-err" id="su-err"></div>
+    <div class="alert alert-ok" id="su-ok"></div>
+    <div class="fg"><label class="fl">Full Name</label><input class="fi" type="text" id="su-name" placeholder="Your name" autocomplete="name"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="su-email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="su-pass" placeholder="8+ characters" autocomplete="new-password"></div>
+    <button class="btn-primary" id="su-btn" onclick="doSignUp()">
+      <div class="spin" id="su-spin"></div><span id="su-label">Create Account</span>
+    </button>
+    <div class="foot">
+      <a onclick="show('v-signin')">← Back to sign in</a>
+      <span style="font-size:.75rem;color:rgba(255,255,255,.18)">Free forever</span>
+    </div>
+  </div>
+
+  <!-- ── Forgot Password ── -->
+  <div class="view" id="v-forgot">
+    <div class="view-title">Reset password</div>
+    <div class="view-sub">Enter your email and we'll send a reset link.</div>
+    <div class="alert alert-err" id="fp-err"></div>
+    <div class="alert alert-ok" id="fp-ok"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="fp-email" placeholder="you@example.com" autocomplete="email"></div>
+    <button class="btn-primary" id="fp-btn" onclick="doForgot()">
+      <div class="spin" id="fp-spin"></div><span id="fp-label">Send Reset Link</span>
+    </button>
+    <div class="foot">
+      <a onclick="show('v-signin')">← Back to sign in</a>
+    </div>
+  </div>
+
+  <!-- ── Magic Link ── -->
+  <div class="view" id="v-magic">
+    <div class="view-title">Magic link</div>
+    <div class="view-sub">Prefer a password? <a onclick="show('v-signin')">Sign in instead</a></div>
+    <div class="magic-hint">
+      <strong>Passwordless sign in.</strong> We'll email you a secure link — click it to access your account instantly.
+    </div>
+    <div class="alert alert-err" id="ml-err"></div>
+    <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="ml-email" placeholder="you@example.com" autocomplete="email"></div>
+    <button class="btn-primary" id="ml-btn" onclick="doMagic()">
+      <div class="spin" id="ml-spin"></div><span id="ml-label">Send Magic Link</span>
+    </button>
+    <div class="foot">
+      <a onclick="show('v-signin')">← Back to sign in</a>
+    </div>
+  </div>
+
+  <!-- ── Success: email sent ── -->
+  <div class="view" id="v-sent">
+    <div class="success-wrap">
+      <div class="success-icon">✉️</div>
+      <div class="success-title" id="sent-title">Check your inbox</div>
+      <div class="success-body" id="sent-body">We've sent an email to <strong id="sent-email"></strong>. Follow the link inside to continue.</div>
+      <button class="btn-ghost" onclick="show('v-signin')" style="margin-top:0">← Back to sign in</button>
+    </div>
+  </div>
+
+</div><!-- /card -->
+
+<script>
+const sb = supabase.createClient(
+  'https://dkpvxlxarsmiljnvnbck.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+)
+
+// If already signed in, go straight to dashboard
+sb.auth.getSession().then(({data:{session}})=>{ if(session) location.replace('/app/dashboard.html') })
+sb.auth.onAuthStateChange((e,s)=>{ if(e==='SIGNED_IN'&&s) location.replace('/app/dashboard.html') })
+
+// Check URL hash for password reset token
+if(location.hash.includes('type=recovery')){
+  show('v-forgot')
+}
+
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  // focus first input
+  const first = document.querySelector('#'+id+' .fi')
+  if(first) setTimeout(()=>first.focus(),50)
+}
+
+function setLoading(prefix, on){
+  document.getElementById(prefix+'-btn').disabled = on
+  document.getElementById(prefix+'-spin').style.display = on ? 'flex' : 'none'
+  document.getElementById(prefix+'-label').style.opacity = on ? '0.4' : '1'
+}
+
+function showErr(prefix, msg){
+  const el = document.getElementById(prefix+'-err')
+  if(!el) return
+  el.textContent = msg
+  el.className = 'alert alert-err show'
+}
+
+function showOk(prefix, msg){
+  const el = document.getElementById(prefix+'-ok')
+  if(!el) return
+  el.textContent = msg
+  el.className = 'alert alert-ok show'
+}
+
+function clearAlerts(prefix){
+  ;[prefix+'-err', prefix+'-ok'].forEach(id=>{
+    const el = document.getElementById(id)
+    if(el) el.classList.remove('show')
+  })
+}
+
+function showSent(title, body, email){
+  document.getElementById('sent-title').textContent = title
+  document.getElementById('sent-body').innerHTML = body
+  document.getElementById('sent-email').textContent = email
+  show('v-sent')
+}
+
+async function doSignIn(){
+  clearAlerts('si')
+  const email = document.getElementById('si-email').value.trim()
+  const pass  = document.getElementById('si-pass').value
+  if(!email){ showErr('si','Please enter your email.'); return }
+  if(!pass)  { showErr('si','Please enter your password.'); return }
+  setLoading('si', true)
+  const {error} = await sb.auth.signInWithPassword({email, password:pass})
+  setLoading('si', false)
+  if(error){ showErr('si', friendlyErr(error.message)); return }
+  location.replace('/app/dashboard.html')
+}
+
+async function doSignUp(){
+  clearAlerts('su')
+  const name  = document.getElementById('su-name').value.trim()
+  const email = document.getElementById('su-email').value.trim()
+  const pass  = document.getElementById('su-pass').value
+  if(!name)        { showErr('su','Please enter your name.'); return }
+  if(!email)       { showErr('su','Please enter your email.'); return }
+  if(pass.length<8){ showErr('su','Password must be at least 8 characters.'); return }
+  setLoading('su', true)
+  const {error} = await sb.auth.signUp({
+    email, password:pass,
+    options:{
+      data:{full_name:name},
+      emailRedirectTo:'https://autologapp.co.uk/app/dashboard.html'
+    }
+  })
+  setLoading('su', false)
+  if(error){ showErr('su', friendlyErr(error.message)); return }
+  showSent(
+    'Confirm your email',
+    `We've sent a confirmation link to <strong>${email}</strong>. Click it to activate your account, then sign in.`,
+    email
+  )
+}
+
+async function doForgot(){
+  clearAlerts('fp')
+  const email = document.getElementById('fp-email').value.trim()
+  if(!email){ showErr('fp','Please enter your email.'); return }
+  setLoading('fp', true)
+  const {error} = await sb.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://autologapp.co.uk/app/login.html'
+  })
+  setLoading('fp', false)
+  if(error){ showErr('fp', friendlyErr(error.message)); return }
+  showSent(
+    'Reset link sent',
+    `We've sent a password reset link to <strong>${email}</strong>. Check your inbox.`,
+    email
+  )
+}
+
+async function doMagic(){
+  clearAlerts('ml')
+  const email = document.getElementById('ml-email').value.trim()
+  if(!email){ showErr('ml','Please enter your email.'); return }
+  setLoading('ml', true)
+  const {error} = await sb.auth.signInWithOtp({
+    email,
+    options:{emailRedirectTo:'https://autologapp.co.uk/app/dashboard.html'}
+  })
+  setLoading('ml', false)
+  if(error){ showErr('ml', friendlyErr(error.message)); return }
+  showSent(
+    'Magic link sent',
+    `We've sent a magic sign-in link to <strong>${email}</strong>. Click it to access your account.`,
+    email
+  )
+}
+
+function friendlyErr(msg){
+  if(!msg) return 'Something went wrong. Please try again.'
+  if(msg.includes('Invalid login')) return 'Incorrect email or password.'
+  if(msg.includes('Email not confirmed')) return 'Please confirm your email before signing in.'
+  if(msg.includes('User already registered')) return 'An account with this email already exists.'
+  if(msg.includes('Password should')) return 'Password must be at least 8 characters.'
+  if(msg.includes('rate limit')) return 'Too many attempts. Please wait a moment.'
+  return msg
+}
+
+// Enter key support
+document.addEventListener('keydown', e=>{
+  if(e.key !== 'Enter') return
+  const v = document.querySelector('.view.active')
+  if(!v) return
+  const id = v.id
+  if(id==='v-signin') doSignIn()
+  else if(id==='v-signup') doSignUp()
+  else if(id==='v-forgot') doForgot()
+  else if(id==='v-magic') doMagic()
+})
+</script>
+</body>
+</html>
