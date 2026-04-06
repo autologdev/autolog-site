@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trips — AutoLog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script type="module">
+import { supabase, requireAuth, getVehicleDisplayName, getSelectedVehicleId, formatDate, renderSidebar, injectAppStyles, initSidebar } from './app.js'
+
+injectAppStyles()
+
+async function init() {
+  const session = await requireAuth()
+  if (!session) return
+
+  const { data: vehicles } = await supabase
+    .from('vehicles').select('*').eq('owner_id', session.user.id).eq('is_active', true).order('created_at', { ascending: true })
+  const allVehicles = vehicles || []
+  let selectedId = getSelectedVehicleId()
+  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) selectedId = allVehicles[0]?.id || null
+  const vehicle = allVehicles.find(v => v.id === selectedId)
+
+  document.body.innerHTML = `
+    ${renderSidebar('trips')}
+    <div class="app-main">
+      <div class="app-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-menu-btn" id="mobile-menu-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span class="app-topbar-title">Trips</span>
+        </div>
+        <div class="app-topbar-right">
+          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="app-content" id="main-content">
+        <div class="loading-state"><div class="spinner"></div><span>Loading trips…</span></div>
+      </div>
+    </div>
+  `
+  initSidebar()
+
+  if (!vehicle) {
+    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗺️</div><h3>No vehicle selected</h3></div>`
+    return
+  }
+
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+
+  const { data: trips } = await supabase
+    .from('trips').select('*').eq('vehicle_id', vehicle.id).order('start_time', { ascending: false })
+
+  const all = trips || []
+  const thisYear = all.filter(t => t.date >= startOfYear)
+  const thisMonth = all.filter(t => t.date >= startOfMonth)
+  const totalYearMiles = thisYear.reduce((s, t) => s + Number(t.distance || 0), 0)
+  const totalMonthMiles = thisMonth.reduce((s, t) => s + Number(t.distance || 0), 0)
+  const businessMiles = thisYear.filter(t => t.purpose === 'business').reduce((s, t) => s + Number(t.distance || 0), 0)
+  const hmrcRate = 0.45
+  const hmrcClaim = businessMiles * hmrcRate
+
+  // Group by month
+  const grouped = {}
+  all.forEach(t => {
+    const month = new Date(t.date || t.start_time).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+    if (!grouped[month]) grouped[month] = []
+    grouped[month].push(t)
+  })
+
+  const purposeColour = { personal: '#94a3b8', business: '#1E7A8C', commute: '#FF9500', other: '#94a3b8' }
+  const purposeLabel = { personal: 'Personal', business: 'Business', commute: 'Commute', other: 'Other' }
+
+  function formatDuration(start, end) {
+    if (!start || !end) return null
+    const mins = Math.round((new Date(end) - new Date(start)) / 60000)
+    if (mins < 60) return `${mins}m`
+    return `${Math.floor(mins/60)}h ${mins%60}m`
+  }
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="page-header">
+      <h1>Trips</h1>
+      <p>${getVehicleDisplayName(vehicle)}</p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px;">
+      <div class="stat-card">
+        <div class="stat-card-label">This Month</div>
+        <div class="stat-card-value">${totalMonthMiles.toFixed(0)}</div>
+        <div class="stat-card-sub">miles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">This Year</div>
+        <div class="stat-card-value">${totalYearMiles.toFixed(0)}</div>
+        <div class="stat-card-sub">miles</div>
+      </div>
+      ${businessMiles > 0 ? `
+        <div class="stat-card">
+          <div class="stat-card-label">Business Miles</div>
+          <div class="stat-card-value">${businessMiles.toFixed(0)}</div>
+          <div class="stat-card-sub">this tax year</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">HMRC Claimable</div>
+          <div class="stat-card-value" style="color:#34C759;">£${hmrcClaim.toFixed(0)}</div>
+          <div class="stat-card-sub">@ 45p/mile</div>
+        </div>
+      ` : ''}
+      <div class="stat-card">
+        <div class="stat-card-label">Total Trips</div>
+        <div class="stat-card-value">${all.length}</div>
+      </div>
+    </div>
+
+    <div style="background:#E8F4F6;border-radius:10px;padding:11px 14px;font-size:0.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px;">
+      🚗 Trip recording requires the AutoLog iPhone app with Bluetooth or GPS. View and export your trip history here.
+    </div>
+
+    ${all.length === 0 ? `
+      <div class="empty-state">
+        <div class="empty-state-icon">🗺️</div>
+        <h3>No trips recorded yet</h3>
+        <p>Trips are tracked automatically via the AutoLog iPhone app using Bluetooth or GPS.</p>
+      </div>
+    ` : Object.entries(grouped).map(([month, monthTrips]) => {
+      const monthMiles = monthTrips.reduce((s, t) => s + Number(t.distance || 0), 0)
+      return `
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:0.875rem;font-weight:700;color:#64748b;">${month}</span>
+            <span style="font-size:0.8125rem;color:#94a3b8;">${monthMiles.toFixed(0)} miles</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${monthTrips.map(t => {
+              const purpose = t.purpose || 'personal'
+              const colour = purposeColour[purpose] || '#94a3b8'
+              const duration = formatDuration(t.start_time, t.end_time)
+              return `
+                <div style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px;">
+                  <div style="width:38px;height:38px;border-radius:10px;background:${colour}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${colour}" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                  </div>
+                  <div style="flex:1;">
+                    <div style="font-size:0.875rem;font-weight:700;color:#0f172a;">${purposeLabel[purpose] || 'Trip'}</div>
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">${formatDate(t.date || t.start_time)}${duration ? ' · ' + duration : ''}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    ${t.distance ? `<div style="font-size:0.9375rem;font-weight:800;color:#0f172a;">${Number(t.distance).toFixed(1)} mi</div>` : '—'}
+                    ${t.purpose === 'business' && t.distance ? `<div style="font-size:0.7rem;color:#34C759;margin-top:1px;">£${(Number(t.distance) * hmrcRate).toFixed(2)} claimable</div>` : ''}
+                  </div>
+                </div>
+              `
+            }).join('')}
+          </div>
+        </div>
+      `
+    }).join('')}
+  `
+}
+
+init()
+</script>
+</body>
+</html>
+</content>

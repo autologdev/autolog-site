@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service History — AutoLog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script type="module">
+import { supabase, requireAuth, getVehicleDisplayName, getSelectedVehicleId, formatMileage, formatCurrency, formatDate, showToast, renderSidebar, injectAppStyles, initSidebar } from './app.js'
+
+injectAppStyles()
+
+let vehicle = null
+let userId = null
+
+async function init() {
+  const session = await requireAuth()
+  if (!session) return
+  userId = session.user.id
+
+  const { data: vehicles } = await supabase
+    .from('vehicles').select('*').eq('owner_id', userId).eq('is_active', true).order('created_at', { ascending: true })
+
+  const allVehicles = vehicles || []
+  let selectedId = getSelectedVehicleId()
+  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) selectedId = allVehicles[0]?.id || null
+  vehicle = allVehicles.find(v => v.id === selectedId)
+
+  document.body.innerHTML = `
+    ${renderSidebar('service')}
+    <div class="app-main">
+      <div class="app-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-menu-btn" id="mobile-menu-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span class="app-topbar-title">Service History</span>
+        </div>
+        <div class="app-topbar-right">
+          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
+          <button class="btn btn-primary btn-sm" id="add-btn">+ Log Service</button>
+        </div>
+      </div>
+      <div class="app-content" id="main-content">
+        <div class="loading-state"><div class="spinner"></div><span>Loading service history…</span></div>
+      </div>
+    </div>
+  `
+  initSidebar()
+  document.getElementById('add-btn').addEventListener('click', () => showAddModal())
+  await loadEntries()
+}
+
+async function loadEntries() {
+  if (!vehicle) {
+    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔧</div><h3>No vehicle selected</h3></div>`
+    return
+  }
+
+  const { data: entries } = await supabase
+    .from('service_entries').select('*')
+    .eq('vehicle_id', vehicle.id)
+    .neq('source', 'dvsa')
+    .order('date', { ascending: false })
+
+  const { data: motEntries } = await supabase
+    .from('service_entries').select('*')
+    .eq('vehicle_id', vehicle.id)
+    .eq('source', 'dvsa')
+    .order('date', { ascending: false })
+
+  const all = entries || []
+  const mots = motEntries || []
+
+  const totalSpend = all.reduce((s, e) => s + Number(e.total_cost || 0), 0)
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="page-header">
+      <h1>Service History</h1>
+      <p>${getVehicleDisplayName(vehicle)}</p>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom:24px;">
+      <div class="stat-card">
+        <div class="stat-card-label">Total Records</div>
+        <div class="stat-card-value">${all.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Total Spent</div>
+        <div class="stat-card-value">£${totalSpend.toFixed(0)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">MOT History</div>
+        <div class="stat-card-value">${mots.length}</div>
+        <div class="stat-card-sub">from DVSA</div>
+      </div>
+    </div>
+
+    <!-- Service history -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">Service Records</div>
+      ${all.length === 0 ? `
+        <div class="empty-state" style="padding:24px 0;">
+          <p>No service records yet. Log a service to start building your history.</p>
+          <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="document.getElementById('add-btn').click()">Log Service</button>
+        </div>
+      ` : `
+        <table class="data-table">
+          <thead>
+            <tr><th>Date</th><th>Mileage</th><th>Garage</th><th>Description</th><th style="text-align:right;">Cost</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${all.map(e => `
+              <tr>
+                <td>${formatDate(e.date)}</td>
+                <td>${formatMileage(e.mileage_at_service)}</td>
+                <td>${e.garage_name || (e.garage_type ? e.garage_type.replace(/_/g,' ') : '—')}</td>
+                <td style="color:#64748b;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.description || e.notes || '—'}</td>
+                <td style="text-align:right;font-weight:700;color:#0f172a;">${e.total_cost ? '£' + Number(e.total_cost).toFixed(2) : '—'}</td>
+                <td><button class="btn-icon" onclick="deleteEntry('${e.id}')" title="Delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+
+    <!-- MOT history -->
+    ${mots.length > 0 ? `
+      <div class="card">
+        <div class="card-title">MOT History <span style="font-size:0.75rem;font-weight:500;color:#94a3b8;margin-left:8px;">from DVSA</span></div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Date</th><th>Mileage</th><th>Result</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            ${mots.map(e => {
+              const pass = e.description?.includes('Pass')
+              return `
+                <tr>
+                  <td>${formatDate(e.date)}</td>
+                  <td>${formatMileage(e.mileage_at_service)}</td>
+                  <td><span class="badge ${pass ? 'badge-green' : 'badge-red'}">${pass ? 'Pass' : 'Fail'}</span></td>
+                  <td style="color:#64748b;font-size:0.8125rem;">${e.notes || '—'}</td>
+                </tr>
+              `
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : ''}
+  `
+  window.deleteEntry = deleteEntry
+}
+
+function showAddModal() {
+  const backdrop = document.createElement('div')
+  backdrop.className = 'modal-backdrop'
+  backdrop.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Log Service</h2>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert" id="modal-error" style="display:none;background:rgba(255,59,48,0.08);color:#cc1a12;border:1px solid rgba(255,59,48,0.2);padding:11px 14px;border-radius:10px;font-size:0.875rem;margin-bottom:16px;"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="s-date" value="${new Date().toISOString().split('T')[0]}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mileage</label>
+            <input class="form-input" type="number" id="s-mileage" value="${vehicle?.current_mileage || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Garage Name</label>
+            <input class="form-input" type="text" id="s-garage" placeholder="e.g. Kwik Fit, ABC Garage">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Garage Type</label>
+            <select class="form-input" id="s-type">
+              <option value="specialist">Independent Specialist</option>
+              <option value="dealer">Main Dealer</option>
+              <option value="chain">Chain Garage</option>
+              <option value="diy">DIY</option>
+              <option value="mobile">Mobile Mechanic</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Work Done</label>
+          <input class="form-input" type="text" id="s-desc" placeholder="e.g. Annual service, oil change, brake pads">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Total Cost (£)</label>
+            <input class="form-input" type="number" step="0.01" id="s-cost" placeholder="e.g. 250.00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Invoice Number (optional)</label>
+            <input class="form-input" type="text" id="s-invoice">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <input class="form-input" type="text" id="s-notes">
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+          <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+          <button class="btn btn-primary" id="modal-save">Save Service</button>
+        </div>
+      </div>
+    </div>
+  `
+  document.body.appendChild(backdrop)
+  backdrop.querySelector('#modal-close').addEventListener('click', () => backdrop.remove())
+  backdrop.querySelector('#modal-cancel').addEventListener('click', () => backdrop.remove())
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.remove() })
+
+  backdrop.querySelector('#modal-save').addEventListener('click', async () => {
+    const btn = backdrop.querySelector('#modal-save')
+    btn.disabled = true; btn.textContent = 'Saving…'
+    const { error } = await supabase.from('service_entries').insert({
+      vehicle_id: vehicle.id,
+      user_id: userId,
+      date: backdrop.querySelector('#s-date').value,
+      mileage_at_service: parseInt(backdrop.querySelector('#s-mileage').value) || null,
+      garage_name: backdrop.querySelector('#s-garage').value || null,
+      garage_type: backdrop.querySelector('#s-type').value,
+      description: backdrop.querySelector('#s-desc').value || null,
+      total_cost: parseFloat(backdrop.querySelector('#s-cost').value) || null,
+      invoice_number: backdrop.querySelector('#s-invoice').value || null,
+      notes: backdrop.querySelector('#s-notes').value || null,
+      source: 'manual',
+    })
+    if (error) {
+      const err = backdrop.querySelector('#modal-error')
+      err.textContent = error.message; err.style.display = 'block'
+      btn.disabled = false; btn.textContent = 'Save Service'
+      return
+    }
+    backdrop.remove()
+    showToast('Service logged ✓')
+    await loadEntries()
+  })
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this service entry?')) return
+  await supabase.from('service_entries').delete().eq('id', id)
+  await supabase.from('cost_entries').delete().eq('source_id', id).eq('source_table', 'service_entries')
+  showToast('Entry deleted', 'error')
+  await loadEntries()
+}
+
+init()
+</script>
+</body>
+</html>

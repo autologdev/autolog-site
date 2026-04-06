@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maintenance — AutoLog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<script type="module">
+import { supabase, requireAuth, getVehicleDisplayName, getSelectedVehicleId, formatMileage, formatDate, statusPill, showToast, renderSidebar, injectAppStyles, initSidebar } from './app.js'
+
+injectAppStyles()
+
+let vehicle = null
+
+async function init() {
+  const session = await requireAuth()
+  if (!session) return
+
+  const { data: vehicles } = await supabase
+    .from('vehicles').select('*').eq('owner_id', session.user.id).eq('is_active', true).order('created_at', { ascending: true })
+  const allVehicles = vehicles || []
+  let selectedId = getSelectedVehicleId()
+  if (!selectedId || !allVehicles.find(v => v.id === selectedId)) selectedId = allVehicles[0]?.id || null
+  vehicle = allVehicles.find(v => v.id === selectedId)
+
+  document.body.innerHTML = `
+    ${renderSidebar('maintenance')}
+    <div class="app-main">
+      <div class="app-topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="mobile-menu-btn" id="mobile-menu-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <span class="app-topbar-title">Maintenance Schedule</span>
+        </div>
+        <div class="app-topbar-right">
+          ${vehicle ? `<div class="vehicle-switcher" style="cursor:default;"><div class="vehicle-switcher-dot"></div><span>${getVehicleDisplayName(vehicle)}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="app-content" id="main-content">
+        <div class="loading-state"><div class="spinner"></div><span>Loading schedule…</span></div>
+      </div>
+    </div>
+  `
+  initSidebar()
+  await loadItems()
+}
+
+async function loadItems() {
+  if (!vehicle) {
+    document.getElementById('main-content').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><h3>No vehicle selected</h3></div>`
+    return
+  }
+
+  const { data: items } = await supabase
+    .from('maintenance_items').select('*').eq('vehicle_id', vehicle.id).order('name')
+
+  const all = items || []
+  const overdue = all.filter(i => i.status === 'overdue')
+  const dueSoon = all.filter(i => i.status === 'due_soon')
+  const ok = all.filter(i => i.status === 'ok')
+  const unknown = all.filter(i => !i.status || i.status === 'unknown')
+
+  const statusColour = { overdue: '#FF3B30', due_soon: '#FF9500', ok: '#34C759', unknown: '#94a3b8' }
+
+  const renderSection = (title, items, colour) => {
+    if (!items.length) return ''
+    return `
+      <div style="margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:${colour};"></div>
+          <span style="font-size:0.875rem;font-weight:700;color:#0f172a;">${title}</span>
+          <span style="font-size:0.75rem;font-weight:600;color:${colour};background:${colour}18;padding:2px 8px;border-radius:100px;">${items.length}</span>
+        </div>
+        ${items.map(item => `
+          <div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border-left:3px solid ${colour};">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+              <div>
+                <div style="font-size:0.9rem;font-weight:700;color:#0f172a;margin-bottom:4px;">${item.name}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                  ${item.next_due_date ? `<span style="font-size:0.75rem;color:#64748b;">📅 ${formatDate(item.next_due_date)}</span>` : ''}
+                  ${item.next_due_mileage ? `<span style="font-size:0.75rem;color:#64748b;">📍 ${formatMileage(item.next_due_mileage)}</span>` : ''}
+                  ${item.oem_interval_months || item.oem_interval_miles ? `
+                    <span style="font-size:0.75rem;color:#94a3b8;">
+                      Every ${[
+                        item.oem_interval_miles ? formatMileage(item.oem_interval_miles) : null,
+                        item.oem_interval_months ? item.oem_interval_months + ' months' : null
+                      ].filter(Boolean).join(' or ')}
+                    </span>
+                  ` : ''}
+                </div>
+                ${item.last_done_date ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">Last done: ${formatDate(item.last_done_date)} ${item.last_done_mileage ? '@ ' + formatMileage(item.last_done_mileage) : ''}</div>` : ''}
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                ${item.specialist_cost_min && item.specialist_cost_max && item.specialist_cost_min > 0 ? `
+                  <div style="font-size:0.8125rem;font-weight:700;color:#1E7A8C;">£${Math.round(item.specialist_cost_min)}–£${Math.round(item.specialist_cost_max)}</div>
+                  <div style="font-size:0.7rem;color:#94a3b8;">specialist est.</div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  }
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="page-header">
+      <h1>Maintenance Schedule</h1>
+      <p>${getVehicleDisplayName(vehicle)} · ${all.length} items tracked</p>
+    </div>
+
+    ${all.length === 0 ? `
+      <div class="empty-state">
+        <div class="empty-state-icon">📅</div>
+        <h3>No maintenance schedule yet</h3>
+        <p>Open the AutoLog iPhone app to generate your vehicle's schedule from OEM data.</p>
+      </div>
+    ` : `
+      <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:11px 14px;font-size:0.8125rem;color:#856404;margin-bottom:20px;">
+        ℹ️ Maintenance schedules are managed in the AutoLog iPhone app. View-only in the web app.
+      </div>
+      ${renderSection('Overdue', overdue, statusColour.overdue)}
+      ${renderSection('Due Soon', dueSoon, statusColour.due_soon)}
+      ${renderSection('Up to Date', ok, statusColour.ok)}
+      ${renderSection('Not Yet Set', unknown, statusColour.unknown)}
+    `}
+  `
+}
+
+init()
+</script>
+</body>
+</html>
