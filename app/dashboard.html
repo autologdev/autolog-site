@@ -124,7 +124,8 @@ function switchVehicle(id){
   allVehicles=veh||[]
 
   // Avatar
-  const initials=(profile?.display_name||session.user.email||'?')[0].toUpperCase()
+  const _name = profile?.display_name || session.user.email || ''
+  const initials = _name.length > 0 ? _name[0].toUpperCase() : '?'
   $('user-avatar').textContent=initials
 
   // Select vehicle
