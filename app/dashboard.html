@@ -315,6 +315,7 @@ function switchVehicle(id){
 
 // ── Main ───────────────────────────────────────────────────
 ;(async()=>{
+  try{
   const{data:{session}}=await sb.auth.getSession()
   if(!session){location.replace('/app/login.html');return}
   const uid=session.user.id
@@ -350,12 +351,17 @@ function switchVehicle(id){
   const sMon=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0]
   const vid=currentVehicle.id
 
-  const[{data:costs},{data:fuelRows},{data:maintItems},{data:svcs}]=await Promise.all([
+  const[costsRes,fuelRes,maintRes,svcsRes]=await Promise.all([
     sb.from('cost_entries').select('amount,date,category').eq('vehicle_id',vid).gte('date',sYear),
     sb.from('fuel_entries').select('mpg,total_cost,date').eq('vehicle_id',vid).order('date',{ascending:false}).limit(20),
     sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage').eq('vehicle_id',vid),
     sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4)
   ])
+  if(costsRes.error)console.warn('cost_entries error:',costsRes.error.message)
+  if(fuelRes.error)console.warn('fuel_entries error:',fuelRes.error.message)
+  if(maintRes.error)console.warn('maintenance_items error:',maintRes.error.message)
+  if(svcsRes.error)console.warn('service_entries error:',svcsRes.error.message)
+  const costs=costsRes.data,fuelRows=fuelRes.data,maintItems=maintRes.data,svcs=svcsRes.data
 
   const allCosts=costs||[]
   const totalYear=allCosts.reduce((s,c)=>s+Number(c.amount||0),0)
@@ -445,6 +451,10 @@ function switchVehicle(id){
       </div>
     </div>
   `
+  }catch(err){
+    console.error('Dashboard render error:',err)
+    $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.8125rem;color:#94a3b8">${err.message}</p></div>`
+  }
 })()
 </script>
 </body>
