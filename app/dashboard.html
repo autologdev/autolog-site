@@ -9,7 +9,6 @@
 </head>
 <body>
 
-<!-- Sidebar -->
 <aside class="sb" id="sb">
   <div class="sb-logo">
     <img src="/assets/logo.png" alt="AutoLog">
@@ -31,7 +30,6 @@
 </aside>
 <div class="sb-overlay" id="sb-ov"></div>
 
-<!-- Main -->
 <div class="main">
   <div class="topbar">
     <div class="topbar-left">
@@ -39,7 +37,14 @@
       <span class="page-title">Dashboard</span>
     </div>
     <div class="topbar-right">
-      <div class="vsw" id="vsw"><button class="vsw-btn" id="vsw-btn" onclick="toggleVsw()"><div class="vsw-dot"></div><span class="vsw-name" id="vsw-name">Loading…</span><span class="vsw-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span></button></div>
+      <div class="vsw" id="vsw">
+        <button class="vsw-btn" id="vsw-btn" onclick="toggleVsw()">
+          <div class="vsw-dot"></div>
+          <span class="vsw-name" id="vsw-name">Loading…</span>
+          <span class="vsw-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </button>
+      </div>
+      <button class="btn btn-primary btn-sm" id="add-vehicle-btn" style="display:none" onclick="showAddVehicle()">+ Add Vehicle</button>
       <div class="user-pill"><div class="user-avatar" id="user-avatar">?</div></div>
     </div>
   </div>
@@ -54,13 +59,13 @@
 const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co'
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
 const sb=supabase.createClient(SURL,SKEY)
+const $=id=>document.getElementById(id)
 
-// ── Utilities ──────────────────────────────────────────────
-const $ = id => document.getElementById(id)
 function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
 function fmtMi(n){return n!=null?Number(n).toLocaleString('en-GB')+' mi':'—'}
 function fmtGBP(n){return n!=null?'£'+Number(n).toFixed(2):'—'}
 function vName(v){return v.nickname||[v.year,v.make,v.model].filter(Boolean).join(' ')||v.registration||'Vehicle'}
+function cap(s){return s&&s.length>0?s[0].toUpperCase()+s.slice(1):s}
 function motStatus(v){
   if(!v.mot_expiry)return{label:'Unknown',cls:'badge-grey',color:'#94a3b8'}
   const d=Math.ceil((new Date(v.mot_expiry)-new Date())/86400000)
@@ -78,13 +83,12 @@ function taxStatus(v){
 function toast(msg,ok=true){const el=$('toast');el.textContent=msg;el.style.borderLeft='3px solid '+(ok?'#22c55e':'#ef4444');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500)}
 function doSignOut(){sb.auth.signOut().then(()=>location.href='/app/login.html')}
 
-// ── Sidebar mobile ─────────────────────────────────────────
 const sbEl=$('sb'),sbOv=$('sb-ov')
 $('mob-menu-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
 sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
 
-// ── Vehicle switcher ───────────────────────────────────────
-let allVehicles=[],currentVehicle=null
+let allVehicles=[],currentVehicle=null,userId=null
+
 function toggleVsw(){
   const existing=$('vsw-drop')
   if(existing){existing.remove();$('vsw-btn').classList.remove('open');return}
@@ -94,163 +98,238 @@ function toggleVsw(){
   drop.id='vsw-drop';drop.className='vsw-drop'
   drop.innerHTML=allVehicles.map(v=>{
     const isCurrent=v.id===currentVehicle?.id
-    const dotColor=isCurrent?'#1E7A8C':'#94a3b8'
-    return`<div class="vsw-drop-item${isCurrent?' current':''}" onclick="switchVehicle('${v.id}')">
-      <div class="vsw-drop-dot" style="background:${dotColor}"></div>
-      <div><div>${vName(v)}</div>${v.registration?`<div class="vsw-drop-item-reg">${v.registration.toUpperCase()}</div>`:''}</div>
+    return`<div class="vsw-item${isCurrent?' cur':''}" onclick="switchVehicle('${v.id}')">
+      <div style="width:7px;height:7px;border-radius:50%;background:${isCurrent?'#1A7A8C':'#94a3b8'};flex-shrink:0"></div>
+      <div><div>${vName(v)}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div>
     </div>`
   }).join('')
   $('vsw').appendChild(drop)
-  setTimeout(()=>document.addEventListener('click',closeVswOnBlur,{once:true}),10)
+  setTimeout(()=>document.addEventListener('click',()=>{const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open')}},{once:true}),10)
 }
-function closeVswOnBlur(){const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open')}}
-function switchVehicle(id){
-  localStorage.setItem('al_vid',id)
+function switchVehicle(id){localStorage.setItem('al_vid',id);location.reload()}
+
+// ── Add Vehicle Modal ──────────────────────────────────────
+function showAddVehicle(){
+  const bg=document.createElement('div');bg.className='mbg'
+  bg.innerHTML=`<div class="mo"><div class="mh"><h2>Add Vehicle</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
+    <div class="merr" id="av-err"></div>
+    <p style="font-size:.875rem;color:#64748b;margin-bottom:16px">Enter your vehicle's UK registration to look it up automatically, or add it manually.</p>
+    <div class="fg"><label class="fl">UK Registration</label>
+      <div style="display:flex;gap:8px">
+        <input class="fi" type="text" id="av-reg" placeholder="e.g. AB12 CDE" style="text-transform:uppercase;flex:1">
+        <button class="btn btn-outline btn-sm" id="av-lookup" onclick="lookupReg()">Look Up</button>
+      </div>
+    </div>
+    <div id="av-lookup-result" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:11px 14px;font-size:.875rem;color:#166534;margin-bottom:14px"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Make</label><input class="fi" type="text" id="av-make" placeholder="e.g. Ford"></div>
+      <div class="fg"><label class="fl">Model</label><input class="fi" type="text" id="av-model" placeholder="e.g. Focus"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Year</label><input class="fi" type="number" id="av-year" placeholder="e.g. 2019" min="1900" max="2099"></div>
+      <div class="fg"><label class="fl">Current Mileage</label><input class="fi" type="number" id="av-mileage" placeholder="e.g. 45000" value="0"></div>
+    </div>
+    <div class="fg"><label class="fl">Nickname (optional)</label><input class="fi" type="text" id="av-nick" placeholder="e.g. My Daily"></div>
+    <div class="mfooter">
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="av-save" onclick="saveVehicle()">Add Vehicle</button>
+    </div>
+  </div></div>`
+  document.body.appendChild(bg)
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
+  bg.querySelector('#av-reg').oninput=e=>{e.target.value=e.target.value.toUpperCase()}
+}
+
+async function lookupReg(){
+  const reg=document.querySelector('#av-reg').value.trim().replace(/\s/g,'').toUpperCase()
+  if(!reg){return}
+  const btn=document.querySelector('#av-lookup');btn.disabled=true;btn.textContent='Looking up…'
+  try{
+    const res=await fetch(`https://mechanic.autologapp.co.uk/dvla-lookup?reg=${encodeURIComponent(reg)}`)
+    if(res.ok){
+      const d=await res.json()
+      if(d.make){
+        document.querySelector('#av-make').value=d.make||''
+        document.querySelector('#av-model').value=d.model||''
+        document.querySelector('#av-year').value=d.year||''
+        const el=document.querySelector('#av-lookup-result')
+        el.style.display='block'
+        el.textContent=`✓ Found: ${d.year||''} ${d.make||''} ${d.model||''} — ${d.colour||''} ${d.fuelType||''}`
+      }
+    }
+  }catch(e){}
+  btn.disabled=false;btn.textContent='Look Up'
+}
+
+async function saveVehicle(){
+  const reg=document.querySelector('#av-reg').value.trim().toUpperCase()
+  const make=document.querySelector('#av-make').value.trim()
+  const model=document.querySelector('#av-model').value.trim()
+  const year=parseInt(document.querySelector('#av-year').value)||null
+  const mileage=parseInt(document.querySelector('#av-mileage').value)||0
+  const nick=document.querySelector('#av-nick').value.trim()
+  if(!reg&&!make){
+    const e=document.querySelector('#av-err');e.textContent='Please enter at least a registration or make.';e.classList.add('on');return
+  }
+  const btn=document.querySelector('#av-save');btn.disabled=true;btn.textContent='Saving…'
+  const{data,error}=await sb.from('vehicles').insert({
+    owner_id:userId,
+    registration:reg||null,
+    make:make||null,
+    model:model||null,
+    year,
+    current_mileage:mileage,
+    nickname:nick||null,
+    is_active:true
+  }).select().single()
+  if(error){
+    const e=document.querySelector('#av-err');e.textContent=error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Add Vehicle';return
+  }
+  document.querySelector('.mbg').remove()
+  toast('Vehicle added ✓')
+  localStorage.setItem('al_vid',data.id)
   location.reload()
 }
 
 // ── Main ───────────────────────────────────────────────────
 ;(async()=>{
   try{
-  const{data:{session}}=await sb.auth.getSession()
-  if(!session){location.replace('/app/login.html');return}
-  const uid=session.user.id
+    const{data:{session}}=await sb.auth.getSession()
+    if(!session){location.replace('/app/login.html');return}
+    userId=session.user.id
 
-  const[{data:veh},{data:profile}]=await Promise.all([
-    sb.from('vehicles').select('*').eq('owner_id',uid).eq('is_active',true).order('created_at',{ascending:true}),
-    sb.from('profiles').select('*').eq('id',uid).single()
-  ])
+    const[{data:veh},{data:profile}]=await Promise.all([
+      sb.from('vehicles').select('*').eq('owner_id',userId).eq('is_active',true).order('created_at',{ascending:true}),
+      sb.from('profiles').select('*').eq('id',userId).single()
+    ])
 
-  allVehicles=veh||[]
+    allVehicles=veh||[]
 
-  // Avatar
-  const _name = profile?.display_name || session.user.email || ''
-  const initials = _name.length > 0 ? _name[0].toUpperCase() : '?'
-  $('user-avatar').textContent=initials
+    // Avatar
+    const _name=(profile?.display_name)||session.user.email||''
+    $('user-avatar').textContent=_name.length>0?_name[0].toUpperCase():'?'
 
-  // Select vehicle
-  let selId=localStorage.getItem('al_vid')
-  if(!selId||!allVehicles.find(v=>v.id===selId)){selId=allVehicles[0]?.id||null;if(selId)localStorage.setItem('al_vid',selId)}
-  currentVehicle=allVehicles.find(v=>v.id===selId)||null
+    // Show add vehicle button
+    $('add-vehicle-btn').style.display='inline-flex'
 
-  // Vehicle switcher label
-  $('vsw-name').textContent=currentVehicle?vName(currentVehicle):'No vehicle'
-  if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
+    // Select vehicle
+    let selId=localStorage.getItem('al_vid')
+    if(!selId||!allVehicles.find(v=>v.id===selId)){selId=allVehicles[0]?.id||null;if(selId)localStorage.setItem('al_vid',selId)}
+    currentVehicle=allVehicles.find(v=>v.id===selId)||null
 
-  if(!currentVehicle){
-    $('content').innerHTML=`<div class="empty"><div class="empty-icon">🚗</div><h3>No vehicles yet</h3><p>Add your first vehicle in the AutoLog iPhone app to get started.</p></div>`
-    return
-  }
+    $('vsw-name').textContent=currentVehicle?vName(currentVehicle):'No vehicle'
+    if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
 
-  // Fetch data
-  const now=new Date()
-  const sYear=new Date(now.getFullYear(),0,1).toISOString().split('T')[0]
-  const sMon=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0]
-  const vid=currentVehicle.id
+    if(!currentVehicle){
+      $('content').innerHTML=`
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;gap:20px">
+          <div style="width:72px;height:72px;background:var(--teal-light);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem">🚗</div>
+          <div>
+            <h2 style="font-size:1.375rem;font-weight:800;letter-spacing:-.02em;color:var(--text-primary);margin-bottom:8px">No vehicles yet</h2>
+            <p style="font-size:.9375rem;color:var(--text-muted);max-width:380px;line-height:1.6">Add your first vehicle to start tracking fuel, services, maintenance and more.</p>
+          </div>
+          <button class="btn btn-primary" onclick="showAddVehicle()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Your First Vehicle
+          </button>
+          <p style="font-size:.8125rem;color:var(--text-muted)">Or add via the AutoLog iPhone app</p>
+        </div>`
+      return
+    }
 
-  const[costsRes,fuelRes,maintRes,svcsRes]=await Promise.all([
-    sb.from('cost_entries').select('amount,date,category').eq('vehicle_id',vid).gte('date',sYear),
-    sb.from('fuel_entries').select('mpg,total_cost,date').eq('vehicle_id',vid).order('date',{ascending:false}).limit(20),
-    sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage').eq('vehicle_id',vid),
-    sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4)
-  ])
-  if(costsRes.error)console.warn('cost_entries error:',costsRes.error.message)
-  if(fuelRes.error)console.warn('fuel_entries error:',fuelRes.error.message)
-  if(maintRes.error)console.warn('maintenance_items error:',maintRes.error.message)
-  if(svcsRes.error)console.warn('service_entries error:',svcsRes.error.message)
-  const costs=costsRes.data,fuelRows=fuelRes.data,maintItems=maintRes.data,svcs=svcsRes.data
+    // Fetch all data
+    const now=new Date()
+    const sYear=new Date(now.getFullYear(),0,1).toISOString().split('T')[0]
+    const sMon=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0]
+    const vid=currentVehicle.id
 
-  const allCosts=costs||[]
-  const totalYear=allCosts.reduce((s,c)=>s+Number(c.amount||0),0)
-  const totalMon=allCosts.filter(c=>c.date>=sMon).reduce((s,c)=>s+Number(c.amount||0),0)
-  const mpgs=(fuelRows||[]).filter(f=>f.mpg).map(f=>Number(f.mpg))
-  const avgMpg=mpgs.length?mpgs.reduce((a,b)=>a+b)/mpgs.length:null
-  const overdue=(maintItems||[]).filter(i=>i.status==='overdue')
-  const soon=(maintItems||[]).filter(i=>i.status==='due_soon')
-  const mot=motStatus(currentVehicle)
-  const tax=taxStatus(currentVehicle)
-  const services=svcs||[]
+    const[costsRes,fuelRes,maintRes,svcsRes]=await Promise.all([
+      sb.from('cost_entries').select('amount,date,category').eq('vehicle_id',vid).gte('date',sYear),
+      sb.from('fuel_entries').select('mpg,total_cost,date').eq('vehicle_id',vid).order('date',{ascending:false}).limit(20),
+      sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage').eq('vehicle_id',vid),
+      sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4)
+    ])
+    if(costsRes.error)console.warn('costs:',costsRes.error.message)
+    if(fuelRes.error)console.warn('fuel:',fuelRes.error.message)
+    if(maintRes.error)console.warn('maint:',maintRes.error.message)
+    if(svcsRes.error)console.warn('svcs:',svcsRes.error.message)
 
-  const v=currentVehicle
-  const reg=v.registration?`<span style="font-family:monospace;font-size:.875rem;color:#94a3b8;letter-spacing:.05em;margin-left:10px">${v.registration.toUpperCase()}</span>`:''
+    const allCosts=costsRes.data||[]
+    const totalYear=allCosts.reduce((s,c)=>s+Number(c.amount||0),0)
+    const totalMon=allCosts.filter(c=>c.date>=sMon).reduce((s,c)=>s+Number(c.amount||0),0)
+    const mpgs=(fuelRes.data||[]).filter(f=>f.mpg).map(f=>Number(f.mpg))
+    const avgMpg=mpgs.length?mpgs.reduce((a,b)=>a+b)/mpgs.length:null
+    const overdue=(maintRes.data||[]).filter(i=>i.status==='overdue')
+    const soon=(maintRes.data||[]).filter(i=>i.status==='due_soon')
+    const mot=motStatus(currentVehicle)
+    const tax=taxStatus(currentVehicle)
+    const services=svcsRes.data||[]
+    const v=currentVehicle
+    const reg=v.registration?`<span style="font-family:var(--font-mono);font-size:.875rem;color:var(--text-muted);letter-spacing:.05em;margin-left:10px">${v.registration.toUpperCase()}</span>`:''
 
-  $('content').innerHTML=`
-    <div class="pg-head">
-      <div class="pg-head-text">
-        <h1>${vName(v)}${reg}</h1>
-        <p>${[v.year,v.colour,v.fuel_type].filter(Boolean).map(s=>s&&s.length>0?s[0].toUpperCase()+s.slice(1):s).join(' · ')||'Vehicle details'}</p>
-      </div>
-    </div>
-
-    <!-- Status bar -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-      <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
-        <div style="width:40px;height:40px;border-radius:10px;background:${mot.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">✅</div>
-        <div>
-          <div style="font-size:.6875rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">MOT</div>
-          <div style="font-size:.9375rem;font-weight:700;color:${mot.color}">${mot.label}</div>
+    $('content').innerHTML=`
+      <div class="pg-head">
+        <div class="pg-head-text">
+          <h1>${vName(v)}${reg}</h1>
+          <p>${[v.year,v.colour,v.fuel_type].filter(Boolean).map(s=>s&&s.length?cap(String(s)):'').filter(Boolean).join(' · ')||'Vehicle details'}</p>
         </div>
       </div>
-      <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
-        <div style="width:40px;height:40px;border-radius:10px;background:${tax.color}12;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">🏷️</div>
-        <div>
-          <div style="font-size:.6875rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Road Tax</div>
-          <div style="font-size:.9375rem;font-weight:700;color:${tax.color}">${tax.label}</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
+          <div style="width:40px;height:40px;border-radius:10px;background:${mot.color}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">✅</div>
+          <div><div style="font-size:.6875rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">MOT</div><div style="font-size:.9375rem;font-weight:700;color:${mot.color}">${mot.label}</div></div>
+        </div>
+        <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
+          <div style="width:40px;height:40px;border-radius:10px;background:${tax.color}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">🏷️</div>
+          <div><div style="font-size:.6875rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Road Tax</div><div style="font-size:.9375rem;font-weight:700;color:${tax.color}">${tax.label}</div></div>
         </div>
       </div>
-    </div>
 
-    <!-- Stats -->
-    <div class="stats" style="margin-bottom:20px">
-      <div class="stat"><div class="stat-label">Mileage</div><div class="stat-value">${Number(v.current_mileage||0).toLocaleString('en-GB')}</div><div class="stat-sub">miles</div></div>
-      ${avgMpg?`<div class="stat"><div class="stat-label">Avg MPG</div><div class="stat-value">${avgMpg.toFixed(1)}</div><div class="stat-sub">fuel economy</div></div>`:''}
-      <div class="stat"><div class="stat-label">This Month</div><div class="stat-value">£${totalMon.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
-      <div class="stat"><div class="stat-label">This Year</div><div class="stat-value">£${totalYear.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
-    </div>
-
-    <!-- Maintenance alert -->
-    ${overdue.length+soon.length>0?`
-    <div class="alert-banner ${overdue.length?'danger':'warn'}" style="margin-bottom:20px">
-      <div class="alert-banner-icon">${overdue.length?'⚠️':'🔔'}</div>
-      <div class="alert-banner-body" style="flex:1">
-        <div class="title">${overdue.length?overdue.length+' item'+( overdue.length>1?'s':'')+' overdue':soon.length+' item'+(soon.length>1?'s':'')+' due soon'}</div>
-        <div class="desc">${[...overdue,...soon].slice(0,3).map(i=>i.name).join(', ')}${overdue.length+soon.length>3?` and ${overdue.length+soon.length-3} more`:''}</div>
+      <div class="stats" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-label">Mileage</div><div class="stat-value">${Number(v.current_mileage||0).toLocaleString('en-GB')}</div><div class="stat-sub">miles</div></div>
+        ${avgMpg?`<div class="stat"><div class="stat-label">Avg MPG</div><div class="stat-value">${avgMpg.toFixed(1)}</div><div class="stat-sub">fuel economy</div></div>`:''}
+        <div class="stat"><div class="stat-label">This Month</div><div class="stat-value">£${totalMon.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
+        <div class="stat"><div class="stat-label">This Year</div><div class="stat-value">£${totalYear.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
       </div>
-      <a href="/app/maintenance.html" class="btn btn-ghost btn-sm" style="flex-shrink:0">View →</a>
-    </div>`:''}
 
-    <!-- Two column -->
-    <div class="grid2">
-      <!-- Recent services -->
+      ${overdue.length+soon.length>0?`
+      <div class="alert-banner ${overdue.length?'danger':'warn'}" style="margin-bottom:20px">
+        <div class="alert-banner-icon">${overdue.length?'⚠️':'🔔'}</div>
+        <div class="alert-banner-body" style="flex:1">
+          <div class="title">${overdue.length?overdue.length+' item'+(overdue.length>1?'s':'')+' overdue':soon.length+' item'+(soon.length>1?'s':'')+' due soon'}</div>
+          <div class="desc">${[...overdue,...soon].slice(0,3).map(i=>i.name).join(', ')}${overdue.length+soon.length>3?` and ${overdue.length+soon.length-3} more`:''}</div>
+        </div>
+        <a href="/app/maintenance.html" class="btn btn-ghost btn-sm" style="flex-shrink:0">View →</a>
+      </div>`:''}
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Recent Services</span><a href="/app/service.html" class="card-link">View all</a></div>
+          ${services.length===0?'<div class="empty" style="padding:20px 0"><div class="empty-icon">🔧</div><p>No service records yet.</p></div>'
+          :services.map(s=>`<div class="row-item">
+            <div><div class="row-item-label">${s.garage_name||(s.garage_type||'Service').replace(/_/g,' ')}</div><div class="row-item-sub">${fmtDate(s.date)}${s.mileage_at_service?' · '+fmtMi(s.mileage_at_service):''}</div></div>
+            ${s.total_cost?`<div class="row-item-val">${fmtGBP(s.total_cost)}</div>`:''}
+          </div>`).join('')}
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Quick Access</span></div>
+          <div class="grid-auto" style="grid-template-columns:1fr 1fr">
+            ${[['⛽','Fuel Log','/app/fuel.html'],['🔧','Service','/app/service.html'],['📅','Maintenance','/app/maintenance.html'],['📄','Documents','/app/documents.html'],['🗺️','Trips','/app/trips.html'],['⚙️','Settings','/app/settings.html']].map(([ic,lb,hr])=>`<a href="${hr}" class="qlink"><span class="qlink-icon">${ic}</span>${lb}</a>`).join('')}
+          </div>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-head"><span class="card-title">Recent Services</span><a href="/app/service.html" class="card-link">View all</a></div>
-        ${services.length===0?'<div class="empty" style="padding:20px 0"><div class="empty-icon">🔧</div><p>No service records yet.</p></div>'
-        :services.map(s=>`<div class="row-item">
-          <div><div class="row-item-label">${s.garage_name||(s.garage_type||'Service').replace(/_/g,' ')}</div><div class="row-item-sub">${fmtDate(s.date)}${s.mileage_at_service?' · '+fmtMi(s.mileage_at_service):''}</div></div>
-          ${s.total_cost?`<div class="row-item-val">${fmtGBP(s.total_cost)}</div>`:''}
-        </div>`).join('')}
-      </div>
-
-      <!-- Quick links -->
-      <div class="card">
-        <div class="card-head"><span class="card-title">Quick Access</span></div>
-        <div class="grid-auto" style="grid-template-columns:1fr 1fr">
-          ${[['⛽','Fuel Log','/app/fuel.html'],['🔧','Service','/app/service.html'],['📅','Maintenance','/app/maintenance.html'],['📄','Documents','/app/documents.html'],['🗺️','Trips','/app/trips.html'],['⚙️','Settings','/app/settings.html']].map(([ic,lb,hr])=>`<a href="${hr}" class="qlink"><span class="qlink-icon">${ic}</span>${lb}</a>`).join('')}
+        <div class="card-head"><span class="card-title">Vehicle Details</span></div>
+        <div class="vd-grid">
+          ${[['Make',v.make],['Model',v.model],['Year',v.year],['Colour',v.colour],['Fuel Type',v.fuel_type&&v.fuel_type.length?cap(v.fuel_type):null],['Engine',v.engine_size_cc?v.engine_size_cc+'cc':null],['Transmission',v.transmission&&v.transmission.length?cap(v.transmission):null],['Power',v.power_bhp?v.power_bhp+'bhp':null],['VIN',v.vin]].filter(([,val])=>val).map(([lbl,val])=>`<div><div class="vd-item-label">${lbl}</div><div class="vd-item-val">${val}</div></div>`).join('')}
         </div>
       </div>
-    </div>
-
-    <!-- Vehicle details -->
-    <div class="card">
-      <div class="card-head"><span class="card-title">Vehicle Details</span></div>
-      <div class="vd-grid">
-        ${[['Make',v.make],['Model',v.model],['Year',v.year],['Colour',v.colour],['Fuel Type',v.fuel_type&&v.fuel_type.length>0?v.fuel_type[0].toUpperCase()+v.fuel_type.slice(1):null],['Engine',v.engine_size_cc?v.engine_size_cc+'cc':null],['Transmission',v.transmission&&v.transmission.length>0?v.transmission[0].toUpperCase()+v.transmission.slice(1):null],['Power',v.power_bhp?v.power_bhp+'bhp':null],['VIN',v.vin]].filter(([,val])=>val).map(([lbl,val])=>`<div><div class="vd-item-label">${lbl}</div><div class="vd-item-val">${val}</div></div>`).join('')}
-      </div>
-    </div>
-  `
+    `
   }catch(err){
-    console.error('Dashboard render error:',err)
-    $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.8125rem;color:#94a3b8">${err.message}</p></div>`
+    console.error('Dashboard error:',err)
+    $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.8125rem;color:var(--text-muted)">${err.message}</p></div>`
   }
 })()
 </script>
