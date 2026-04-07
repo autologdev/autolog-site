@@ -23,6 +23,10 @@ html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;background:#0
   <div class="spin"></div>
 </div>
 <script>
+// Safety guard: if somehow loaded at root, go to marketing page
+if(location.pathname === '/' || location.pathname === '') {
+  location.replace('https://www.autologapp.co.uk')
+}
 const sb = supabase.createClient(
   'https://dkpvxlxarsmiljnvnbck.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
