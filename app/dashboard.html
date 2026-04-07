@@ -178,7 +178,7 @@ function switchVehicle(id){
     <div class="pg-head">
       <div class="pg-head-text">
         <h1>${vName(v)}${reg}</h1>
-        <p>${[v.year,v.colour,v.fuel_type].filter(Boolean).map(s=>s[0].toUpperCase()+s.slice(1)).join(' · ')||'Vehicle details'}</p>
+        <p>${[v.year,v.colour,v.fuel_type].filter(Boolean).map(s=>s&&s.length>0?s[0].toUpperCase()+s.slice(1):s).join(' · ')||'Vehicle details'}</p>
       </div>
     </div>
 
@@ -244,7 +244,7 @@ function switchVehicle(id){
     <div class="card">
       <div class="card-head"><span class="card-title">Vehicle Details</span></div>
       <div class="vd-grid">
-        ${[['Make',v.make],['Model',v.model],['Year',v.year],['Colour',v.colour],['Fuel Type',v.fuel_type?v.fuel_type[0].toUpperCase()+v.fuel_type.slice(1):null],['Engine',v.engine_size_cc?v.engine_size_cc+'cc':null],['Transmission',v.transmission?v.transmission[0].toUpperCase()+v.transmission.slice(1):null],['Power',v.power_bhp?v.power_bhp+'bhp':null],['VIN',v.vin]].filter(([,val])=>val).map(([lbl,val])=>`<div><div class="vd-item-label">${lbl}</div><div class="vd-item-val">${val}</div></div>`).join('')}
+        ${[['Make',v.make],['Model',v.model],['Year',v.year],['Colour',v.colour],['Fuel Type',v.fuel_type&&v.fuel_type.length>0?v.fuel_type[0].toUpperCase()+v.fuel_type.slice(1):null],['Engine',v.engine_size_cc?v.engine_size_cc+'cc':null],['Transmission',v.transmission&&v.transmission.length>0?v.transmission[0].toUpperCase()+v.transmission.slice(1):null],['Power',v.power_bhp?v.power_bhp+'bhp':null],['VIN',v.vin]].filter(([,val])=>val).map(([lbl,val])=>`<div><div class="vd-item-label">${lbl}</div><div class="vd-item-val">${val}</div></div>`).join('')}
       </div>
     </div>
   `
