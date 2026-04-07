@@ -3,39 +3,8 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Settings — AutoLog</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app/app-theme.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
-body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#475569;-webkit-font-smoothing:antialiased;display:flex;min-height:100vh}
-h1,h2,h3{color:#0f172a;font-weight:700;line-height:1.2}a{text-decoration:none;color:inherit}
-.sb{width:64px;min-height:100vh;background:#0f172a;display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;transition:width .22s cubic-bezier(.4,0,.2,1);overflow:hidden}.sb:hover{width:220px}
-.sb-logo{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid rgba(255,255,255,.07);min-height:65px;overflow:hidden}.sb-logo img{width:32px;height:32px;border-radius:8px;flex-shrink:0}
-.sb-logo-t{font-size:.9375rem;font-weight:700;color:#fff;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s}.sb:hover .sb-logo-t{opacity:1;transform:translateX(0)}
-.sb-nav{flex:1;padding:10px 0;display:flex;flex-direction:column;overflow:hidden}
-.sb-a{display:flex;align-items:center;gap:13px;padding:11px 18px;color:rgba(255,255,255,.5);font-size:.875rem;font-weight:500;white-space:nowrap;transition:color .15s,background .15s;position:relative;text-decoration:none;border:none;background:none;font-family:inherit;cursor:pointer;width:100%}
-.sb-a:hover{color:#fff;background:rgba(255,255,255,.06)}.sb-a.on{color:#fff;background:rgba(30,122,140,.28)}.sb-a.on::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;background:#1E7A8C;border-radius:0 3px 3px 0}
-.sb-ic{width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center}.sb-ic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
-.sb-lb{opacity:0;transform:translateX(-6px);transition:opacity .18s .04s,transform .18s .04s;pointer-events:none}.sb:hover .sb-lb{opacity:1;transform:translateX(0)}
-.sb-foot{padding:10px 0;border-top:1px solid rgba(255,255,255,.07)}.sb-out:hover{color:#FF3B30!important;background:rgba(255,59,48,.08)!important}
-.sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}.sb-ov.on{display:block}
-.main{flex:1;margin-left:64px;min-height:100vh;display:flex;flex-direction:column}
-.topbar{height:64px;background:#fff;border-bottom:1px solid rgba(0,0,0,.06);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:100;gap:16px}
-.topbar-title{font-size:1rem;font-weight:700;color:#0f172a}
-.content{flex:1;padding:28px;max-width:600px;width:100%}.ph{margin-bottom:22px}.ph h1{font-size:1.5rem;letter-spacing:-.02em}
-.card{background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.03);padding:20px 22px;margin-bottom:16px}.ct{font-size:.9375rem;font-weight:700;color:#0f172a;margin-bottom:14px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:.875rem;font-weight:600;font-family:inherit;cursor:pointer;border:2px solid transparent;transition:all .18s}.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-p{background:#1E7A8C;color:#fff;border-color:#1E7A8C}.btn-p:hover:not(:disabled){background:#155F6E}.btn-o{background:transparent;color:#1E7A8C;border-color:#1E7A8C}.btn-o:hover:not(:disabled){background:#E8F4F6}
-.btn-danger{background:transparent;color:#FF3B30;border-color:#FF3B30}.btn-danger:hover:not(:disabled){background:rgba(255,59,48,.06)}.btn-sm{padding:7px 14px;font-size:.8125rem;border-radius:8px}
-.fg{margin-bottom:16px}.fl{display:block;font-size:.8125rem;font-weight:600;color:#475569;margin-bottom:6px}
-.fi{width:100%;padding:10px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:10px;font-size:.9375rem;font-family:inherit;color:#0f172a;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}.fi:focus{border-color:#1E7A8C;box-shadow:0 0 0 3px rgba(30,122,140,.1)}.fi:disabled{opacity:.6;cursor:not-allowed}
-.lnk-row{display:flex;align-items:center;gap:10px;padding:10px;background:#f8fafc;border-radius:9px;font-size:.875rem;font-weight:500;color:#0f172a;transition:background .15s;margin-bottom:8px;text-decoration:none}.lnk-row:hover{background:#E8F4F6}
-#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#0f172a;color:#fff;padding:12px 20px;border-radius:10px;font-size:.875rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);max-width:320px;display:none}
-.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;color:#94a3b8;font-size:.875rem;width:100%}.spin{width:32px;height:32px;border:3px solid rgba(30,122,140,.15);border-top-color:#1E7A8C;border-radius:50%;animation:sp .7s linear infinite}
-.mob-btn{display:none;width:36px;height:36px;background:#f1f5f9;border:none;border-radius:9px;cursor:pointer;align-items:center;justify-content:center;color:#0f172a}.mob-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.5}
-@keyframes sp{to{transform:rotate(360deg)}}
-@media(max-width:768px){.sb{transform:translateX(-100%);width:220px!important;transition:transform .25s cubic-bezier(.4,0,.2,1)}.sb.open{transform:translateX(0)}.sb .sb-lb,.sb .sb-logo-t{opacity:1!important;transform:none!important}.sb-ov.on{display:block}.main{margin-left:0}.mob-btn{display:flex}.content{padding:20px 16px 32px}}
-</style>
 </head>
 <body>
 <aside class="sb" id="sb"><div class="sb-logo"><img src="/assets/logo.png" alt=""><span class="sb-logo-t">AutoLog</span></div><nav class="sb-nav" id="sb-nav"></nav><div class="sb-foot"><button class="sb-a sb-out" onclick="doSignOut()"><span class="sb-ic"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span><span class="sb-lb">Sign Out</span></button></div></aside>
