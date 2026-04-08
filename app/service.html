@@ -184,7 +184,7 @@ function showAdd(){
     bg.remove();toast('Service saved ✓');await load()
   }
 }
-async function del(id){if(!confirm('Delete this service record?'))return;await sb.from('service_entries').delete().eq('id',id);toast('Deleted',false);await load()}
+async function del(id){if(!confirm('Delete this service record?'))return;await sb.from('service_entries').delete().eq('id',id);toast('Deleted ✓');await load()}
 </script>
 </body>
 </html>
