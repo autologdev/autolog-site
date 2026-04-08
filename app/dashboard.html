@@ -397,7 +397,7 @@ async function saveVehicle(){
 
   }catch(err){
     console.error('Dashboard error:',err)
-    $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.8125rem;color:var(--text-muted)">${err.message}</p></div>`
+    $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${err.message||'Could not load your dashboard. Please check your connection.'}</p><button class="btn btn-primary" onclick="location.reload()">Try again</button></div>`
   }
 })()
 </script>
