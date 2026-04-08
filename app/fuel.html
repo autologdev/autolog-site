@@ -207,7 +207,7 @@ async function del(id){
   if(!confirm('Delete this entry?'))return
   await sb.from('fuel_entries').delete().eq('id',id)
   await sb.from('cost_entries').delete().eq('source_id',id)
-  toast('Deleted',false);await load()
+  toast('Deleted ✓');await load()
 }
 </script>
 </body>
