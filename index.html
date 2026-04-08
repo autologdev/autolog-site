@@ -6,6 +6,7 @@
   <title>AutoLog — Your Car, Fully Under Control</title>
   <meta name="description" content="AutoLog keeps your MOT, tax, service history, fuel costs and documents in one place — automatically updated from DVLA and DVSA. Available on iPhone.">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
 
     /* ── Hero ────────────────────────────── */
@@ -607,12 +608,12 @@
           <a href="#screenshots">See it in action</a>
           <a href="#pricing">Pricing</a>
           <a href="privacy.html">Privacy</a>
-          <a href="/app/splash.html">Web App</a>
+          <a href="/app/splash" id="nav-dashboard-link">Dashboard</a>
         </div>
         <div class="nav-cta">
           <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
         </div>
-        <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
+        <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -622,7 +623,7 @@
       <a href="#screenshots">See it in action</a>
       <a href="#pricing">Pricing</a>
       <a href="privacy.html">Privacy</a>
-      <a href="/app/splash.html">Web App</a>
+      <a href="/app/splash" id="mob-dashboard-link">Dashboard</a>
       <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download on App Store</a>
     </div>
   </nav>
@@ -729,29 +730,29 @@
           <h3>DVLA &amp; DVSA Connected</h3>
           <p>MOT expiry, tax status and full MOT test history fetched automatically from official government sources the moment you add your registration.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card fade-in">
           <div class="feature-tag">AI Powered</div>
           <div class="feature-icon-wrap">📄</div>
           <h3>Smart Document Scanning</h3>
           <p>Photograph your MOT certificate, service invoice or insurance document. AutoLog reads it automatically and files it — no typing required.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card fade-in">
           <div class="feature-icon-wrap">⛽</div>
           <h3>Fuel &amp; Cost Tracking</h3>
           <p>Log every fill-up and track real MPG, cost per mile and total spend. All your vehicle costs in one place — fuel, servicing, tyres and more.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card fade-in">
           <div class="feature-tag">Predictive</div>
           <div class="feature-icon-wrap">🔧</div>
           <h3>Maintenance Schedules</h3>
           <p>Manufacturer service intervals loaded for your specific vehicle. AutoLog predicts when items are due based on how you actually drive — not just the calendar.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card fade-in">
           <div class="feature-icon-wrap">🚗</div>
           <h3>Automatic Trip Detection</h3>
           <p>AutoLog detects when you start driving via Bluetooth and logs your trips in the background. No buttons, no fuss — just drive.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card fade-in">
           <div class="feature-icon-wrap">🔗</div>
           <h3>Mechanic Sharing</h3>
           <p>Generate a secure link showing your full service history for your mechanic. No app needed on their end — works in any browser.</p>
@@ -977,14 +978,14 @@
           <h4>Product</h4>
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
-          <a href="/app/splash.html">Web App</a>
+          <a href="/app/splash" id="footer-dashboard-link">Dashboard</a>
           <a href="https://apps.apple.com/gb/app/autolog/id6746798513">Download</a>
         </div>
         <div class="footer-links-col">
           <h4>Legal</h4>
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
-          <a href="/cdn-cgi/l/email-protection#650d0009090a250410110a090a020415154b060a4b100e">Contact</a>
+          <a href="/cdn-cgi/l/email-protection#c7afa2ababa887a6b2b3a8aba8a0a6b7b7e9a4a8e9b2ac">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -995,18 +996,43 @@
   </footer>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // Auth-aware dashboard links
+    ;(async () => {
+      try {
+        const sb = supabase.createClient(
+          'https://dkpvxlxarsmiljnvnbck.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+        )
+        const { data: { session } } = await sb.auth.getSession()
+        const dest = session ? '/app/dashboard' : '/app/login'
+        document.querySelectorAll('#nav-dashboard-link, #mob-dashboard-link, #footer-dashboard-link').forEach(el => {
+          el.href = dest
+        })
+      } catch(e) {}
+    })()
+
     // Mobile menu
     const hamburger = document.getElementById('hamburger');
     const mobileNav = document.getElementById('mobile-nav');
-    hamburger.addEventListener('click', () => {
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
       const open = mobileNav.classList.toggle('open');
       hamburger.classList.toggle('open', open);
-      hamburger.setAttribute('aria-expanded', open);
+      hamburger.setAttribute('aria-expanded', String(open));
+    });
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) {
+        mobileNav.classList.remove('open');
+        hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
     });
     mobileNav.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         mobileNav.classList.remove('open');
         hamburger.classList.remove('open');
+        hamburger.setAttribute('aria-expanded', 'false');
       });
     });
 
