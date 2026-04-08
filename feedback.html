@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback — AutoLog</title>
+  <meta name="description" content="Send feedback, report a bug, or suggest a feature for AutoLog.">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    .legal-hero {
+      background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
+      padding: 64px 0 48px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .legal-hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 10px; }
+    .legal-hero p { color: var(--text-muted); font-size: 0.9375rem; }
+    .legal-body { padding: 64px 0 80px; }
+
+    /* Form card */
+    .feedback-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 36px 40px;
+      max-width: 600px;
+    }
+
+    /* Type selector */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .type-btn {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .type-btn:hover { border-color: var(--teal); background: var(--teal-light); }
+    .type-btn.selected { border-color: var(--teal); background: var(--teal-light); }
+    .type-btn .type-icon { font-size: 1.375rem; display: block; margin-bottom: 5px; }
+    .type-btn .type-label { font-size: 0.75rem; font-weight: 600; color: var(--text-dark); }
+
+    /* Form fields */
+    .fg { margin-bottom: 20px; }
+    .fl {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-body);
+      margin-bottom: 6px;
+    }
+    .fl-hint { font-weight: 400; color: var(--text-muted); margin-left: 6px; }
+    .fi {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      color: var(--text-dark);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+    .fi:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(30,122,140,0.1); }
+    textarea.fi { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+    /* Error */
+    .form-err {
+      background: rgba(239,68,68,0.08);
+      color: #dc2626;
+      border: 1px solid rgba(239,68,68,0.2);
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 0.8125rem;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .form-err.on { display: block; }
+
+    /* Success state */
+    .success-wrap {
+      text-align: center;
+      padding: 16px 0;
+      display: none;
+    }
+    .success-wrap.on { display: block; }
+    .success-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(52,199,89,0.1);
+      border: 1px solid rgba(52,199,89,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 18px;
+      font-size: 1.5rem;
+    }
+    .success-wrap h3 { font-size: 1.25rem; margin-bottom: 8px; }
+    .success-wrap p { font-size: 0.9375rem; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* Submit btn */
+    .submit-row { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .btn-submit {
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px 28px;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.12s;
+    }
+    .btn-submit:hover { background: var(--teal-dark); }
+    .btn-submit:active { transform: translateY(1px); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-spin {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .feedback-card { padding: 24px 20px; }
+      .type-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ───────────────────────── -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:22px;height:22px;object-fit:contain;"></div>
+          AutoLog
+        </a>
+        <div class="nav-links">
+          <a href="index.html#features">Features</a>
+          <a href="index.html#pricing">Pricing</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Support</a>
+        </div>
+        <div class="nav-cta">
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
+        </div>
+        <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <div class="nav-mobile" id="mobile-nav">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="support.html">Support</a>
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download on App Store</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────── -->
+  <div class="legal-hero">
+    <div class="container">
+      <h1>Send Feedback</h1>
+      <p>We read every submission — bugs, ideas and anything else.</p>
+    </div>
+  </div>
+
+  <!-- ── Body ─────────────────────────────── -->
+  <div class="legal-body">
+    <div class="container">
+
+      <div class="feedback-card">
+
+        <!-- Success state (hidden until submitted) -->
+        <div class="success-wrap" id="success-wrap">
+          <div class="success-icon">✓</div>
+          <h3>Thanks for your feedback</h3>
+          <p>We read every message and use it to make AutoLog better. If you left your email we'll follow up if needed.</p>
+          <a href="index.html" class="btn btn-primary" style="display:inline-flex">Back to AutoLog</a>
+        </div>
+
+        <!-- Form -->
+        <div id="form-wrap">
+          <p style="font-size:0.9375rem;color:var(--text-muted);margin-bottom:24px;line-height:1.6;">What kind of feedback do you have?</p>
+
+          <!-- Type selector -->
+          <div class="type-grid" id="type-grid">
+            <button class="type-btn selected" data-type="bug" onclick="selectType(this)">
+              <span class="type-icon">🐛</span>
+              <span class="type-label">Bug Report</span>
+            </button>
+            <button class="type-btn" data-type="confusing" onclick="selectType(this)">
+              <span class="type-icon">🤔</span>
+              <span class="type-label">Confusing</span>
+            </button>
+            <button class="type-btn" data-type="feature" onclick="selectType(this)">
+              <span class="type-icon">💡</span>
+              <span class="type-label">Feature Idea</span>
+            </button>
+            <button class="type-btn" data-type="general" onclick="selectType(this)">
+              <span class="type-icon">💬</span>
+              <span class="type-label">General</span>
+            </button>
+          </div>
+
+          <div class="form-err" id="form-err"></div>
+
+          <div class="fg">
+            <label class="fl" for="f-desc">
+              Description <span style="color:#ef4444">*</span>
+            </label>
+            <textarea class="fi" id="f-desc" placeholder="Tell us what happened, what you expected, or what you'd like to see…"></textarea>
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="f-ctx">
+              Where in the app? <span class="fl-hint">(optional)</span>
+            </label>
+            <input class="fi" type="text" id="f-ctx" placeholder="e.g. Dashboard, Fuel Log, Document upload…">
+          </div>
+
+          <div class="fg">
+            <label class="fl" for="f-email">
+              Your email <span class="fl-hint">(optional — for follow-up)</span>
+            </label>
+            <input class="fi" type="email" id="f-email" placeholder="you@example.com">
+          </div>
+
+          <div class="submit-row">
+            <button class="btn-submit" id="submit-btn" onclick="submitFeedback()">
+              <div class="btn-spin" id="btn-spin"></div>
+              <span id="btn-label">Send Feedback</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Footer ───────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <div class="footer-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:20px;height:20px;object-fit:contain;"></div>
+            AutoLog
+          </div>
+          <p class="footer-tagline">Your car, fully under control. Digital vehicle records for UK drivers.</p>
+        </div>
+        <div class="footer-links-col">
+          <h4>Product</h4>
+          <a href="index.html#features">Features</a>
+          <a href="index.html#pricing">Pricing</a>
+          <a href="/app/dashboard">Dashboard</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513">Download</a>
+        </div>
+        <div class="footer-links-col">
+          <h4>Legal</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="support.html">Support</a>
+          <a href="/cdn-cgi/l/email-protection#b4dcd1d8d8dbf4d5c1c0dbd8dbd3d5c4c49ad7db9ac1df">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 AutoLog. All rights reserved.</span>
+        <span>Built in the UK 🇬🇧</span>
+      </div>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
+    const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+    const sb = supabase.createClient(SURL, SKEY)
+
+    let selectedType = 'bug'
+
+    function selectType(btn) {
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'))
+      btn.classList.add('selected')
+      selectedType = btn.dataset.type
+    }
+
+    async function submitFeedback() {
+      const desc = document.getElementById('f-desc').value.trim()
+      const ctx  = document.getElementById('f-ctx').value.trim()
+      const email = document.getElementById('f-email').value.trim()
+      const errEl = document.getElementById('form-err')
+
+      errEl.classList.remove('on')
+
+      if (!desc || desc.length < 10) {
+        errEl.textContent = 'Please enter at least 10 characters in the description.'
+        errEl.classList.add('on')
+        return
+      }
+
+      const btn = document.getElementById('submit-btn')
+      const spin = document.getElementById('btn-spin')
+      const label = document.getElementById('btn-label')
+      btn.disabled = true
+      spin.style.display = 'block'
+      label.textContent = 'Sending…'
+
+      // Check if user is signed in — attach user_id if so
+      const { data: { session } } = await sb.auth.getSession()
+
+      const record = {
+        type: selectedType,
+        description: desc,
+        context: ctx || null,
+        email: email || null,
+        user_id: session?.user?.id || null
+      }
+
+      const { error } = await sb.from('feedback').insert(record)
+
+      if (error) {
+        errEl.textContent = 'Something went wrong — please try again or email hello@autologapp.co.uk'
+        errEl.classList.add('on')
+        btn.disabled = false
+        spin.style.display = 'none'
+        label.textContent = 'Send Feedback'
+        return
+      }
+
+      // Show success
+      document.getElementById('form-wrap').style.display = 'none'
+      document.getElementById('success-wrap').classList.add('on')
+    }
+
+    // Enter key submits
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) submitFeedback()
+    })
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger')
+    const mobileNav = document.getElementById('mobile-nav')
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const open = mobileNav.classList.toggle('open')
+      hamburger.classList.toggle('open', open)
+      hamburger.setAttribute('aria-expanded', String(open))
+    })
+    document.addEventListener('click', (e) => {
+      if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) {
+        mobileNav.classList.remove('open')
+        hamburger.classList.remove('open')
+        hamburger.setAttribute('aria-expanded', 'false')
+      }
+    })
+    mobileNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove
