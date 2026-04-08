@@ -171,15 +171,18 @@ function renderDocCard(doc,ti){
 async function viewDoc(docId,path,fileType){
   const{data}=await sb.storage.from('vehicle-documents').createSignedUrl(path,300)
   if(!data?.signedUrl){toast('Could not open document',false);return}
+  const lb=document.createElement('div');lb.className='lightbox'
   if(fileType&&fileType.startsWith('image/')){
-    // Inline lightbox
-    const lb=document.createElement('div');lb.className='lightbox'
-    lb.innerHTML=`<button class="lightbox-close" onclick="this.closest('.lightbox').remove()">✕</button><img src="${data.signedUrl}" alt="Document">`
-    lb.onclick=e=>{if(e.target===lb)lb.remove()}
-    document.body.appendChild(lb)
+    lb.innerHTML=`<button class="lightbox-close" type="button" onclick="this.closest('.lightbox').remove()">✕</button><img src="${data.signedUrl}" alt="Document">`
+  } else if(fileType==='application/pdf'||path.toLowerCase().endsWith('.pdf')){
+    lb.innerHTML=`<button class="lightbox-close" type="button" onclick="this.closest('.lightbox').remove()" style="z-index:10">✕</button><iframe src="${data.signedUrl}" style="width:90vw;height:88vh;border:none;border-radius:12px;background:#fff"></iframe>`
   } else {
-    window.open(data.signedUrl,'_blank')
+    window.open(data.signedUrl,'_blank');return
   }
+  lb.onclick=e=>{if(e.target===lb)lb.remove()}
+  document.body.appendChild(lb)
+  const escHandler=e=>{if(e.key==='Escape'){lb.remove();document.removeEventListener('keydown',escHandler)}}
+  document.addEventListener('keydown',escHandler)
 }
 
 async function delDoc(id,path){
