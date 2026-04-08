@@ -159,6 +159,189 @@
       transition: color 0.15s;
     }
     .wl-appstore-fallback a:hover { color: rgba(255,255,255,0.6); }
+    /* ── Reg lookup widget ────────────────────────────── */
+    .rl-widget {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .rl-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+    .rl-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .rl-plate-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #f5c842;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.125rem;
+      font-weight: 800;
+      font-family: 'UK Number Plate', 'Arial Black', monospace;
+      letter-spacing: 0.12em;
+      color: #0f172a;
+      text-transform: uppercase;
+      outline: none;
+      min-width: 0;
+    }
+    .rl-plate-input::placeholder {
+      color: rgba(0,0,0,0.35);
+      font-weight: 700;
+    }
+    .rl-lookup-btn {
+      background: #1E7A8C;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.12s;
+      flex-shrink: 0;
+    }
+    .rl-lookup-btn:hover { background: #155F6E; }
+    .rl-lookup-btn:active { transform: translateY(1px); }
+    .rl-lookup-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .rl-err {
+      font-size: 0.8125rem;
+      color: #f87171;
+      margin-top: 8px;
+      min-height: 18px;
+      display: block;
+    }
+    #rl-loading {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.5);
+    }
+    .rl-spin {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #4DB8CC;
+      border-radius: 50%;
+      animation: spin .65s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #rl-result {
+      display: none;
+      margin-top: 16px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .rl-result-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .rl-result-reg {
+      background: #f5c842;
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      flex-shrink: 0;
+    }
+    .rl-result-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .rl-result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .rl-result-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+    .rl-result-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+    .rl-result-val {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .rl-badge {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+    .rl-badge-green  { background: rgba(52,199,89,.2);  color: #4ade80; }
+    .rl-badge-amber  { background: rgba(245,158,11,.2); color: #fbbf24; }
+    .rl-badge-red    { background: rgba(239,68,68,.2);  color: #f87171; }
+    .rl-badge-grey   { background: rgba(255,255,255,.1);color: rgba(255,255,255,.5); }
+    .rl-result-cta-text {
+      font-size: 0.8125rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .rl-cta-btn {
+      display: block;
+      background: #1E7A8C;
+      color: #fff;
+      text-align: center;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s;
+      margin-bottom: 10px;
+    }
+    .rl-cta-btn:hover { background: #155F6E; }
+    .rl-result-signin {
+      font-size: 0.8125rem;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      margin: 0;
+    }
+    .rl-result-signin a { color: #4DB8CC; text-decoration: none; }
+    .rl-result-signin a:hover { text-decoration: underline; }
+    .rl-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0 20px;
+    }
+    .rl-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+    .rl-divider-text { font-size: 0.75rem; color: rgba(255,255,255,0.3); white-space: nowrap; }
+
 
 
     /* Hero phone stack */
@@ -689,6 +872,17 @@
           </div>
           <h1>Your car,<br><span class="accent">fully under control.</span></h1>
           <p class="hero-sub">MOT, tax, service history, fuel costs and documents — all in one place, automatically updated from DVLA and DVSA. Built for UK drivers.</p>
+          <div class="rl-widget" id="rl-widget">
+            <div class="rl-label">&#x1F1EC;&#x1F1E7; Look up your vehicle</div>
+            <div class="rl-input-row">
+              <input class="rl-plate-input" type="text" id="rl-input" placeholder="AB12 CDE" maxlength="8" oninput="rlInput(event)" onkeydown="rlKeydown(event)" autocomplete="off" autocapitalize="characters" spellcheck="false">
+              <button class="rl-lookup-btn" type="button" id="rl-btn" onclick="lookupHeroReg()">Look Up &#8594;</button>
+            </div>
+            <span class="rl-err" id="rl-err"></span>
+            <div id="rl-loading"><div class="rl-spin"></div><span>Checking DVLA database&#8230;</span></div>
+            <div id="rl-result"></div>
+          </div>
+          <div class="rl-divider"><div class="rl-divider-line"></div><div class="rl-divider-text">or join the waitlist</div><div class="rl-divider-line"></div></div>
           <div class="hero-waitlist">
             <p class="wl-incentive">Join early access &#8212; <strong>first users get AutoLog+ free for 2 months.</strong></p>
             <div id="wl-form">
@@ -1055,6 +1249,7 @@
   </footer>
 
   <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
+<script data-cfasync="false" src="/reg-lookup.js"></script>
 <script data-cfasync="false" src="/index.js"></script>
 </body>
 </html>
