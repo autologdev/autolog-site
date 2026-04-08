@@ -6,7 +6,7 @@
   <title>Feedback — AutoLog</title>
   <meta name="description" content="Send feedback, report a bug, or suggest a feature for AutoLog.">
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     .legal-hero {
       background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
@@ -281,7 +281,7 @@
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
           <a href="support.html">Support</a>
-          <a href="/cdn-cgi/l/email-protection#7d15181111123d1c08091211121a1c0d0d531e12530816">Contact</a>
+          <a href="/cdn-cgi/l/email-protection#f59d9099999ab59480819a999a92948585db969adb809e">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -291,107 +291,4 @@
     </div>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
-    const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
-    let sb = null
-
-    // Init Supabase once DOM + scripts are ready
-    function initSb() {
-      if (typeof supabase !== 'undefined' && !sb) {
-        sb = supabase.createClient(SURL, SKEY)
-      }
-    }
-    document.addEventListener('DOMContentLoaded', initSb)
-
-    let selectedType = 'bug'
-
-    function selectType(btn) {
-      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'))
-      btn.classList.add('selected')
-      selectedType = btn.dataset.type
-    }
-
-    async function submitFeedback() {
-      initSb()
-      const desc = document.getElementById('f-desc').value.trim()
-      const ctx  = document.getElementById('f-ctx').value.trim()
-      const email = document.getElementById('f-email').value.trim()
-      const errEl = document.getElementById('form-err')
-
-      errEl.classList.remove('on')
-
-      if (!desc || desc.length < 10) {
-        errEl.textContent = 'Please enter at least 10 characters in the description.'
-        errEl.classList.add('on')
-        return
-      }
-
-      if (!sb) {
-        errEl.textContent = 'Could not connect — please refresh and try again.'
-        errEl.classList.add('on')
-        return
-      }
-
-      const btn = document.getElementById('submit-btn')
-      const spin = document.getElementById('btn-spin')
-      const label = document.getElementById('btn-label')
-      btn.disabled = true
-      spin.style.display = 'block'
-      label.textContent = 'Sending…'
-
-      // Check if user is signed in — attach user_id if so
-      let userId = null
-      try {
-        const { data: { session } } = await sb.auth.getSession()
-        userId = session?.user?.id || null
-      } catch(e) {}
-
-      const record = {
-        type: selectedType,
-        description: desc,
-        context: ctx || null,
-        email: email || null,
-        user_id: userId
-      }
-
-      const { error } = await sb.from('feedback').insert(record)
-
-      if (error) {
-        errEl.textContent = 'Something went wrong — please try again or email hello@autologapp.co.uk'
-        errEl.classList.add('on')
-        btn.disabled = false
-        spin.style.display = 'none'
-        label.textContent = 'Send Feedback'
-        return
-      }
-
-      // Show success
-      document.getElementById('form-wrap').style.display = 'none'
-      document.getElementById('success-wrap').classList.add('on')
-    }
-
-    // Ctrl+Enter submits
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.ctrlKey) submitFeedback()
-    })
-
-    // Hamburger
-    const hamburger = document.getElementById('hamburger')
-    const mobileNav = document.getElementById('mobile-nav')
-    hamburger.addEventListener('click', (e) => {
-      e.stopPropagation()
-      const open = mobileNav.classList.toggle('open')
-      hamburger.classList.toggle('open', open)
-      hamburger.setAttribute('aria-expanded', String(open))
-    })
-    document.addEventListener('click', (e) => {
-      if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) {
-        mobileNav.classList.remove('open')
-        hamburger.classList.remove('open')
-        hamburger.setAttribute('aria-expanded', 'false')
-      }
-    })
-    mobileNav.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileNav.classList.remove
+  <script data-cfasync="false" 
