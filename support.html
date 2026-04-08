@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support — AutoLog</title>
+  <meta name="description" content="AutoLog support — get help, find answers to common questions, and contact the team.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .legal-hero {
+      background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
+      padding: 64px 0 48px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .legal-hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: 10px; }
+    .legal-hero p { color: var(--text-muted); font-size: 0.9375rem; }
+    .legal-body { padding: 64px 0 80px; }
+
+    /* Contact card */
+    .contact-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 48px;
+      border-left: 4px solid var(--teal);
+    }
+    .contact-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--teal-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.375rem;
+      flex-shrink: 0;
+    }
+    .contact-card h3 { font-size: 1rem; margin-bottom: 4px; }
+    .contact-card p { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+    .contact-card a { color: var(--teal); font-weight: 600; }
+
+    /* FAQ */
+    .faq-list { margin-bottom: 48px; }
+    .faq-item {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      margin-bottom: 10px;
+      border: 1px solid rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 18px 20px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .faq-q:hover { background: #f8fafc; }
+    .faq-chevron {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-a {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--text-body);
+      border-top: 1px solid rgba(0,0,0,0.05);
+      padding-top: 14px;
+    }
+    .faq-item.open .faq-a { display: block; }
+    .faq-a a { color: var(--teal); text-decoration: underline; }
+
+    /* Feedback link */
+    .feedback-cta {
+      background: var(--teal-light);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .feedback-cta h3 { font-size: 1rem; margin-bottom: 4px; }
+    .feedback-cta p { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+
+    @media (max-width: 600px) {
+      .contact-card { flex-direction: column; align-items: flex-start; }
+      .feedback-cta { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navigation ───────────────────────── -->
+  <nav class="nav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="index.html" class="nav-logo">
+          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:22px;height:22px;object-fit:contain;"></div>
+          AutoLog
+        </a>
+        <div class="nav-links">
+          <a href="index.html#features">Features</a>
+          <a href="index.html#pricing">Pricing</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html" class="active">Support</a>
+        </div>
+        <div class="nav-cta">
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
+        </div>
+        <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <div class="nav-mobile" id="mobile-nav">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="support.html" class="active">Support</a>
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download on App Store</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────── -->
+  <div class="legal-hero">
+    <div class="container">
+      <h1>Support</h1>
+      <p>Get help with AutoLog — answers to common questions and ways to get in touch.</p>
+    </div>
+  </div>
+
+  <!-- ── Body ─────────────────────────────── -->
+  <div class="legal-body">
+    <div class="container">
+      <div class="prose">
+
+        <!-- Contact -->
+        <h2>Contact Us</h2>
+        <div class="contact-card">
+          <div class="contact-icon">✉️</div>
+          <div>
+            <h3>Email Support</h3>
+            <p>We read every message and aim to respond within 1 business day.</p>
+            <a href="/cdn-cgi/l/email-protection#79111c15151639180c0d1615161e180909571a16570c12"><span class="__cf_email__" data-cfemail="96fef3fafaf9d6f7e3e2f9faf9f1f7e6e6b8f5f9b8e3fd">[email&#160;protected]</span></a>
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-list">
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              How do I add a vehicle?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              In the iOS app, open the Garage tab and tap the <strong>+</strong> button. Enter your UK registration plate and AutoLog will look up your vehicle's details from the DVLA automatically — including MOT status, tax expiry, make, colour and fuel type. You can also add a vehicle manually if the lookup doesn't find it.
+              <br><br>
+              On the web dashboard, click <strong>+ Add Vehicle</strong> in the top bar and follow the same process.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              Why isn't DVLA finding my vehicle?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              The DVLA Vehicle Enquiry Service doesn't cover every UK vehicle. Common reasons a plate isn't found include: the vehicle is registered as SORN, it's a very recently registered vehicle not yet in the database, or it's an older or imported vehicle. If your plate isn't found, you can still add the vehicle manually by entering the make, model and year yourself — all other AutoLog features will work normally.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              How do I cancel my AutoLog+ subscription?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              AutoLog+ subscriptions are managed through Apple. To cancel, open <strong>Settings</strong> on your iPhone → tap your name → <strong>Subscriptions</strong> → find AutoLog and tap <strong>Cancel Subscription</strong>. Your subscription will remain active until the end of the current billing period. We don't handle subscription billing directly so we're unable to process refunds — these must be requested from Apple.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              How do I delete my account?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              You can delete your account from within the app: go to <strong>Settings → Account → Delete Account</strong>. This will permanently remove all your vehicles, records, documents and account data within 30 days. This action cannot be undone. If you have an active AutoLog+ subscription, please cancel it via Apple before deleting your account.
+              <br><br>
+              Alternatively, email us at <a href="/cdn-cgi/l/email-protection#9af2fff6f6f5dafbefeef5f6f5fdfbeaeab4f9f5b4eff1"><span class="__cf_email__" data-cfemail="9df5f8f1f1f2ddfce8e9f2f1f2fafcededb3fef2b3e8f6">[email&#160;protected]</span></a> and we'll delete your account manually.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              How do I export my vehicle history?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              AutoLog+ subscribers can export a full PDF vehicle history report from the vehicle dashboard. Tap the share icon on your vehicle and select <strong>Export PDF History</strong>. The report includes all service records, MOT history, fuel logs and documents.
+              <br><br>
+              You can also share a live read-only history link with any mechanic directly from the app — no AutoLog account needed on their end.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              What data does AutoLog store?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              AutoLog stores your account details (email, name), vehicle records (registration, make, MOT/tax dates, mileage), fuel and service logs, uploaded documents and trip distances. All data is stored in the EU (London region) and is accessible only to you. We do not sell your data or share it with advertisers.
+              <br><br>
+              For full details, see our <a href="privacy.html">Privacy Policy</a>.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              The web dashboard isn't loading my data — what should I do?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Try a hard refresh first (<strong>Ctrl+Shift+R</strong> on Windows, <strong>Cmd+Shift+R</strong> on Mac). If that doesn't help, sign out and back in — your session may have expired. If the issue persists, please email us with a description of what you're seeing and we'll investigate.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" onclick="toggleFaq(this)">
+              Does AutoLog work on Android?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              The AutoLog app is currently iPhone only (iOS 16+). An Android version is on the roadmap but no release date is confirmed yet. In the meantime, the web dashboard at <a href="/app/dashboard">autologapp.co.uk/app/dashboard</a> works on any browser including Android devices.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Feedback CTA -->
+        <div class="feedback-cta">
+          <div>
+            <h3>Can't find what you need?</h3>
+            <p>Send us feedback or report a bug — we read every submission.</p>
+          </div>
+          <a href="feedback.html" class="btn btn-primary">Send Feedback</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Footer ───────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <div class="footer-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:20px;height:20px;object-fit:contain;"></div>
+            AutoLog
+          </div>
+          <p class="footer-tagline">Your car, fully under control. Digital vehicle records for UK drivers.</p>
+        </div>
+        <div class="footer-links-col">
+          <h4>Product</h4>
+          <a href="index.html#features">Features</a>
+          <a href="index.html#pricing">Pricing</a>
+          <a href="/app/dashboard" id="footer-dashboard-link">Dashboard</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513">Download</a>
+        </div>
+        <div class="footer-links-col">
+          <h4>Legal</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="support.html">Support</a>
+          <a href="/cdn-cgi/l/email-protection#b5ddd0d9d9daf5d4c0c1dad9dad2d4c5c59bd6da9bc0de">Contact</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 AutoLog. All rights reserved.</span>
+        <span>Built in the UK 🇬🇧</span>
+      </div>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // FAQ accordion
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item')
+      const isOpen = item.classList.contains('open')
+      // Close all
+      document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'))
+      // Open clicked if it was closed
+      if (!isOpen) item.classList.add('open')
+    }
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger')
+    const mobileNav = document.getElementById('mobile-nav')
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const open = mobileNav.classList.toggle('open')
+      hamburger.classList.toggle('open', open)
+      hamburger.setAttribute('aria-expanded', String(open))
+    })
+    document.addEventListener('click', (e) => {
+      if (!hamburger.contains(e.target) && !mobileNav.contains(e.target)) {
+        m
