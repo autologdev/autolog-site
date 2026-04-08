@@ -68,6 +68,7 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   if(!vehicle){$('content').innerHTML=`<div class="empty"><div class="empty-icon">📅</div><h3>No vehicle selected</h3></div>`;return}
   const{data:items}=await sb.from('maintenance_items').select('*').eq('vehicle_id',vehicle.id).order('status').order('name')
   const all=items||[]
+  window.allMaintItems=all
   const groups={overdue:all.filter(i=>i.status==='overdue'),due_soon:all.filter(i=>i.status==='due_soon'),ok:all.filter(i=>i.status==='ok'),unknown:all.filter(i=>!i.status||i.status==='unknown')}
   const cfg={overdue:{label:'Overdue',color:'#dc2626',bg:'rgba(220,38,38,.1)'},due_soon:{label:'Due Soon',color:'#b45309',bg:'rgba(245,158,11,.1)'},ok:{label:'Up to Date',color:'#15803d',bg:'rgba(34,197,94,.1)'},unknown:{label:'Not Set',color:'#64748b',bg:'#f1f5f9'}}
   function renderGroup(key,items){
@@ -79,7 +80,7 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
         <span class="section-title">${c.label}</span>
         <span class="section-count" style="background:${c.bg};color:${c.color}">${items.length}</span>
       </div>
-      ${items.map(item=>`<div class="mitem" style="border-left:3px solid ${c.color}">
+      ${items.map(item=>`<div class="mitem" style="border-left:3px solid ${c.color};cursor:pointer" onclick="showMaintDetail('${item.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
           <div style="flex:1">
             <div style="font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:5px">${item.name}</div>
@@ -98,13 +99,85 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   $('content').innerHTML=`
     <div class="pg-head"><div class="pg-head-text"><h1>Maintenance Schedule</h1><p>${vName(vehicle)} · ${all.length} items tracked</p></div></div>
     ${all.length===0?`<div class="empty"><div class="empty-icon">📅</div><h3>No schedule loaded</h3><p>Open the AutoLog iPhone app to generate your vehicle's maintenance schedule from OEM data.</p></div>`:`
-    <div style="background:#E8F4F6;border-radius:10px;padding:11px 14px;font-size:.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px;display:flex;align-items:center;gap:8px"><span>ℹ️</span> Maintenance schedules are managed in the iOS app. View-only here.</div>
+    <div style="background:#E8F4F6;border-radius:10px;padding:11px 14px;font-size:.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px;display:flex;align-items:center;gap:8px"><span>ℹ️</span> Schedules are generated in the iOS app. Click any item to update its status.</div>
     ${renderGroup('overdue',groups.overdue)}
     ${renderGroup('due_soon',groups.due_soon)}
     ${renderGroup('ok',groups.ok)}
     ${renderGroup('unknown',groups.unknown)}`}
   `
-})()
+})();
+
+function showMaintDetail(id){
+  const item=(window.allMaintItems||[]).find(i=>i.id===id)
+  if(!item)return
+  const today=new Date().toISOString().split('T')[0]
+  const bg=document.createElement('div');bg.className='mbg'
+  bg.innerHTML=`<div class="mo"><div class="mh"><h2>${item.name}</h2><button class="mc" type="button" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
+    <div class="merr" id="md-err"></div>
+    <div class="fg"><label class="fl">Status</label>
+      <select class="fi" id="md-status">
+        <option value="ok"${item.status==='ok'?' selected':''}>Up to Date</option>
+        <option value="due_soon"${item.status==='due_soon'?' selected':''}>Due Soon</option>
+        <option value="overdue"${item.status==='overdue'?' selected':''}>Overdue</option>
+        <option value="unknown"${!item.status||item.status==='unknown'?' selected':''}>Not Set</option>
+      </select>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Next Due Date</label><input class="fi" type="date" id="md-ndd" value="${item.next_due_date||''}"></div>
+      <div class="fg"><label class="fl">Next Due Mileage</label><input class="fi" type="number" id="md-ndm" placeholder="e.g. 60000" value="${item.next_due_mileage||''}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">Last Done Date</label><input class="fi" type="date" id="md-ldd" value="${item.last_done_date||''}"></div>
+      <div class="fg"><label class="fl">Last Done Mileage</label><input class="fi" type="number" id="md-ldm" placeholder="e.g. 55000" value="${item.last_done_mileage||''}"></div>
+    </div>
+    ${item.oem_interval_months||item.oem_interval_miles?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 13px;font-size:.8125rem;color:var(--teal);margin-bottom:14px">🔄 OEM interval: ${[item.oem_interval_miles?Number(item.oem_interval_miles).toLocaleString('en-GB')+' mi':null,item.oem_interval_months?item.oem_interval_months+' months':null].filter(Boolean).join(' / ')}</div>`:''}
+    <div class="mfooter" style="flex-direction:column;gap:8px">
+      <button type="button" class="btn btn-primary" id="md-done-btn" onclick="markDoneToday('${item.id}')" style="width:100%;justify-content:center">✅ Mark as Done Today</button>
+      <div style="display:flex;gap:8px;width:100%">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()" style="flex:1">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="md-save" onclick="saveMaintItem('${item.id}')" style="flex:1">Save Changes</button>
+      </div>
+    </div>
+  </div></div>`
+  document.body.appendChild(bg)
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
+}
+
+async function saveMaintItem(id){
+  const btn=document.getElementById('md-save');btn.disabled=true;btn.textContent='Saving…'
+  const{error}=await sb.from('maintenance_items').update({
+    status:document.getElementById('md-status').value,
+    next_due_date:document.getElementById('md-ndd').value||null,
+    next_due_mileage:parseInt(document.getElementById('md-ndm').value)||null,
+    last_done_date:document.getElementById('md-ldd').value||null,
+    last_done_mileage:parseInt(document.getElementById('md-ldm').value)||null
+  }).eq('id',id)
+  if(error){
+    const e=document.getElementById('md-err');e.textContent=error.message;e.classList.add('on')
+    btn.disabled=false;btn.textContent='Save Changes';return
+  }
+  document.querySelector('.mbg').remove()
+  location.reload()
+}
+
+async function markDoneToday(id){
+  const btn=document.getElementById('md-done-btn');btn.disabled=true;btn.textContent='Saving…'
+  const today=new Date().toISOString().split('T')[0]
+  const curMileage=allVehicles.find(v=>v.id===vehicle?.id)?.current_mileage||null
+  const{error}=await sb.from('maintenance_items').update({
+    status:'ok',
+    last_done_date:today,
+    last_done_mileage:curMileage,
+    next_due_date:null,
+    next_due_mileage:null
+  }).eq('id',id)
+  if(error){
+    const e=document.getElementById('md-err');e.textContent=error.message;e.classList.add('on')
+    btn.disabled=false;btn.textContent='✅ Mark as Done Today';return
+  }
+  document.querySelector('.mbg').remove()
+  location.reload()
+}
 </script>
 </body>
 </html>
