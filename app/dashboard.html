@@ -109,14 +109,14 @@ function toggleVsw(){
 function switchVehicle(id){localStorage.setItem('al_vid',id);location.reload()}
 
 // ── Add Vehicle Modal ──────────────────────────────────────
-function showAddVehicle(){
+function showAddVehicle(prefillReg){
   const bg=document.createElement('div');bg.className='mbg'
   bg.innerHTML=`<div class="mo"><div class="mh"><h2>Add Vehicle</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
     <div class="merr" id="av-err"></div>
     <p style="font-size:.875rem;color:#64748b;margin-bottom:16px">Enter your vehicle's UK registration to look it up automatically, or add it manually.</p>
     <div class="fg"><label class="fl">UK Registration</label>
       <div style="display:flex;gap:8px">
-        <input class="fi" type="text" id="av-reg" placeholder="e.g. AB12 CDE" style="text-transform:uppercase;flex:1">
+        <input class="fi" type="text" id="av-reg" placeholder="e.g. AB12 CDE" style="text-transform:uppercase;flex:1" value="${prefillReg||''}">
         <button class="btn btn-outline btn-sm" id="av-lookup" onclick="lookupReg()">Look Up</button>
       </div>
     </div>
@@ -138,6 +138,10 @@ function showAddVehicle(){
   document.body.appendChild(bg)
   bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
   bg.querySelector('#av-reg').oninput=e=>{e.target.value=e.target.value.toUpperCase()}
+  // Auto-trigger lookup if reg was pre-filled from URL param
+  if(prefillReg){
+    setTimeout(()=>lookupReg(),200)
+  }
 }
 
 let _dvlaData=null
@@ -254,6 +258,11 @@ async function saveVehicle(){
           </button>
           <p style="font-size:.8125rem;color:var(--text-muted)">Or add via the AutoLog iPhone app</p>
         </div>`
+      // Auto-open modal with reg pre-filled if ?reg= param present
+      const urlReg=new URLSearchParams(location.search).get('reg')
+      if(urlReg){
+        showAddVehicle(urlReg)
+      }
       return
     }
 
@@ -347,6 +356,45 @@ async function saveVehicle(){
         </div>
       </div>
     `
+
+    // ── Post-signup first action prompt (Task 3) ──────────
+    // Show once to new users with 1 vehicle and no services yet
+    const firstActionKey='al_first_action_prompted_'+userId
+    if(!localStorage.getItem(firstActionKey)&&allVehicles.length===1&&services.length===0){
+      const b=document.createElement('div')
+      b.className='alert-banner'
+      b.style.cssText='background:linear-gradient(135deg,var(--teal-light),#f0fdf4);border:1px solid rgba(30,122,140,.2);margin-bottom:20px'
+      b.innerHTML=`<div style="flex:1">
+        <div style="font-size:.9375rem;font-weight:700;color:var(--text-primary);margin-bottom:6px">${vName(currentVehicle)} is now being tracked &#x2705;</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <a href="/app/fuel" class="btn btn-ghost btn-sm">⛽ Log a fill-up</a>
+          <a href="/app/service" class="btn btn-ghost btn-sm">🔧 Add a service</a>
+          <a href="/app/documents" class="btn btn-ghost btn-sm">📄 Upload a doc</a>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('.alert-banner').remove()" style="flex-shrink:0;align-self:flex-start">✕</button>`
+      $('content').prepend(b)
+      localStorage.setItem(firstActionKey,'1')
+    }
+
+    // ── Historical data upload banner (Task 4) ────────────
+    // Show to users with <3 service records until dismissed
+    const histKey='al_history_prompt_'+userId
+    if(!localStorage.getItem(histKey)&&services.length<3){
+      const h=document.createElement('div')
+      h.style.cssText='background:#fff8ed;border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap'
+      h.innerHTML=`<div style="font-size:1.375rem;flex-shrink:0">📂</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.9rem;font-weight:700;color:var(--text-primary);margin-bottom:2px">Build your full history instantly</div>
+          <div style="font-size:.8125rem;color:var(--text-muted)">Upload past MOT certificates, service receipts or documents.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <a href="/app/documents" class="btn btn-primary btn-sm">Add past records</a>
+          <button class="btn btn-ghost btn-sm" onclick="this.closest('div').remove();localStorage.setItem('${histKey}','1')" style="color:var(--text-muted)">✕</button>
+        </div>`
+      $('content').prepend(h)
+    }
+
   }catch(err){
     console.error('Dashboard error:',err)
     $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.8125rem;color:var(--text-muted)">${err.message}</p></div>`
