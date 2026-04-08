@@ -386,7 +386,7 @@ const sb = supabase.createClient(
 )
 
 // If already signed in, go straight to dashboard (only on initial load, not after every auth event)
-sb.auth.getSession().then(({data:{session}})=>{ if(session) location.replace('/app/dashboard.html') })
+sb.auth.getSession().then(({data:{session}})=>{ if(session) location.replace('/app/dashboard') })
 
 // Check URL hash for password reset token
 if(location.hash.includes('type=recovery')){
@@ -445,7 +445,7 @@ async function doSignIn(){
   const {error} = await sb.auth.signInWithPassword({email, password:pass})
   setLoading('si', false)
   if(error){ showErr('si', friendlyErr(error.message)); return }
-  location.replace('/app/dashboard.html')
+  location.replace('/app/dashboard')
 }
 
 async function doSignUp(){
@@ -461,7 +461,7 @@ async function doSignUp(){
     email, password:pass,
     options:{
       data:{full_name:name},
-      emailRedirectTo:'https://autologapp.co.uk/app/dashboard.html'
+      emailRedirectTo:'https://autologapp.co.uk/app/dashboard'
     }
   })
   setLoading('su', false)
@@ -479,7 +479,7 @@ async function doForgot(){
   if(!email){ showErr('fp','Please enter your email.'); return }
   setLoading('fp', true)
   const {error} = await sb.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://autologapp.co.uk/app/login.html'
+    redirectTo:'https://autologapp.co.uk/app/login'
   })
   setLoading('fp', false)
   if(error){ showErr('fp', friendlyErr(error.message)); return }
@@ -497,7 +497,7 @@ async function doMagic(){
   setLoading('ml', true)
   const {error} = await sb.auth.signInWithOtp({
     email,
-    options:{emailRedirectTo:'https://autologapp.co.uk/app/dashboard.html'}
+    options:{emailRedirectTo:'https://autologapp.co.uk/app/dashboard'}
   })
   setLoading('ml', false)
   if(error){ showErr('ml', friendlyErr(error.message)); return }
