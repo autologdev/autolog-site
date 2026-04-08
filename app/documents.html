@@ -186,7 +186,7 @@ async function delDoc(id,path){
   if(!confirm('Delete this document permanently?'))return
   await sb.storage.from('vehicle-documents').remove([path])
   await sb.from('documents').delete().eq('id',id)
-  toast('Deleted',false);await load()
+  toast('Deleted ✓');await load()
 }
 
 // ── AI Classification ──────────────────────────────────────
