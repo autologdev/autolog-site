@@ -81,9 +81,14 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   await load()
 })()
 let allFuel=[]
+function showPageError(msg){
+  $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${msg}</p><button class="btn btn-primary" onclick="load()">Try again</button></div>`
+}
 async function load(){
   if(!vehicle){$('content').innerHTML=`<div class="empty"><div class="empty-icon">⛽</div><h3>No vehicle selected</h3></div>`;return}
-  const{data:rows}=await sb.from('fuel_entries').select('*').eq('vehicle_id',vehicle.id).order('mileage_at_fill',{ascending:false})
+  $('content').innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>'
+  const{data:rows,error:fetchErr}=await sb.from('fuel_entries').select('*').eq('vehicle_id',vehicle.id).order('mileage_at_fill',{ascending:false})
+  if(fetchErr){showPageError(fetchErr.message);return}
   allFuel=rows||[]
   const spend=allFuel.reduce((s,e)=>s+Number(e.total_cost||0),0)
   const litres=allFuel.reduce((s,e)=>s+Number(e.litres||0),0)
