@@ -140,24 +140,33 @@ function showAddVehicle(){
   bg.querySelector('#av-reg').oninput=e=>{e.target.value=e.target.value.toUpperCase()}
 }
 
+let _dvlaData=null
 async function lookupReg(){
   const reg=document.querySelector('#av-reg').value.trim().replace(/\s/g,'').toUpperCase()
   if(!reg){return}
   const btn=document.querySelector('#av-lookup');btn.disabled=true;btn.textContent='Looking up…'
+  const result=document.querySelector('#av-lookup-result')
+  const errEl=document.querySelector('#av-err')
+  result.style.display='none';errEl.classList.remove('on')
   try{
     const res=await fetch(`https://mechanic.autologapp.co.uk/dvla-lookup?reg=${encodeURIComponent(reg)}`)
-    if(res.ok){
-      const d=await res.json()
-      if(d.make){
-        document.querySelector('#av-make').value=d.make||''
-        document.querySelector('#av-model').value=d.model||''
-        document.querySelector('#av-year').value=d.year||''
-        const el=document.querySelector('#av-lookup-result')
-        el.style.display='block'
-        el.textContent=`✓ Found: ${d.year||''} ${d.make||''} ${d.model||''} — ${d.colour||''} ${d.fuelType||''}`
-      }
+    const d=await res.json()
+    if(d.error||!d.make){
+      errEl.textContent=d.error==='Vehicle not found'?'Registration not found — enter details manually.':'DVLA lookup failed. Enter details manually.'
+      errEl.classList.add('on')
+    } else {
+      _dvlaData=d
+      document.querySelector('#av-make').value=d.make||''
+      document.querySelector('#av-model').value=''
+      document.querySelector('#av-year').value=d.year||''
+      result.style.display='block'
+      const parts=[d.year,d.make,d.colour,d.fuelType].filter(Boolean)
+      result.innerHTML=`✓ Found: <strong>${parts.join(' · ')}</strong>${d.motExpiry?' &nbsp;·&nbsp; MOT: '+d.motExpiry:''}`
     }
-  }catch(e){}
+  }catch(e){
+    errEl.textContent='Could not reach DVLA. Check your connection and try again.'
+    errEl.classList.add('on')
+  }
   btn.disabled=false;btn.textContent='Look Up'
 }
 
@@ -172,7 +181,8 @@ async function saveVehicle(){
     const e=document.querySelector('#av-err');e.textContent='Please enter at least a registration or make.';e.classList.add('on');return
   }
   const btn=document.querySelector('#av-save');btn.disabled=true;btn.textContent='Saving…'
-  const{data,error}=await sb.from('vehicles').insert({
+  // Build record - merge manual inputs with any DVLA data
+  const record={
     owner_id:userId,
     registration:reg||null,
     make:make||null,
@@ -181,7 +191,17 @@ async function saveVehicle(){
     current_mileage:mileage,
     nickname:nick||null,
     is_active:true
-  }).select().single()
+  }
+  // Enrich with DVLA data if lookup was done for this same reg
+  if(_dvlaData&&_dvlaData.registration===reg){
+    if(_dvlaData.colour) record.colour=_dvlaData.colour
+    if(_dvlaData.fuelType) record.fuel_type=_dvlaData.fuelType
+    if(_dvlaData.engineSizeCc) record.engine_size_cc=_dvlaData.engineSizeCc
+    if(_dvlaData.doors) record.doors=_dvlaData.doors
+    if(_dvlaData.motExpiry) record.mot_expiry=_dvlaData.motExpiry
+    if(_dvlaData.taxExpiry) record.tax_expiry=_dvlaData.taxExpiry
+  }
+  const{data,error}=await sb.from('vehicles').insert(record).select().single()
   if(error){
     const e=document.querySelector('#av-err');e.textContent=error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Add Vehicle';return
   }
