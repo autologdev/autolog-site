@@ -74,12 +74,17 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   await load()
 })()
 let allSvcs=[]
+function showPageError(msg){
+  $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${msg}</p><button class="btn btn-primary" onclick="load()">Try again</button></div>`
+}
 async function load(){
   if(!vehicle){$('content').innerHTML=`<div class="empty"><div class="empty-icon">🔧</div><h3>No vehicle selected</h3></div>`;return}
-  const[{data:svcs},{data:mots}]=await Promise.all([
+  $('content').innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>'
+  const[{data:svcs,error:svcErr},{data:mots,error:motErr}]=await Promise.all([
     sb.from('service_entries').select('*').eq('vehicle_id',vehicle.id).neq('source','dvsa').order('date',{ascending:false}),
     sb.from('service_entries').select('*').eq('vehicle_id',vehicle.id).eq('source','dvsa').order('date',{ascending:false})
   ])
+  if(svcErr||motErr){showPageError((svcErr||motErr).message);return}
   allSvcs=svcs||[];const motAll=mots||[]
   const total=allSvcs.reduce((s,e)=>s+Number(e.total_cost||0),0)
   $('content').innerHTML=`
