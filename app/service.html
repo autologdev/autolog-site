@@ -193,6 +193,11 @@ function showDetail(i){
       notes:bg.querySelector('#ed-n').value||null
     }).eq('id',e.id)
     if(error){const er=bg.querySelector('#ed-err');er.textContent=error.message;er.classList.add('on');btn.disabled=false;btn.textContent='Save Changes';return}
+    const editedSvcCost=parseFloat(bg.querySelector('#ed-cost').value)||null
+    if(editedSvcCost){
+      await sb.from('cost_entries').delete().eq('source_id',e.id)
+      await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#ed-d').value||e.date,amount:editedSvcCost,category:'service',source_id:e.id,source_table:'service_entries'})
+    }
     bg.remove();toast('Service updated ✓');await load()
   }
 }
@@ -211,8 +216,10 @@ function showAdd(){
   bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
   bg.querySelector('#s-sv').onclick=async()=>{
     const btn=bg.querySelector('#s-sv');btn.disabled=true;btn.textContent='Saving…'
-    const{error}=await sb.from('service_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#s-d').value,mileage_at_service:parseInt(bg.querySelector('#s-m').value)||null,garage_name:bg.querySelector('#s-gn').value||null,garage_type:bg.querySelector('#s-gt').value,description:bg.querySelector('#s-desc').value||null,total_cost:parseFloat(bg.querySelector('#s-cost').value)||null,invoice_number:bg.querySelector('#s-inv').value||null,notes:bg.querySelector('#s-n').value||null,source:'manual'})
-    if(error){const e=bg.querySelector('#merr');e.textContent=error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Service';return}
+    const svcInsert=await sb.from('service_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#s-d').value,mileage_at_service:parseInt(bg.querySelector('#s-m').value)||null,garage_name:bg.querySelector('#s-gn').value||null,garage_type:bg.querySelector('#s-gt').value,description:bg.querySelector('#s-desc').value||null,total_cost:parseFloat(bg.querySelector('#s-cost').value)||null,invoice_number:bg.querySelector('#s-inv').value||null,notes:bg.querySelector('#s-n').value||null,source:'manual'}).select().single()
+    if(svcInsert.error){const e=bg.querySelector('#merr');e.textContent=svcInsert.error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Service';return}
+    const svcCost=parseFloat(bg.querySelector('#s-cost').value)||null
+    if(svcInsert.data&&svcCost){await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#s-d').value,amount:svcCost,category:'service',source_id:svcInsert.data.id,source_table:'service_entries'})}
     bg.remove();toast('Service saved ✓');await load()
   }
 }
