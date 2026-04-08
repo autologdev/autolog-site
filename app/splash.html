@@ -28,7 +28,7 @@ const sb = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
 )
 sb.auth.getSession().then(({ data: { session } }) => {
-  location.replace(session ? '/app/dashboard.html' : '/app/login.html')
+  location.replace(session ? '/app/dashboard' : '/app/login')
 })
 </script>
 </body>
