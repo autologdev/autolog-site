@@ -386,7 +386,16 @@ const sb = supabase.createClient(
 )
 
 // If already signed in, go straight to dashboard (only on initial load, not after every auth event)
-sb.auth.getSession().then(({data:{session}})=>{ if(session) location.replace('/app/dashboard') })
+sb.auth.getSession().then(({data:{session}})=>{
+  if(session){
+    const reg=new URLSearchParams(location.search).get('reg')
+    location.replace(reg?'/app/dashboard?reg='+encodeURIComponent(reg):'/app/dashboard')
+    return
+  }
+  // Show signup view if ?view=signup in URL
+  const view=new URLSearchParams(location.search).get('view')
+  if(view==='signup') show('v-signup')
+})
 
 // Check URL hash for password reset token
 if(location.hash.includes('type=recovery')){
