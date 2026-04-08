@@ -260,6 +260,11 @@ function showFuelDetail(i){
       notes:bg.querySelector('#fed-n').value||null
     }).eq('id',e.id)
     if(error){const er=bg.querySelector('#fed-err');er.textContent=error.message;er.classList.add('on');btn.disabled=false;btn.textContent='Save Changes';return}
+    const editedCost=parseFloat(bg.querySelector('#fed-c').value)||null
+    if(editedCost){
+      await sb.from('cost_entries').delete().eq('source_id',e.id)
+      await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#fed-d').value||e.date,amount:editedCost,category:'fuel',source_id:e.id,source_table:'fuel_entries'})
+    }
     bg.remove();toast('Fill-up updated ✓');await load()
   }
 }
@@ -292,8 +297,10 @@ function showAdd(){
     const mi=parseInt(bg.querySelector('#f-m').value)
     if(!mi){const e=bg.querySelector('#merr');e.textContent='Please enter mileage.';e.classList.add('on');return}
     const btn=bg.querySelector('#f-sv');btn.disabled=true;btn.textContent='Saving…'
-    const{error}=await sb.from('fuel_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#f-d').value,mileage_at_fill:mi,litres:parseFloat(li.value)||null,total_cost:parseFloat(co.value)||null,cost_per_litre:parseFloat(cp.value)||null,station_name:bg.querySelector('#f-st').value||null,notes:bg.querySelector('#f-n').value||null,source:'manual'})
-    if(error){const e=bg.querySelector('#merr');e.textContent=error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Fill-up';return}
+    const fuelInsert=await sb.from('fuel_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#f-d').value,mileage_at_fill:mi,litres:parseFloat(li.value)||null,total_cost:parseFloat(co.value)||null,cost_per_litre:parseFloat(cp.value)||null,station_name:bg.querySelector('#f-st').value||null,notes:bg.querySelector('#f-n').value||null,source:'manual'}).select().single()
+    if(fuelInsert.error){const e=bg.querySelector('#merr');e.textContent=fuelInsert.error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Fill-up';return}
+    const fuelCost=parseFloat(co.value)||null
+    if(fuelInsert.data&&fuelCost){await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#f-d').value,amount:fuelCost,category:'fuel',source_id:fuelInsert.data.id,source_table:'fuel_entries'})}
     bg.remove();toast('Fill-up saved ✓');await load()
   }
 }
