@@ -152,7 +152,7 @@ async function lookupReg(){
     const res=await fetch(`https://mechanic.autologapp.co.uk/dvla-lookup?reg=${encodeURIComponent(reg)}`)
     const d=await res.json()
     if(d.error||!d.make){
-      errEl.textContent=d.error==='Vehicle not found'?'Registration not found — enter details manually.':'DVLA lookup failed. Enter details manually.'
+      errEl.textContent=d.error==='Vehicle not found'?'Not found in DVLA database — some vehicles aren\'t covered. Enter your details below manually.':'DVLA lookup failed — please enter details manually.'
       errEl.classList.add('on')
     } else {
       _dvlaData=d
