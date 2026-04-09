@@ -470,7 +470,7 @@ async function doSignUp(){
     email, password:pass,
     options:{
       data:{full_name:name},
-      emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://autologapp.co.uk/app/dashboard?reg='+encodeURIComponent(r):'https://autologapp.co.uk/app/dashboard'})()
+      emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://autologapp.co.uk/app/confirm?reg='+encodeURIComponent(r)+'&type=signup':'https://autologapp.co.uk/app/confirm?type=signup'})()
     }
   })
   setLoading('su', false)
@@ -506,7 +506,7 @@ async function doMagic(){
   setLoading('ml', true)
   const {error} = await sb.auth.signInWithOtp({
     email,
-    options:{emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://autologapp.co.uk/app/dashboard?reg='+encodeURIComponent(r):'https://autologapp.co.uk/app/dashboard'})()}
+    options:{emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://autologapp.co.uk/app/confirm?reg='+encodeURIComponent(r)+'&type=signup':'https://autologapp.co.uk/app/confirm?type=signup'})()}
   })
   setLoading('ml', false)
   if(error){ showErr('ml', friendlyErr(error.message)); return }
