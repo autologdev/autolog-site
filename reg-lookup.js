@@ -80,7 +80,7 @@
           (taxExp ? '<div class="rl-result-item"><div class="rl-result-label">Tax</div><div class="rl-result-val">' + taxExp + '</div></div>' : '') +
         '</div>' +
         '<p class="rl-result-cta-text">AutoLog will track MOT, tax, fuel costs and service history for this vehicle.</p>' +
-        '<a href="/app/login?reg=' + encodeURIComponent(reg) + '&view=signup" class="rl-cta-btn">Create free account to track this vehicle &rarr;</a>' +
+        '<a href="#" id="rl-main-cta" class="rl-cta-btn" onclick="rlHandleCTA(\'' + encodeURIComponent(reg) + '\',event)">Create free account to track this vehicle &rarr;</a>' +
         '<p class="rl-result-signin">Already have AutoLog? <a href="/app/dashboard?reg=' + encodeURIComponent(reg) + '">Sign in &rarr;</a></p>';
 
       result.style.display = 'block';
