@@ -477,7 +477,7 @@ async function doSignUp(){
   if(error){ showErr('su', friendlyErr(error.message)); return }
   showSent(
     'Confirm your email',
-    `We've sent a confirmation link to <strong>${email}</strong>. Click it to activate your account, then sign in.`,
+    `We've sent a confirmation email to <strong>${email}</strong>. Open it and click <strong>Activate my account</strong> to continue.`,
     email
   )
 }
