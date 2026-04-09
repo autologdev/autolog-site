@@ -372,7 +372,7 @@ body::after{
     <div class="success-wrap">
       <div class="success-icon">✉️</div>
       <div class="success-title" id="sent-title">Check your inbox</div>
-      <div class="success-body" id="sent-body">We've sent an email to <strong id="sent-email"></strong>. Follow the link inside to continue.</div>
+      <div class="success-body" id="sent-body">We've sent a confirmation email. Open it and click <strong>Activate my account</strong> to continue. Check your spam folder if it doesn't arrive within a minute.<span id="sent-email" style="display:none"></span></div>
       <button class="btn-ghost" onclick="show('v-signin')" style="margin-top:0">← Back to sign in</button>
     </div>
   </div>
@@ -440,7 +440,8 @@ function clearAlerts(prefix){
 function showSent(title, body, email){
   document.getElementById('sent-title').textContent = title
   document.getElementById('sent-body').innerHTML = body
-  document.getElementById('sent-email').textContent = email
+  const el = document.getElementById('sent-email')
+  if(el) el.textContent = email
   show('v-sent')
 }
 
@@ -477,7 +478,7 @@ async function doSignUp(){
   if(error){ showErr('su', friendlyErr(error.message)); return }
   showSent(
     'Confirm your email',
-    `We've sent a confirmation email to <strong>${email}</strong>.<br><br>Open the email and click <strong>&ldquo;Activate my account&rdquo;</strong> to finish setting up your account. Check your spam folder if it doesn't arrive within a minute.`,
+    `We\'ve sent a confirmation email to <strong>${email}</strong>.<br><br>Open it and click <strong>Activate my account</strong> to continue. Check your spam folder if it doesn\'t arrive within a minute.`,
     email
   )
 }
