@@ -23,6 +23,7 @@
   width:100%;
   text-align:center;
   box-shadow:0 8px 40px rgba(0,0,0,0.08);
+  margin:0 auto;
 }
 .confirm-icon{
   width:72px;height:72px;
@@ -64,7 +65,7 @@
     <h1>Confirm your email</h1>
     <p>Click the button below to activate your AutoLog account and start tracking your vehicle.</p>
     <div class="confirm-err" id="conf-err"></div>
-    <button class="btn btn-primary" id="conf-btn" onclick="confirmAccount()" style="width:100%;justify-content:center;font-size:1rem;padding:16px;">
+    <button id="conf-btn" onclick="confirmAccount()" style="width:100%;display:block;background:#1E7A8C;color:#fff;border:none;border-radius:12px;padding:16px 24px;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s;">
       Activate my account →
     </button>
     <p style="font-size:.8125rem;color:#94a3b8;margin-top:16px;margin-bottom:0;">
@@ -77,6 +78,21 @@ const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co'
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
 const sb = supabase.createClient(SURL, SKEY)
 
+function getReg() {
+  const params = new URLSearchParams(location.search)
+  // Try direct reg param first
+  if (params.get('reg')) return params.get('reg')
+  // Fall back to extracting from redirect_to param (Supabase embeds it there)
+  const redirectTo = params.get('redirect_to')
+  if (redirectTo) {
+    try {
+      const redirectParams = new URLSearchParams(new URL(redirectTo).search)
+      if (redirectParams.get('reg')) return redirectParams.get('reg')
+    } catch(e) {}
+  }
+  return null
+}
+
 async function confirmAccount() {
   const btn = document.getElementById('conf-btn')
   const err = document.getElementById('conf-err')
@@ -84,13 +100,12 @@ async function confirmAccount() {
   btn.textContent = 'Activating…'
   err.classList.remove('on')
 
-  // Get token_hash and type from URL params
   const params = new URLSearchParams(location.search)
   const tokenHash = params.get('token_hash')
-  const type = params.get('type')
-  const reg = params.get('reg')
+  const type = params.get('type') || 'signup'
+  const reg = getReg()
 
-  if (!tokenHash || !type) {
+  if (!tokenHash) {
     err.textContent = 'Invalid confirmation link. Please request a new one.'
     err.classList.add('on')
     btn.disabled = false
@@ -102,8 +117,8 @@ async function confirmAccount() {
   const { error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: type })
 
   if (error) {
-    if (error.message.includes('expired') || error.message.includes('not found')) {
-      err.innerHTML = 'This link has expired or already been used. <a href="/app/login" style="color:#1E7A8C;">Sign in</a> if your account is already active, or sign up again.'
+    if (error.message.includes('expired') || error.message.includes('not found') || error.message.includes('invalid')) {
+      err.innerHTML = 'This link has expired or already been used. <a href="/app/login" style="color:#1E7A8C;font-weight:600;">Sign in</a> if your account is already active, or sign up again.'
     } else {
       err.textContent = error.message
     }
@@ -113,11 +128,11 @@ async function confirmAccount() {
     return
   }
 
-  // Success — redirect to dashboard, carrying reg param if present
-  btn.textContent = '✅ Account activated!'
+  // Success — redirect to dashboard with reg so the add vehicle modal opens
+  btn.textContent = '✅ Account activated! Taking you to your dashboard…'
   setTimeout(() => {
     location.replace(reg ? '/app/dashboard?reg=' + encodeURIComponent(reg) : '/app/dashboard')
-  }, 800)
+  }, 1000)
 }
 </script>
 </body>
