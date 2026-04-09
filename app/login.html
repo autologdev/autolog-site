@@ -477,7 +477,7 @@ async function doSignUp(){
   if(error){ showErr('su', friendlyErr(error.message)); return }
   showSent(
     'Confirm your email',
-    `We've sent a confirmation email to <strong>${email}</strong>. Open it and click <strong>Activate my account</strong> to continue.`,
+    `We've sent a confirmation email to <strong>${email}</strong>.<br><br>Open the email and click <strong>&ldquo;Activate my account&rdquo;</strong> to finish setting up your account. Check your spam folder if it doesn't arrive within a minute.`,
     email
   )
 }
