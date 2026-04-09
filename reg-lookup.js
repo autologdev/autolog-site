@@ -102,4 +102,26 @@
   window.rlInput = function(e) {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
   };
+  // Route the main CTA based on whether user is already signed in
+  window.rlHandleCTA = async function(encodedReg, e) {
+    e.preventDefault()
+    const reg = decodeURIComponent(encodedReg)
+    // Check for existing Supabase session
+    try {
+      const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
+      const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+      const sb = supabase.createClient(SURL, SKEY)
+      const { data: { session } } = await sb.auth.getSession()
+      if (session) {
+        // Already signed in — go straight to dashboard with reg
+        location.href = '/app/dashboard?reg=' + encodeURIComponent(reg)
+      } else {
+        // Not signed in — go to signup
+        location.href = '/app/login?reg=' + encodeURIComponent(reg) + '&view=signup'
+      }
+    } catch(err) {
+      // Fallback to signup if session check fails
+      location.href = '/app/login?reg=' + encodeURIComponent(reg) + '&view=signup'
+    }
+  }
 })();
