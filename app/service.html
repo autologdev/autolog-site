@@ -31,6 +31,7 @@
     <div class="topbar-left"><button class="mob-menu" id="mob-menu-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="page-title">Service History</span></div>
     <div class="topbar-right">
       <div class="vsw" id="vsw"><button class="vsw-btn" id="vsw-btn" onclick="toggleVsw()"><div class="vsw-dot"></div><span class="vsw-name" id="vsw-name">…</span><span class="vsw-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span></button></div>
+      <a href="/app/dashboard" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
       <button class="btn btn-primary btn-sm" id="add-btn">+ Log Service</button>
       <div class="user-avatar" id="user-avatar">?</div>
     </div>
@@ -186,6 +187,8 @@ function showAdd(){
     if(svcInsert.error){const e=bg.querySelector('#merr');e.textContent=svcInsert.error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Service';return}
     const svcCost=parseFloat(bg.querySelector('#s-cost').value)||null
     if(svcInsert.data&&svcCost){await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#s-d').value,amount:svcCost,category:'service',source_id:svcInsert.data.id,source_table:'service_entries'})}
+    // Analytics: first_action_taken
+    try{const{data:p}=await sb.from('profiles').select('first_action_completed').eq('id',userId).single();if(p&&!p.first_action_completed){await sb.from('analytics_events').insert({user_id:userId,event_name:'first_action_taken',properties:{source:'web',action_type:'service'}});await sb.from('profiles').update({first_action_completed:true}).eq('id',userId)}}catch(e){}
     bg.remove();toast('Service saved ✓');await load()
   }
 }

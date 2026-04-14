@@ -214,7 +214,9 @@ async function saveVehicle(){
   }
   document.querySelector('.mbg').remove()
   toast('Vehicle added ✓')
-  localStorage.setItem('al_vid',data.id)
+  // Analytics: vehicle_added
+      try{await sb.from('analytics_events').insert({user_id:userId,event_name:'vehicle_added',properties:{source:'web',make:make||null}})}catch(e){}
+      localStorage.setItem('al_vid',data.id)
   location.reload()
 }
 

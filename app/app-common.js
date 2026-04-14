@@ -59,6 +59,24 @@ function pill(label, colour) {
   return `<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:0.75rem;font-weight:600;color:${c};background:${c}18">${label}</span>`
 }
 
+// ── Plan helpers ─────────────────────────────────────────────
+async function getUserPlan(userId) {
+  const { data } = await sb.from('profiles').select('plan').eq('id', userId).single()
+  return data?.plan || 'free'
+}
+function isPro(plan) { return plan === 'paid' || plan === 'business' }
+
+// ── Analytics ─────────────────────────────────────────────────
+async function logEvent(userId, eventName, properties = {}) {
+  try {
+    await sb.from('analytics_events').insert({
+      user_id: userId,
+      event_name: eventName,
+      properties
+    })
+  } catch (e) { /* silent */ }
+}
+
 // ── Toast ─────────────────────────────────────────────────────
 function toast(msg, type) {
   const old = document.getElementById('al-toast'); if (old) old.remove()

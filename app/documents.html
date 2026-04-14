@@ -24,6 +24,10 @@
 .ai-field-val{font-size:.8125rem;font-weight:600;color:var(--text-primary)}
 .upload-progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
 .upload-progress-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-mid));border-radius:2px;transition:width .3s ease;width:0%}
+.paywall-banner{background:linear-gradient(135deg,#1E7A8C,#155F6E);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.paywall-banner-text{flex:1;min-width:0;color:#fff}
+.paywall-banner-text strong{display:block;font-size:.9375rem;font-weight:700;margin-bottom:3px}
+.paywall-banner-text span{font-size:.8125rem;opacity:.85}
 </style>
 </head>
 <body>
@@ -46,6 +50,7 @@
   <div class="topbar">
     <div class="topbar-left"><button class="mob-menu" id="mob-menu-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="page-title">Documents</span></div>
     <div class="topbar-right">
+      <a href="/app/dashboard" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
       <div class="vsw" id="vsw"><button class="vsw-btn" id="vsw-btn" onclick="toggleVsw()"><div class="vsw-dot"></div><span class="vsw-name" id="vsw-name">…</span><span class="vsw-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span></button></div>
       <button class="btn btn-primary btn-sm" id="upload-btn">+ Upload</button>
       <div class="user-avatar" id="user-avatar">?</div>
@@ -57,9 +62,6 @@
 
 <script>
 const SURL='https://dkpvxlxarsmiljnvnbck.supabase.co',SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
-// NOTE: OpenAI calls go through the mechanic worker to avoid exposing the key client-side
-// The worker at mechanic.autologapp.co.uk proxies AI requests server-side
-const OPENAI_KEY='sk-proj-placeholder' // Set in worker env - direct calls use mechanic worker proxy
 const sb=supabase.createClient(SURL,SKEY)
 const $=id=>document.getElementById(id)
 function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
@@ -69,7 +71,46 @@ function doSignOut(){sb.auth.signOut().then(()=>location.href='/app/login')}
 const sbEl=$('sb'),sbOv=$('sb-ov')
 $('mob-menu-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
 sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
-let allVehicles=[],vehicle=null,userId=null
+let allVehicles=[],vehicle=null,userId=null,userPlan='free'
+
+// ── Plan helpers ───────────────────────────────────────────
+function isProPlan(){return userPlan==='paid'||userPlan==='business'}
+
+// ── Analytics ─────────────────────────────────────────────
+async function logEvent(eventName,properties={}){
+  try{await sb.from('analytics_events').insert({user_id:userId,event_name:eventName,properties})}catch(e){}
+}
+async function checkFirstAction(actionType){
+  try{
+    const{data:p}=await sb.from('profiles').select('first_action_completed').eq('id',userId).single()
+    if(p&&!p.first_action_completed){
+      await logEvent('first_action_taken',{source:'web',action_type:actionType})
+      await sb.from('profiles').update({first_action_completed:true}).eq('id',userId)
+    }
+  }catch(e){}
+}
+
+// ── OCR usage tracking (Task 2) ────────────────────────────
+async function checkOCRUsage(){
+  if(isProPlan())return true // pro: unlimited
+  try{
+    const today=new Date()
+    const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
+    const{data}=await sb.from('api_usage').select('used_count').eq('user_id',userId).eq('service','ocr').eq('period_start',periodStart).single()
+    return !data || data.used_count < 10
+  }catch(e){return true}
+}
+async function incrementOCRUsage(){
+  if(isProPlan())return
+  try{
+    const today=new Date()
+    const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
+    await sb.from('api_usage').upsert({user_id:userId,service:'ocr',period_start:periodStart,used_count:1},{onConflict:'user_id,service,period_start',ignoreDuplicates:false})
+    // increment via RPC or re-fetch and update
+    const{data}=await sb.from('api_usage').select('id,used_count').eq('user_id',userId).eq('service','ocr').eq('period_start',periodStart).single()
+    if(data)await sb.from('api_usage').update({used_count:data.used_count+1}).eq('id',data.id)
+  }catch(e){}
+}
 
 const DTYPES={
   mot_certificate:{label:'MOT Certificate',icon:'✅'},
@@ -90,7 +131,7 @@ function toggleVsw(){
   if(allVehicles.length<=1)return
   $('vsw-btn').classList.add('open')
   const drop=document.createElement('div');drop.id='vsw-drop';drop.className='vsw-drop'
-  drop.innerHTML=allVehicles.map(v=>`<div class="vsw-item${v.id===vehicle?.id?' cur':''}" onclick="switchV('${v.id}')"><div style="width:7px;height:7px;border-radius:50%;background:${v.id===vehicle?.id?'#1A7A8C':'#94a3b8'};flex-shrink:0"></div><div><div>${vName(v)}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div></div>`).join('')
+  drop.innerHTML=allVehicles.map(v=>`<div class="vsw-item${v.id===vehicle?.id?' cur':''}" onclick="switchV('${v.id}')"><div style="width:7px;height:7px;border-radius:50%;background:${v.id===vehicle?.id?'#1E7A8C':'#94a3b8'};flex-shrink:0"></div><div><div>${vName(v)}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div></div>`).join('')
   $('vsw').appendChild(drop)
   setTimeout(()=>document.addEventListener('click',()=>{const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open')}},{once:true}),10)
 }
@@ -102,9 +143,10 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   userId=session.user.id
   const[{data:veh},{data:prof}]=await Promise.all([
     sb.from('vehicles').select('*').eq('owner_id',userId).eq('is_active',true).order('created_at',{ascending:true}),
-    sb.from('profiles').select('display_name').eq('id',userId).single()
+    sb.from('profiles').select('display_name,plan').eq('id',userId).single()
   ])
   allVehicles=veh||[]
+  userPlan=prof?.plan||'free'
   const _n=prof?.display_name||session.user.email||''
   $('user-avatar').textContent=_n.length?_n[0].toUpperCase():'?'
   let selId=localStorage.getItem('al_vid')
@@ -123,10 +165,26 @@ async function load(){
   const groups={}
   all.forEach(d=>{const t=d.document_type||'other';if(!groups[t])groups[t]=[];groups[t].push(d)})
 
+  // ── Upload limit banner for free users (Task 3) ────────
+  const FREE_DOC_LIMIT=10
+  const overLimit=!isProPlan()&&all.length>=FREE_DOC_LIMIT
+
   $('content').innerHTML=`
     <div class="pg-head">
       <div class="pg-head-text"><h1>Documents</h1><p>${vName(vehicle)} · ${all.length} document${all.length!==1?'s':''}</p></div>
     </div>
+    ${overLimit?`<div class="paywall-banner" id="paywall-banner">
+      <div class="paywall-banner-text">
+        <strong>🔒 Upload limit reached</strong>
+        <span>Free plan includes ${FREE_DOC_LIMIT} documents per vehicle. Upgrade for unlimited uploads and enhanced AI scanning.</span>
+      </div>
+      <a href="/app/settings#upgrade" class="btn btn-sm" style="background:#fff;color:#1E7A8C;font-weight:700;flex-shrink:0" onclick="logEvent('paywall_viewed',{source:'web',trigger:'upload_limit'})">Upgrade →</a>
+    </div>`:''}
+    ${!isProPlan()&&!overLimit?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span>📄 Basic Scan active — <a href="/app/settings#upgrade" style="color:var(--teal);font-weight:700" onclick="logEvent('paywall_viewed',{source:'web',trigger:'scan_upsell'})">Upgrade to Enhanced Scan ✨</a></span>
+      <span style="font-size:.75rem;opacity:.7">${all.length}/${FREE_DOC_LIMIT} documents used</span>
+    </div>`:''}
+    ${isProPlan()?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;gap:6px"><span>✨</span><strong>Enhanced Scan active</strong> — Google Vision + GPT-4o</div>`:''}
     ${all.length===0?`
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;gap:20px">
       <div style="width:72px;height:72px;background:var(--teal-light);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem">📄</div>
@@ -134,10 +192,10 @@ async function load(){
         <h2 style="font-size:1.375rem;font-weight:800;letter-spacing:-.02em;color:var(--text-primary);margin-bottom:8px">No documents yet</h2>
         <p style="font-size:.9375rem;color:var(--text-muted);max-width:380px;line-height:1.6">Upload MOT certificates, invoices, insurance docs and more. AI will categorise and extract key details automatically.</p>
       </div>
-      <button class="btn btn-primary" onclick="showUpload()">
+      ${overLimit?'':`<button class="btn btn-primary" onclick="showUpload()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Upload First Document
-      </button>
+      </button>`}
     </div>`
     :Object.entries(groups).map(([type,docs])=>{
       const ti=DTYPES[type]||DTYPES.other
@@ -197,7 +255,12 @@ async function delDoc(id,path){
 
 // ── AI Classification ──────────────────────────────────────
 async function classifyWithAI(file){
-  // Convert file to base64 for vision API
+  // Check OCR usage before proceeding (Task 2)
+  const allowed=await checkOCRUsage()
+  if(!allowed){
+    await logEvent('paywall_viewed',{source:'web',trigger:'ocr_limit'})
+    return null
+  }
   return new Promise((resolve)=>{
     const reader=new FileReader()
     reader.onload=async(e)=>{
@@ -206,7 +269,6 @@ async function classifyWithAI(file){
         const mediaType=file.type||'image/jpeg'
         const isPDF=file.type==='application/pdf'
 
-        // Build prompt for classification + data extraction
         const systemPrompt=`You are an automotive document classifier for a UK vehicle management app. 
 Analyse the document image and return ONLY valid JSON (no markdown, no explanation) with this exact structure:
 {
@@ -234,8 +296,12 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
           }]
         }
 
-        // Use mechanic worker as proxy to avoid exposing OpenAI key
-        const res=await fetch('https://mechanic.autologapp.co.uk/ai-classify',{
+        // Pro: enhanced endpoint (Google Vision + GPT-4o); Free: standard endpoint
+        const endpoint=isProPlan()
+          ?'https://mechanic.autologapp.co.uk/ai-classify-enhanced'
+          :'https://mechanic.autologapp.co.uk/ai-classify'
+
+        const res=await fetch(endpoint,{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify(payload)
@@ -244,6 +310,7 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
         const data=await res.json()
         const text=data.choices?.[0]?.message?.content||''
         const clean=text.replace(/```json|```/g,'').trim()
+        await incrementOCRUsage()
         resolve(JSON.parse(clean))
       }catch(err){
         console.warn('AI classification failed:',err)
@@ -252,7 +319,6 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
     }
     reader.onerror=()=>resolve(null)
     if(file.type==='application/pdf'){
-      // For PDFs just classify by filename
       resolve(null)
     } else {
       reader.readAsDataURL(file)
@@ -262,8 +328,39 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
 
 // ── Upload Modal ───────────────────────────────────────────
 function showUpload(){
+  // Gate: free users at limit
+  if(!isProPlan()){
+    sb.from('documents').select('id',{count:'exact',head:true}).eq('vehicle_id',vehicle.id).then(({count})=>{
+      if(count>=10){
+        logEvent('paywall_viewed',{source:'web',trigger:'upload_limit'})
+        // Replace upload button with locked state
+        const btn=$('upload-btn')
+        if(btn){
+          btn.innerHTML='🔒 Upgrade to upload more'
+          btn.disabled=true
+          btn.style.opacity='0.7'
+        }
+        // Show paywall banner inline
+        let existing=document.getElementById('paywall-banner')
+        if(!existing){
+          const banner=document.createElement('div')
+          banner.id='paywall-banner'
+          banner.className='paywall-banner'
+          banner.innerHTML=`<div class="paywall-banner-text"><strong>🔒 Upload limit reached</strong><span>Free plan includes 10 documents per vehicle. Upgrade for unlimited uploads and enhanced AI scanning. £2.99/mo</span></div><a href="/app/settings#upgrade" class="btn btn-sm" style="background:#fff;color:#1E7A8C;font-weight:700;flex-shrink:0">Upgrade →</a>`
+          $('content').prepend(banner)
+        }
+        return
+      }
+      _showUploadModal()
+    })
+  } else {
+    _showUploadModal()
+  }
+}
+
+function _showUploadModal(){
   const bg=document.createElement('div');bg.className='mbg'
-  bg.innerHTML=`<div class="mo" style="max-width:560px"><div class="mh"><h2>Upload Document</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
+  bg.innerHTML=`<div class="mo" style="max-width:560px"><div class="mh"><h2>Upload Document${isProPlan()?' <span style="font-size:.75rem;font-weight:600;color:#7c3aed;background:rgba(139,92,246,.1);padding:2px 8px;border-radius:100px;margin-left:6px">Enhanced Scan ✨</span>':' <span style="font-size:.75rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:2px 8px;border-radius:100px;margin-left:6px">Basic Scan</span>'}</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
     <div class="merr" id="merr"></div>
     <div id="ai-suggestion-zone"></div>
     <div class="fg"><label class="fl">Document Type</label><select class="fi" id="u-t">${Object.entries(DTYPES).map(([v,{label}])=>`<option value="${v}">${label}</option>`).join('')}</select></div>
@@ -313,22 +410,21 @@ function showUpload(){
   bg.querySelector('#u-f').onchange=e=>{if(e.target.files.length)setFiles(e.target.files)}
   window.handleDrop=e=>{e.preventDefault();bg.querySelector('#dz').classList.remove('over');if(e.dataTransfer.files.length)setFiles(e.dataTransfer.files)}
 
-  // AI classification on first image
   const runAIClassification=async(file)=>{
     const zone=bg.querySelector('#ai-suggestion-zone')
+    const scanLabel=isProPlan()?'Enhanced Scan ✨':'Basic Scan'
     zone.innerHTML=`<div class="ai-suggestion"><h4>✨ AI Analysis <span class="ai-badge"><span class="ai-spinner"></span> Analysing…</span></h4></div>`
     const result=await classifyWithAI(file)
     aiResult=result
     if(!result){zone.innerHTML='';return}
 
-    // Pre-fill form
     if(result.document_type)bg.querySelector('#u-t').value=result.document_type
     if(result.document_date)bg.querySelector('#u-d').value=result.document_date
     if(result.extracted_amount)bg.querySelector('#u-amount').value=result.extracted_amount
 
     const conf=Math.round((result.confidence||0)*100)
     zone.innerHTML=`<div class="ai-suggestion">
-      <h4>✨ AI Classification <span class="ai-badge">${conf}% confident</span></h4>
+      <h4>✨ AI Classification <span class="ai-badge">${conf}% confident · ${scanLabel}</span></h4>
       <div style="font-size:.8125rem;color:var(--text-secondary);margin-bottom:10px">Detected: <strong>${DTYPES[result.document_type]?.label||result.document_type}</strong>${result.description?` — ${result.description}`:''}</div>
       ${result.garage_name||result.extracted_amount||result.extracted_mileage?`
       <div class="ai-fields">
@@ -357,7 +453,6 @@ function showUpload(){
       const{error:ue}=await sb.storage.from('vehicle-documents').upload(path,file,{contentType:file.type})
       if(ue){const e=bg.querySelector('#merr');e.textContent=ue.message;e.classList.add('on');btn.disabled=false;btn.textContent='Upload';return}
 
-      // Save document record with AI extracted data
       const docRecord={
         vehicle_id:vehicle.id,
         user_id:userId,
@@ -373,7 +468,10 @@ function showUpload(){
       }
       await sb.from('documents').insert(docRecord)
 
-      // If service invoice or MOT, offer to create linked record
+      // Analytics: document_uploaded (Task 4)
+      await logEvent('document_uploaded',{source:'web',document_type:docType,vehicle_id:vehicle.id})
+      await checkFirstAction('document')
+
       if(aiResult&&(docType==='service_invoice'||docType==='mot_certificate'||docType==='repair_invoice'||docType==='fuel_receipt')){
         await createLinkedRecord(docType, aiResult, path)
       }
@@ -385,7 +483,6 @@ function showUpload(){
   }
 }
 
-// Create a linked service/fuel record from AI extracted data
 async function createLinkedRecord(docType, ai, docPath){
   try{
     if((docType==='service_invoice'||docType==='repair_invoice')&&(ai.extracted_amount||ai.garage_name)){

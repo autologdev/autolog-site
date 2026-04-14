@@ -17,7 +17,8 @@
 </aside>
 <div class="sb-overlay" id="sb-ov"></div>
 <div class="main">
-  <div class="topbar"><button class="mob-btn" id="mob-btn" style="margin-right:4px"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="topbar-title">Settings</span></div>
+  <div class="topbar"><button class="mob-btn" id="mob-btn" style="margin-right:4px"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="topbar-title">Settings</span>
+  <div style="margin-left:auto"><a href="/app/dashboard" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a></div></div>
   <div class="content" id="content"><div class="ld"><div class="spin"></div></div></div>
 </div>
 <div id="toast"></div>
@@ -52,15 +53,33 @@ function toast(msg,err){const el=document.getElementById('toast');el.textContent
       <button class="btn btn-p btn-sm" id="save-btn">Save Changes</button>
       <div id="name-status" style="font-size:.8125rem;color:#94a3b8;margin-top:10px"></div>
     </div>
-    <div class="card">
-      <div class="ct">Plan</div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
+    <div class="card" id="upgrade">
+      <div class="ct">AutoLog+</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
         <div>
-          <div style="font-size:.9375rem;font-weight:700;color:#0f172a">${profile?.plan==='paid'?'AutoLog+':profile?.plan==='business'?'Business':'Free'}</div>
-          <div style="font-size:.8125rem;color:#94a3b8;margin-top:3px">${profile?.plan==='free'?'1 vehicle · 110 AI actions/year':'Unlimited · Priority features'}</div>
+          <div style="font-size:.9375rem;font-weight:700;color:#0f172a">${profile?.plan==='paid'?'AutoLog+ Active':profile?.plan==='business'?'Business Plan':'Free Plan'}</div>
+          <div style="font-size:.8125rem;color:#94a3b8;margin-top:3px">${profile?.plan==='free'?'1 vehicle · 10 documents · 10 AI scans/month':'Unlimited · All features active'}</div>
         </div>
-        ${profile?.plan==='free'?`<a href="/#pricing" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#1E7A8C;color:#fff;border-radius:9px;font-size:.8125rem;font-weight:700;text-decoration:none;transition:background .15s" onmouseover="this.style.background='#155F6E'" onmouseout="this.style.background='#1E7A8C'">✨ Upgrade</a>`:`<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#E8F4F6;color:#1E7A8C">Active</span>`}
+        ${profile?.plan==='free'?'':"<span style='display:inline-block;padding:3px 10px;border-radius:100px;font-size:.75rem;font-weight:600;background:#E8F4F6;color:#1E7A8C'>Active</span>"}
       </div>
+      ${profile?.plan==='free'?`
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        ${[['car.fill','Unlimited vehicles'],['doc.fill','Unlimited documents and history'],['chart.bar.fill','Full cost insights and analytics'],['antenna','Automatic trip tracking'],['arrow.down.doc','PDF vehicle history export'],['doc.viewfinder','Advanced document scanning — Enhanced AI extraction'],['star.fill','Priority support']].map(([,text])=>`<div style="display:flex;align-items:center;gap:10px"><span style="color:#1E7A8C;font-size:1rem">✓</span><span style="font-size:.875rem;color:#334155">${text}</span></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:12px">
+        <div style="flex:1;border:2px solid #1E7A8C;border-radius:12px;padding:14px;cursor:pointer">
+          <div style="font-size:.75rem;font-weight:700;color:#64748b;margin-bottom:6px">Monthly</div>
+          <div style="font-size:1.375rem;font-weight:800;color:#0f172a">£2.99<span style="font-size:.875rem;font-weight:400;color:#94a3b8">/mo</span></div>
+        </div>
+        <div style="flex:1;border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;position:relative">
+          <div style="position:absolute;top:-10px;right:10px;background:#22c55e;color:#fff;font-size:.625rem;font-weight:800;padding:2px 8px;border-radius:100px">SAVE 30%</div>
+          <div style="font-size:.75rem;font-weight:700;color:#64748b;margin-bottom:6px">Annual</div>
+          <div style="font-size:1.375rem;font-weight:800;color:#0f172a">£24.99<span style="font-size:.875rem;font-weight:400;color:#94a3b8">/yr</span></div>
+        </div>
+      </div>
+      <a href="mailto:hello@autologapp.co.uk?subject=AutoLog%2B%20Upgrade%20Request" class="btn btn-primary" style="width:100%;justify-content:center;display:flex" onclick="try{sb.from('analytics_events').insert({user_id:userId,event_name:'paywall_viewed',properties:{source:'web',trigger:'settings_upgrade'}})}catch(e){}">✨ Upgrade to AutoLog+</a>
+      <p style="font-size:.75rem;color:#94a3b8;text-align:center;margin-top:10px">Tap to email us — full in-app billing coming soon.</p>
+      `:'<div style="font-size:.875rem;color:#64748b">All AutoLog+ features are active on your account.</div>'}
     </div>
     <div class="card">
       <div class="ct">Security</div>
