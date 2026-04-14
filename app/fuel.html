@@ -150,6 +150,8 @@ function showFuelDetail(i){
   </div></div>`
   document.body.appendChild(bg)
   bg.addEventListener('click',ev=>{if(ev.target===bg)bg.remove()})
+  const fuelEscH=e=>{if(e.key==='Escape'){bg.remove();document.removeEventListener('keydown',fuelEscH)}}
+  document.addEventListener('keydown',fuelEscH)
   bg.querySelector('#fed-sv').onclick=async()=>{
     const btn=bg.querySelector('#fed-sv');btn.disabled=true;btn.textContent='Saving…'
     const{error}=await sb.from('fuel_entries').update({
