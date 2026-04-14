@@ -360,6 +360,53 @@ async function saveVehicle(){
       </div>
     `
 
+    // ── Vehicle summary cards (all vehicles overview) ──────
+    if(allVehicles.length > 1) {
+      const now2 = new Date()
+      // Fetch last service date for each vehicle
+      const svcPromises = allVehicles.map(v =>
+        sb.from('service_entries').select('date').eq('vehicle_id',v.id).neq('source','dvsa').order('date',{ascending:false}).limit(1)
+      )
+      const svcResults = await Promise.all(svcPromises)
+      const summaryEl = document.createElement('div')
+      summaryEl.innerHTML = `
+        <div style="margin-bottom:24px">
+          <div style="font-size:.8125rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px">All Vehicles</div>
+          <div class="vehicle-cards-grid">
+            ${allVehicles.map((v,idx) => {
+              const mot = motStatus(v)
+              const tax = taxStatus(v)
+              const lastSvc = svcResults[idx]?.data?.[0]?.date
+              const isActive = v.id === currentVehicle?.id
+              return `<div onclick="switchVehicle('${v.id}')" style="background:var(--surface);border-radius:var(--radius);padding:18px 20px;border:1.5px solid ${isActive?'var(--teal)':'var(--border-soft)'};box-shadow:var(--shadow-sm);cursor:pointer;transition:all .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow-sm)'">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+                  <div>
+                    <div style="font-size:.9375rem;font-weight:700;color:var(--text-primary);letter-spacing:-.01em">${vName(v)}</div>
+                    ${v.registration ? `<div style="font-family:var(--font-mono);font-size:.75rem;color:var(--text-muted);letter-spacing:.05em;margin-top:1px">${v.registration.toUpperCase()}</div>` : ''}
+                  </div>
+                  ${isActive ? `<span style="font-size:.625rem;font-weight:700;background:var(--teal);color:#fff;padding:3px 8px;border-radius:100px;letter-spacing:.04em">ACTIVE</span>` : ''}
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+                  <div>
+                    <div style="font-size:.625rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">MOT</div>
+                    <span class="badge ${mot.cls}" style="font-size:.6875rem">${mot.label}</span>
+                  </div>
+                  <div>
+                    <div style="font-size:.625rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Tax</div>
+                    <span class="badge ${tax.cls}" style="font-size:.6875rem">${tax.label}</span>
+                  </div>
+                  <div>
+                    <div style="font-size:.625rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Last Service</div>
+                    <span style="font-size:.75rem;font-weight:600;color:var(--text-secondary)">${lastSvc ? fmtDate(lastSvc) : '—'}</span>
+                  </div>
+                </div>
+              </div>`
+            }).join('')}
+          </div>
+        </div>`
+      $('content').prepend(summaryEl)
+    }
+
     // ── Post-signup first action prompt (Task 3) ──────────
     // Show once to new users with 1 vehicle and no services yet
     const firstActionKey='al_first_action_prompted_'+userId
