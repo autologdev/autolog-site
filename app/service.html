@@ -144,6 +144,8 @@ function showDetail(i){
   </div></div>`
   document.body.appendChild(bg)
   bg.addEventListener('click',ev=>{if(ev.target===bg)bg.remove()})
+  const escH=e=>{if(e.key==='Escape'){bg.remove();document.removeEventListener('keydown',escH)}}
+  document.addEventListener('keydown',escH)
   bg.querySelector('#ed-sv').onclick=async()=>{
     const btn=bg.querySelector('#ed-sv');btn.disabled=true;btn.textContent='Saving…'
     const{error}=await sb.from('service_entries').update({
