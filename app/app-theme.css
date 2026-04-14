@@ -863,6 +863,29 @@ img { display: block; max-width: 100%; }
   }
 }
 
+/* ── Dashboard topbar button ─────────────────────────────── */
+.dash-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.14s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dash-btn:hover { background: var(--teal-light); color: var(--teal); border-color: rgba(26,122,140,0.3); }
+.dash-btn svg { flex-shrink: 0; }
+@media (max-width: 768px) { .dash-btn { display: none; } }
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1279px) {
   .sb { width: var(--sb-width-col); }
