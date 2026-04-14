@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Early Access — AutoLog</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #0B1120;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%; left: -10%;
+      width: 60vw; height: 60vw;
+      background: radial-gradient(ellipse, rgba(30,122,140,0.13) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 480px;
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 48px 44px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+      text-align: center;
+      animation: cardIn .4s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .logo img {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+    }
+    .logo-name {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+    .check-wrap {
+      width: 72px; height: 72px;
+      margin: 0 auto 28px;
+      border-radius: 50%;
+      background: rgba(77,184,204,0.12);
+      border: 1px solid rgba(77,184,204,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 24px rgba(77,184,204,0.15);
+      animation: pop .5s cubic-bezier(.16,1,.3,1) .2s both;
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .check-wrap svg { width: 34px; height: 34px; }
+    h1 {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .subtitle {
+      font-size: 0.9375rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.65;
+      margin-bottom: 36px;
+    }
+    .steps {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 8px 0;
+    }
+    .step + .step {
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .step-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: rgba(30,122,140,0.35);
+      border: 1px solid rgba(77,184,204,0.3);
+      color: #4DB8CC;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-text {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.5;
+    }
+    .step-text strong {
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+    }
+    .btn-testflight {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 20px;
+      background: linear-gradient(135deg, #1E7A8C, #155F6E);
+      color: #fff;
+      border: none;
+      border-radius: 13px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .18s;
+      box-shadow: 0 4px 20px rgba(30,122,140,.35);
+      letter-spacing: -0.01em;
+    }
+    .btn-testflight:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(30,122,140,.5);
+    }
+    .btn-testflight svg { flex-shrink: 0; }
+    .note {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.2);
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.07);
+      margin: 28px 0;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: .75rem;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,.25);
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .footer-links a:hover { color: rgba(255,255,255,.6); }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <img src="/assets/logo.png" alt="AutoLog">
+    <span class="logo-name">AutoLog</span>
+  </div>
+
+  <div class="check-wrap">
+    <svg viewBox="0 0 34 34" fill="none">
+      <path d="M17 3C9.268 3 3 9.268 3 17s6.268 14 14 14 14-6.268 14-14S24.732 3 17 3z" stroke="#4DB8CC" stroke-width="1.5" stroke-opacity="0.3"/>
+      <path d="M11 17.5l4.5 4.5 8-9" stroke="#4DB8CC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <h1>You're in — get AutoLog<br>on your iPhone now</h1>
+  <p class="subtitle">Follow these steps to install AutoLog via TestFlight. Takes less than a minute.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>Install TestFlight</strong> — Apple's app for beta testing, free from the App Store.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>Tap the button below</strong> on your iPhone to open the AutoLog TestFlight link.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>Tap "Accept" then "Install"</strong> in TestFlight and AutoLog will appear on your home screen.</div>
+    </div>
+  </div>
+
+  <a href="#testflight" class="btn-testflight">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+    </svg>
+    Get AutoLog on TestFlight
+  </a>
+
+  <p class="note">Requires iOS 16 or later. TestFlight must be installed first.<br>The TestFlight link will be updated once beta is live.</p>
+
+  <hr class="divider">
+  <div class="footer-links">
+    <a href="/">autologapp.co.uk</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="mailto:hello@autologapp.co.uk">Contact</a>
+  </div>
+</div>
+
+</body>
+</html>

@@ -42,7 +42,7 @@ async function joinWaitlist() {
       // Duplicate — already on list
       form.style.display = 'none';
       document.getElementById('wl-success').style.display = 'block';
-      document.getElementById('wl-success-msg').textContent = "You're already on the list — we'll be in touch soon.";
+      document.getElementById('wl-success-msg').textContent = "You're already signed up — check your email for the TestFlight link.";
     } else {
       msg.textContent = 'Something went wrong — please try again.';
       msg.className = 'wl-msg wl-msg-err';
@@ -55,7 +55,7 @@ async function joinWaitlist() {
   // Success
   form.style.display = 'none';
   document.getElementById('wl-success').style.display = 'block';
-  document.getElementById('wl-success-msg').textContent = "You\u2019re on the list. Early users get AutoLog+ free for 2 months.";
+  document.getElementById('wl-success-msg').textContent = "Check your email \u2014 we\u2019ve sent you the TestFlight link.";
 }
 
 // Allow Enter key to submit
