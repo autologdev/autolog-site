@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service — AutoLog</title>
-  <link rel="icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png">
+
+  <title>Terms of Service — AutoLog</title>
   <meta name="description" content="AutoLog Terms of Service.">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -140,7 +147,7 @@
         <p>If you have any questions about these Terms, please contact us:</p>
         <p>
           <strong>AutoLog</strong><br>
-          Email: <a href="/cdn-cgi/l/email-protection#244c4148484b644551504b484b434554540a474b0a514f"><span class="__cf_email__" data-cfemail="9ff7faf3f3f0dffeeaebf0f3f0f8feefefb1fcf0b1eaf4">[email&#160;protected]</span></a>
+          Email: <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>
         </p>
 
       </div>
@@ -162,13 +169,13 @@
           <h4>Product</h4>
           <a href="index.html#features">Features</a>
           <a href="index.html#pricing">Pricing</a>
-          <a href="/cdn-cgi/l/email-protection#86eee3eaeae9c6e7f3f2e9eae9e1e7f6f6a8e5e9a8f3edb9f5f3e4ece3e5f2bbc7f3f2e9cae9e1a3b4b6d1e7eff2eaeff5f2">Join Waitlist</a>
+          <a href="mailto:hello@autologapp.co.uk?subject=AutoLog%20Waitlist">Join Waitlist</a>
         </div>
         <div class="footer-links-col">
           <h4>Legal</h4>
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
-          <a href="/cdn-cgi/l/email-protection#fc9499909093bc9d89889390939b9d8c8cd29f93d28997">Contact</a>
+          <a href="mailto:hello@autologapp.co.uk">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -178,7 +185,19 @@
     </div>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     const hamburger = document.getElementById('hamburger');
     const mobileNav = document.getElementById('mobile-nav');
-    hamburger.addEventList
+    hamburger.addEventListener('click', () => {
+      const open = mobileNav.classList.toggle('open');
+      hamburger.classList.toggle('open', open);
+    });
+    mobileNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        hamburger.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
