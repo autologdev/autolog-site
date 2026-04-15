@@ -10,8 +10,6 @@ function initSb() {
 
 // ── Waitlist signup ────────────────────────────────────────
 window.joinWaitlist = async function joinWaitlist() {
-  initSb();
-  if (!sb) { initSb(); }
   var input = document.getElementById('wl-email');
   var btn = document.getElementById('wl-btn');
   var msg = document.getElementById('wl-msg');
@@ -27,36 +25,34 @@ window.joinWaitlist = async function joinWaitlist() {
     return;
   }
 
-  if (!sb) {
-    msg.textContent = 'Could not connect — please try again.';
-    msg.className = 'wl-msg wl-msg-err';
-    return;
-  }
-
   btn.disabled = true;
-  btn.textContent = 'Joining…';
+  btn.textContent = 'Joining\u2026';
 
-  var result = await sb.from('waitlist').insert({ email: email, source: 'website' });
+  try {
+    var res = await fetch('https://dkpvxlxarsmiljnvnbck.supabase.co/functions/v1/join-waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    });
+    var data = await res.json();
 
-  if (result.error) {
-    if (result.error.code === '23505') {
-      // Duplicate — already on list
+    if (data.duplicate) {
       form.style.display = 'none';
       document.getElementById('wl-success').style.display = 'block';
-      document.getElementById('wl-success-msg').textContent = "You're already signed up — check your email for the TestFlight link.";
+      document.getElementById('wl-success-msg').textContent = "You're already signed up \u2014 check your email for the TestFlight link.";
+    } else if (res.ok) {
+      form.style.display = 'none';
+      document.getElementById('wl-success').style.display = 'block';
+      document.getElementById('wl-success-msg').textContent = "Check your email \u2014 we've sent you the TestFlight link.";
     } else {
-      msg.textContent = 'Something went wrong — please try again.';
-      msg.className = 'wl-msg wl-msg-err';
-      btn.disabled = false;
-      btn.textContent = 'Join Early Access \u2192';
+      throw new Error('bad response');
     }
-    return;
+  } catch (e) {
+    msg.textContent = 'Something went wrong \u2014 please try again.';
+    msg.className = 'wl-msg wl-msg-err';
+    btn.disabled = false;
+    btn.textContent = 'Join Early Access \u2192';
   }
-
-  // Success
-  form.style.display = 'none';
-  document.getElementById('wl-success').style.display = 'block';
-  document.getElementById('wl-success-msg').textContent = "Check your email \u2014 we\u2019ve sent you the TestFlight link.";
 }
 
 // Allow Enter key to submit
