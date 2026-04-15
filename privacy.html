@@ -3,10 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacy Policy — AutoLog</title>
-  <link rel="icon" href="/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <!-- Favicons -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png">
+
+  <title>Privacy Policy — AutoLog</title>
   <meta name="description" content="AutoLog Privacy Policy — how we collect, use and protect your data.">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -102,7 +109,7 @@
       <div class="prose">
 
         <p>AutoLog ("we", "us", "our") is committed to protecting your personal data and respecting your privacy. This policy explains what data we collect, why we collect it, and your rights under the UK General Data Protection Regulation (UK GDPR).</p>
-        <p>AutoLog is operated as an independent UK-based service. Our contact email is <a href="/cdn-cgi/l/email-protection#b8d0ddd4d4d7f8d9cdccd7d4d7dfd9c8c896dbd796cdd3"><span class="__cf_email__" data-cfemail="bdd5d8d1d1d2fddcc8c9d2d1d2dadccdcd93ded293c8d6">[email&#160;protected]</span></a>.</p>
+        <p>AutoLog is operated as an independent UK-based service. Our contact email is <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>.</p>
 
         <h2>1. Data We Collect</h2>
         <p>We collect only the data necessary to provide the AutoLog service. The table below summarises what we collect and why.</p>
@@ -235,7 +242,7 @@
           <li><strong>Right to object</strong> — object to processing based on legitimate interests.</li>
           <li><strong>Right to restrict processing</strong> — request that we limit how we use your data in certain circumstances.</li>
         </ul>
-        <p>To exercise any of these rights, contact us at <a href="/cdn-cgi/l/email-protection#82eae7eeeeedc2e3f7f6edeeede5e3f2f2ace1edacf7e9"><span class="__cf_email__" data-cfemail="38505d54545778594d4c5754575f594848165b57164d53">[email&#160;protected]</span></a>. We will respond within 30 days.</p>
+        <p>To exercise any of these rights, contact us at <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>. We will respond within 30 days.</p>
         <p>You also have the right to lodge a complaint with the <strong>Information Commissioner's Office (ICO)</strong> at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
 
         <h2>8. Cookies</h2>
@@ -251,7 +258,7 @@
         <p>If you have any questions about this Privacy Policy or how we handle your data, please contact us:</p>
         <p>
           <strong>AutoLog</strong><br>
-          Email: <a href="/cdn-cgi/l/email-protection#f8909d949497b8998d8c9794979f998888d69b97d68d93"><span class="__cf_email__" data-cfemail="f49c9198989bb49581809b989b93958484da979bda819f">[email&#160;protected]</span></a>
+          Email: <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>
         </p>
 
       </div>
@@ -273,18 +280,36 @@
           <h4>Product</h4>
           <a href="index.html#features">Features</a>
           <a href="index.html#pricing">Pricing</a>
-          <a href="/cdn-cgi/l/email-protection#d2bab7bebebd92b3a7a6bdbebdb5b3a2a2fcb1bdfca7b9eda1a7b0b8b7b1a6ef93a7a6bd9ebdb5f7e0e285b3bba6bebba1a6">Join Waitlist</a>
+          <a href="mailto:hello@autologapp.co.uk?subject=AutoLog%20Waitlist">Join Waitlist</a>
         </div>
         <div class="footer-links-col">
           <h4>Legal</h4>
           <a href="privacy.html">Privacy Policy</a>
           <a href="terms.html">Terms of Service</a>
           <a href="support.html">Support</a>
-          <a href="/cdn-cgi/l/email-protection#9df5f8f1f1f2ddfce8e9f2f1f2fafcededb3fef2b3e8f6">Contact</a>
+          <a href="mailto:hello@autologapp.co.uk">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
         <span>© 2026 AutoLog. All rights reserved.</span>
         <span>Built in the UK 🇬🇧</span>
       </div>
-    </di
+    </div>
+  </footer>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobile-nav');
+    hamburger.addEventListener('click', () => {
+      const open = mobileNav.classList.toggle('open');
+      hamburger.classList.toggle('open', open);
+    });
+    mobileNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        hamburger.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
