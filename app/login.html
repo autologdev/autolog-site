@@ -16,6 +16,9 @@
 <title>AutoLog — Sign In</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- consent.js for early consent capture on login page -->
+<script src="/app/consent.js"></script>
+<script src="/app/consent-banner.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
@@ -395,6 +398,15 @@ const sb = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
 )
 
+// Lightweight consent-aware analytics for login page
+// login.html does not load app-common.js, so we define a local logEvent
+async function logLoginEvent(eventName, properties = {}) {
+  if (!window.AutoLogConsent || !window.AutoLogConsent.hasAnalyticsConsent()) return
+  try {
+    await sb.from('analytics_events').insert({ user_id: null, event_name: eventName, properties })
+  } catch (e) { /* silent */ }
+}
+
 // If already signed in, go straight to dashboard (only on initial load, not after every auth event)
 sb.auth.getSession().then(({data:{session}})=>{
   if(session){
@@ -462,9 +474,11 @@ async function doSignIn(){
   if(!email){ showErr('si','Please enter your email.'); return }
   if(!pass)  { showErr('si','Please enter your password.'); return }
   setLoading('si', true)
+  await logLoginEvent('signin_started', { source: 'web' })
   const {error} = await sb.auth.signInWithPassword({email, password:pass})
   setLoading('si', false)
   if(error){ showErr('si', friendlyErr(error.message)); return }
+  await logLoginEvent('signin_completed', { source: 'web' })
   location.replace('/app/dashboard')
 }
 
@@ -477,6 +491,7 @@ async function doSignUp(){
   if(!email)       { showErr('su','Please enter your email.'); return }
   if(pass.length<8){ showErr('su','Password must be at least 8 characters.'); return }
   setLoading('su', true)
+  await logLoginEvent('signup_started', { source: 'web' })
   const {error} = await sb.auth.signUp({
     email, password:pass,
     options:{
@@ -486,6 +501,7 @@ async function doSignUp(){
   })
   setLoading('su', false)
   if(error){ showErr('su', friendlyErr(error.message)); return }
+  await logLoginEvent('signup_completed', { source: 'web' })
   showSent(
     'Confirm your email',
     `We\'ve sent a confirmation email to <strong>${email}</strong>.<br><br>Open it and click <strong>Activate my account</strong> to continue. Check your spam folder if it doesn\'t arrive within a minute.`,
@@ -521,6 +537,7 @@ async function doMagic(){
   })
   setLoading('ml', false)
   if(error){ showErr('ml', friendlyErr(error.message)); return }
+  await logLoginEvent('magic_link_sent', { source: 'web' })
   showSent(
     'Magic link sent',
     `We've sent a magic sign-in link to <strong>${email}</strong>. Click it to access your account.`,

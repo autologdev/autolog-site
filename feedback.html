@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="alternate" hreflang="en-GB" href="https://www.autologapp.co.uk/feedback">
-  <link rel="alternate" hreflang="en" href="https://www.autologapp.co.uk/feedback">
   <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -18,6 +16,9 @@
   <title>Feedback — AutoLog</title>
   <meta name="description" content="Send feedback, report a bug, or suggest a feature for AutoLog.">
   <link rel="stylesheet" href="style.css">
+  <!-- Consent management -->
+  <script src="/app/consent.js"></script>
+  <script src="/app/consent-banner.js" defer></script>
   <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     .legal-hero {
@@ -162,7 +163,7 @@
     <div class="container">
       <div class="nav-inner">
         <a href="index.html" class="nav-logo">
-          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:36px;height:36px;border-radius:9px;display:block;"></div>
+          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:22px;height:22px;object-fit:contain;"></div>
           AutoLog
         </a>
         <div class="nav-links">
@@ -173,7 +174,7 @@
         </div>
         <div class="nav-cta">
           <a href="/app/dashboard" class="btn btn-outline" style="margin-right:8px">Dashboard</a>
-          <a href="https://testflight.apple.com/join/yPmgXjnF" class="btn btn-primary">Download</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
         </div>
         <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -186,7 +187,7 @@
       <a href="privacy.html">Privacy</a>
       <a href="support.html">Support</a>
       <a href="/app/dashboard">Dashboard</a>
-      <a href="https://testflight.apple.com/join/yPmgXjnF" class="btn btn-primary">Download on App Store</a>
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download on App Store</a>
     </div>
   </nav>
 
@@ -278,7 +279,7 @@
       <div class="footer-inner">
         <div class="footer-brand">
           <div class="footer-logo">
-            <div class="footer-logo-icon" style="background:none;padding:0;width:32px;height:32px;"><img src="assets/logo.png" alt="AutoLog" style="width:32px;height:32px;border-radius:8px;display:block;"></div>
+            <div class="footer-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:20px;height:20px;object-fit:contain;"></div>
             AutoLog
           </div>
           <p class="footer-tagline">Your car, fully under control. Digital vehicle records for UK drivers.</p>
@@ -288,7 +289,7 @@
           <a href="index.html#features">Features</a>
           <a href="index.html#pricing">Pricing</a>
           <a href="/app/dashboard">Dashboard</a>
-          <a href="https://testflight.apple.com/join/yPmgXjnF">Download</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513">Download</a>
         </div>
         <div class="footer-links-col">
           <h4>Legal</h4>

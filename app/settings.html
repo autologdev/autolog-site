@@ -14,7 +14,10 @@
 
 <title>Settings — AutoLog</title>
 <link rel="stylesheet" href="/app/app-theme.css">
+<!-- consent.js must load synchronously before any other script -->
+<script src="/app/consent.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/app/consent-banner.js" defer></script>
 </head>
 <body>
 <aside class="sb" id="sb">
@@ -84,7 +87,7 @@ function toast(msg,err){const el=document.getElementById('toast');el.textContent
           <div style="font-size:1.375rem;font-weight:800;color:#0f172a">£24.99<span style="font-size:.875rem;font-weight:400;color:#94a3b8">/yr</span></div>
         </div>
       </div>
-      <a href="mailto:hello@autologapp.co.uk?subject=AutoLog%2B%20Upgrade%20Request" class="btn btn-primary" style="width:100%;justify-content:center;display:flex" onclick="try{sb.from('analytics_events').insert({user_id:userId,event_name:'paywall_viewed',properties:{source:'web',trigger:'settings_upgrade'}})}catch(e){}">✨ Upgrade to AutoLog+</a>
+      <a href="mailto:hello@autologapp.co.uk?subject=AutoLog%2B%20Upgrade%20Request" class="btn btn-primary" style="width:100%;justify-content:center;display:flex" id="upgrade-link">✨ Upgrade to AutoLog+</a>
       <p style="font-size:.75rem;color:#94a3b8;text-align:center;margin-top:10px">Tap to email us — full in-app billing coming soon.</p>
       `:'<div style="font-size:.875rem;color:#64748b">All AutoLog+ features are active on your account.</div>'}
     </div>
@@ -113,6 +116,17 @@ function toast(msg,err){const el=document.getElementById('toast');el.textContent
       <div id="delete-status" style="font-size:.8125rem;margin-top:10px"></div>
     </div>
   `
+
+  // Gate the paywall_viewed analytics event
+  const upgradeLink = document.getElementById('upgrade-link')
+  if(upgradeLink){
+    upgradeLink.addEventListener('click', function(){
+      if(window.AutoLogConsent && window.AutoLogConsent.hasAnalyticsConsent()){
+        try{sb.from('analytics_events').insert({user_id:userId,event_name:'paywall_viewed',properties:{source:'web',trigger:'settings_upgrade'}})}catch(e){}
+      }
+    })
+  }
+
   document.getElementById('save-btn').addEventListener('click',async()=>{
     const name=document.getElementById('name-input').value.trim()
     const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving…'
@@ -169,7 +183,6 @@ async function confirmDeleteAccount() {
       return
     }
 
-    // Success — sign out locally and redirect
     await sb.auth.signOut()
     location.replace('/app/login?deleted=1')
 

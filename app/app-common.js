@@ -67,7 +67,12 @@ async function getUserPlan(userId) {
 function isPro(plan) { return plan === 'paid' || plan === 'business' }
 
 // ── Analytics ─────────────────────────────────────────────────
+// CONSENT GATED: logEvent silently does nothing if analytics consent has not been granted.
+// This is required under UK GDPR + PECR: analytics inserts are pseudonymous user-level
+// processing and require affirmative consent before firing.
 async function logEvent(userId, eventName, properties = {}) {
+  // Gate: do nothing if consent module is absent or consent not granted
+  if (!window.AutoLogConsent || !window.AutoLogConsent.hasAnalyticsConsent()) return
   try {
     await sb.from('analytics_events').insert({
       user_id: userId,

@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="alternate" hreflang="en-GB" href="https://www.autologapp.co.uk/privacy">
-  <link rel="alternate" hreflang="en" href="https://www.autologapp.co.uk/privacy">
   <!-- Favicons -->
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -18,6 +16,9 @@
   <title>Privacy Policy — AutoLog</title>
   <meta name="description" content="AutoLog Privacy Policy — how we collect, use and protect your data.">
   <link rel="stylesheet" href="style.css">
+  <!-- Consent management -->
+  <script src="/app/consent.js"></script>
+  <script src="/app/consent-banner.js" defer></script>
   <style>
     .legal-hero {
       background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
@@ -71,7 +72,7 @@
     <div class="container">
       <div class="nav-inner">
         <a href="index.html" class="nav-logo">
-          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:36px;height:36px;border-radius:9px;display:block;"></div>
+          <div class="nav-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:22px;height:22px;object-fit:contain;"></div>
           AutoLog
         </a>
         <div class="nav-links">
@@ -81,7 +82,7 @@
         </div>
         <div class="nav-cta">
           <a href="/app/dashboard" class="btn btn-outline" style="margin-right:8px">Dashboard</a>
-          <a href="https://testflight.apple.com/join/yPmgXjnF" class="btn btn-primary">Download</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
         </div>
         <button class="nav-hamburger" id="hamburger" aria-label="Open menu">
           <span></span><span></span><span></span>
@@ -93,7 +94,7 @@
       <a href="index.html#pricing">Pricing</a>
       <a href="privacy.html" class="active">Privacy</a>
       <a href="/app/dashboard">Dashboard</a>
-      <a href="https://testflight.apple.com/join/yPmgXjnF" class="btn btn-primary">Download on App Store</a>
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download on App Store</a>
     </div>
   </nav>
 
@@ -248,7 +249,29 @@
         <p>You also have the right to lodge a complaint with the <strong>Information Commissioner's Office (ICO)</strong> at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
 
         <h2>8. Cookies</h2>
-        <p>The AutoLog website uses no tracking cookies. Only strictly necessary session cookies are used to maintain your login state. No third-party advertising or analytics cookies are set.</p>
+        <p>The AutoLog website and web app use no third-party tracking cookies and no advertising cookies. The only information stored in your browser is:</p>
+        <ul>
+          <li><strong>Session tokens</strong> — strictly necessary to keep you signed in. Stored in browser local storage under keys beginning with <code>sb-</code>. These are essential for the service to function and cannot be disabled without logging you out.</li>
+          <li><strong>Vehicle selection state</strong> (<code>al_vid</code>) — remembers which vehicle you last viewed. Strictly necessary for UX continuity.</li>
+          <li><strong>Consent preference record</strong> (<code>al_consent_v1</code>) — stores your analytics consent choice (accepted or rejected). Storing this record is itself strictly necessary to implement the consent mechanism.</li>
+          <li><strong>Banner dismissal flags</strong> (<code>al_first_action_prompted_*</code>, <code>al_history_prompt_*</code>) — remember whether you have dismissed certain UI prompts. These are only set if you have accepted analytics. Clearing them has no effect on core functionality.</li>
+        </ul>
+        <p>No third-party advertising or analytics cookies are set. AutoLog does not use Google Analytics, Meta Pixel, or any other external tracking service.</p>
+        <p>You can review or change your analytics preference at any time using the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in the footer of any page.</p>
+
+        <h2>8a. Analytics and Usage Data</h2>
+        <p>AutoLog collects product analytics data <strong>only with your explicit consent</strong>. You will be asked for consent when you first visit the site or app. If you do not accept, no analytics data is collected.</p>
+        <p>When you accept analytics, the following is collected:</p>
+        <ul>
+          <li>Which features you used (e.g. fuel log viewed, service log viewed, documents viewed)</li>
+          <li>When you signed in</li>
+          <li>Whether you added a vehicle or completed your first action</li>
+          <li>Whether you viewed the upgrade screen and which trigger caused it</li>
+        </ul>
+        <p>This data is <strong>pseudonymous</strong> — it is linked to your account identifier (a randomly generated UUID, not your name or email address). It cannot directly identify you without access to the accounts database.</p>
+        <p>Analytics data is stored in AutoLog's own database (Supabase, EU London region). It is not shared with any third-party analytics provider. AutoLog does not use Google Analytics, Mixpanel, Hotjar or any equivalent service.</p>
+        <p>Analytics data collected before you withdraw consent is retained for up to <strong>12 months</strong> from the date of collection and used only in aggregated form for product improvement. It is not used for advertising or sold to third parties.</p>
+        <p>You can withdraw analytics consent at any time using the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in the footer of this page. Withdrawing consent stops future analytics collection but does not delete previously collected data.</p>
 
         <h2>9. Children's Privacy</h2>
         <p>AutoLog is not directed at children under the age of 13. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us and we will delete it promptly.</p>
@@ -273,7 +296,7 @@
       <div class="footer-inner">
         <div class="footer-brand">
           <div class="footer-logo">
-            <div class="footer-logo-icon" style="background:none;padding:0;width:32px;height:32px;"><img src="assets/logo.png" alt="AutoLog" style="width:32px;height:32px;border-radius:8px;display:block;"></div>
+            <div class="footer-logo-icon"><img src="assets/logo.png" alt="AutoLog" style="width:20px;height:20px;object-fit:contain;"></div>
             AutoLog
           </div>
           <p class="footer-tagline">Your car, fully under control. Digital vehicle records for UK drivers.</p>
@@ -295,6 +318,7 @@
       <div class="footer-bottom">
         <span>© 2026 AutoLog. All rights reserved.</span>
         <span>Built in the UK 🇬🇧</span>
+        <span><a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--text-muted);text-decoration:none;font-size:0.8125rem;">Cookie preferences</a></span>
       </div>
     </div>
   </footer>

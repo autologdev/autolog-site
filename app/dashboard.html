@@ -15,7 +15,10 @@
 
 <title>Dashboard — AutoLog</title>
 <link rel="stylesheet" href="/app/app-theme.css">
+<!-- consent.js must load synchronously before any other script -->
+<script src="/app/consent.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/app/consent-banner.js" defer></script>
 </head>
 <body>
 
@@ -148,10 +151,7 @@ function showAddVehicle(prefillReg){
   document.body.appendChild(bg)
   bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
   bg.querySelector('#av-reg').oninput=e=>{e.target.value=e.target.value.toUpperCase()}
-  // Auto-trigger lookup if reg was pre-filled from URL param
-  if(prefillReg){
-    setTimeout(()=>lookupReg(),200)
-  }
+  if(prefillReg){setTimeout(()=>lookupReg(),200)}
 }
 
 let _dvlaData=null
@@ -195,7 +195,6 @@ async function saveVehicle(){
     const e=document.querySelector('#av-err');e.textContent='Please enter at least a registration or make.';e.classList.add('on');return
   }
   const btn=document.querySelector('#av-save');btn.disabled=true;btn.textContent='Saving…'
-  // Build record - merge manual inputs with any DVLA data
   const record={
     owner_id:userId,
     registration:reg||null,
@@ -206,7 +205,6 @@ async function saveVehicle(){
     nickname:nick||null,
     is_active:true
   }
-  // Enrich with DVLA data if lookup was done for this same reg
   if(_dvlaData&&_dvlaData.registration===reg){
     if(_dvlaData.colour) record.colour=_dvlaData.colour
     if(_dvlaData.fuelType) record.fuel_type=_dvlaData.fuelType
@@ -221,9 +219,11 @@ async function saveVehicle(){
   }
   document.querySelector('.mbg').remove()
   toast('Vehicle added ✓')
-  // Analytics: vehicle_added
-      try{await sb.from('analytics_events').insert({user_id:userId,event_name:'vehicle_added',properties:{source:'web',make:make||null}})}catch(e){}
-      localStorage.setItem('al_vid',data.id)
+  // Analytics: vehicle_added — CONSENT GATED
+  if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
+    try{await sb.from('analytics_events').insert({user_id:userId,event_name:'vehicle_added',properties:{source:'web',make:make||null}})}catch(e){}
+  }
+  localStorage.setItem('al_vid',data.id)
   location.reload()
 }
 
@@ -256,6 +256,16 @@ async function saveVehicle(){
     $('vsw-name').textContent=currentVehicle?vName(currentVehicle):'No vehicle'
     if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
 
+    // Analytics: dashboard_viewed — CONSENT GATED, session-deduplicated
+    if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
+      if(!sessionStorage.getItem('al_evt_dashboard_viewed')){
+        try{
+          await sb.from('analytics_events').insert({user_id:userId,event_name:'dashboard_viewed',properties:{source:'web'}})
+          sessionStorage.setItem('al_evt_dashboard_viewed','1')
+        }catch(e){}
+      }
+    }
+
     if(!currentVehicle){
       $('content').innerHTML=`
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;gap:20px">
@@ -270,11 +280,8 @@ async function saveVehicle(){
           </button>
           <p style="font-size:.8125rem;color:var(--text-muted)">Or add via the AutoLog iPhone app</p>
         </div>`
-      // Auto-open modal with reg pre-filled if ?reg= param present
       const urlReg=new URLSearchParams(location.search).get('reg')
-      if(urlReg){
-        showAddVehicle(urlReg)
-      }
+      if(urlReg){showAddVehicle(urlReg)}
       return
     }
 
@@ -290,10 +297,6 @@ async function saveVehicle(){
       sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage').eq('vehicle_id',vid),
       sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4)
     ])
-    if(costsRes.error)console.warn('costs:',costsRes.error.message)
-    if(fuelRes.error)console.warn('fuel:',fuelRes.error.message)
-    if(maintRes.error)console.warn('maint:',maintRes.error.message)
-    if(svcsRes.error)console.warn('svcs:',svcsRes.error.message)
 
     const allCosts=costsRes.data||[]
     const totalYear=allCosts.reduce((s,c)=>s+Number(c.amount||0),0)
@@ -369,10 +372,7 @@ async function saveVehicle(){
       </div>
     `
 
-    // ── Vehicle summary cards (all vehicles overview) ──────
     if(allVehicles.length > 1) {
-      const now2 = new Date()
-      // Fetch last service date for each vehicle
       const svcPromises = allVehicles.map(v =>
         sb.from('service_entries').select('date').eq('vehicle_id',v.id).neq('source','dvsa').order('date',{ascending:false}).limit(1)
       )
@@ -416,8 +416,7 @@ async function saveVehicle(){
       $('content').prepend(summaryEl)
     }
 
-    // ── Post-signup first action prompt (Task 3) ──────────
-    // Show once to new users with 1 vehicle and no services yet
+    // ── Post-signup first action prompt ──────────────────────────
     const firstActionKey='al_first_action_prompted_'+userId
     if(!localStorage.getItem(firstActionKey)&&allVehicles.length===1&&services.length===0){
       const b=document.createElement('div')
@@ -433,11 +432,13 @@ async function saveVehicle(){
       </div>
       <button class="btn btn-ghost btn-sm" onclick="this.closest('.alert-banner').remove()" style="flex-shrink:0;align-self:flex-start">✕</button>`
       $('content').prepend(b)
-      localStorage.setItem(firstActionKey,'1')
+      // Only set this key if consent is granted (non-essential localStorage)
+      if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
+        localStorage.setItem(firstActionKey,'1')
+      }
     }
 
-    // ── Historical data upload banner (Task 4) ────────────
-    // Show to users with <3 service records until dismissed
+    // ── Historical data upload banner ─────────────────────────────
     const histKey='al_history_prompt_'+userId
     if(!localStorage.getItem(histKey)&&services.length<3){
       const h=document.createElement('div')
@@ -449,7 +450,7 @@ async function saveVehicle(){
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0">
           <a href="/app/documents" class="btn btn-primary btn-sm">Add past records</a>
-          <button class="btn btn-ghost btn-sm" onclick="this.closest('div').remove();localStorage.setItem('${histKey}','1')" style="color:var(--text-muted)">✕</button>
+          <button class="btn btn-ghost btn-sm" onclick="dismissHistBanner(this)" style="color:var(--text-muted)">✕</button>
         </div>`
       $('content').prepend(h)
     }
@@ -459,6 +460,15 @@ async function saveVehicle(){
     $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${err.message||'Could not load your dashboard. Please check your connection.'}</p><button class="btn btn-primary" onclick="location.reload()">Try again</button></div>`
   }
 })()
+
+function dismissHistBanner(btn){
+  btn.closest('div[style]').remove()
+  const histKey='al_history_prompt_'+userId
+  // Only persist dismissal to localStorage if consent granted
+  if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
+    localStorage.setItem(histKey,'1')
+  }
+}
 </script>
 </body>
 </html>

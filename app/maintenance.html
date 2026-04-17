@@ -14,7 +14,10 @@
 
 <title>Maintenance — AutoLog</title>
 <link rel="stylesheet" href="/app/app-theme.css">
+<!-- consent.js must load synchronously before any other script -->
+<script src="/app/consent.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/app/consent-banner.js" defer></script>
 </head>
 <body>
 <aside class="sb" id="sb">
@@ -78,6 +81,12 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   vehicle=allVehicles.find(v=>v.id===selId)||null
   $('vsw-name').textContent=vehicle?vName(vehicle):'No vehicle'
   if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
+  // Analytics: maintenance_viewed — CONSENT GATED, session-deduplicated
+  if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()&&session.user.id){
+    if(!sessionStorage.getItem('al_evt_maintenance_viewed')){
+      try{await sb.from('analytics_events').insert({user_id:session.user.id,event_name:'maintenance_viewed',properties:{source:'web'}});sessionStorage.setItem('al_evt_maintenance_viewed','1')}catch(e){}
+    }
+  }
   if(!vehicle){$('content').innerHTML=`<div class="empty"><div class="empty-icon">📅</div><h3>No vehicle selected</h3></div>`;return}
   const{data:items}=await sb.from('maintenance_items').select('*').eq('vehicle_id',vehicle.id).order('status').order('name')
   const all=items||[]
