@@ -542,39 +542,152 @@ function _showUploadModal(){
 }
 
 // Task 6 Part B: pass insertedDocId, set ocr_attributed after linked record created
-async function createLinkedRecord(docType, ai, insertedDocId){
+// ── Attribution engine (mirrors iOS DocumentAttributionEngine) ──────────────
+// Builds ocr_extracted_data JSONB and writes full attribution to service/fuel/cost tables.
+
+function buildExtractedData(ai){
+  const d={}
+  if(ai.document_date)    d.date            = ai.document_date
+  if(ai.extracted_amount) d.total_cost      = ai.extracted_amount
+  if(ai.extracted_mileage)d.mileage         = ai.extracted_mileage
+  if(ai.garage_name)      d.garage_name     = ai.garage_name
+  if(ai.invoice_number)   d.invoice_number  = ai.invoice_number
+  if(ai.mot_expiry)       d.mot_expiry_date = ai.mot_expiry
+  if(ai.description)      d.notes           = ai.description
+  return Object.keys(d).length ? d : null
+}
+
+async function deduplicateServiceEntry(date, mileage, toleranceDays=3, toleranceMiles=200){
+  const from=new Date(date); from.setDate(from.getDate()-toleranceDays)
+  const to  =new Date(date); to.setDate(to.getDate()+toleranceDays)
+  const{data}=await sb.from('service_entries').select('*')
+    .eq('vehicle_id',vehicle.id)
+    .gte('date',from.toISOString().split('T')[0])
+    .lte('date',to.toISOString().split('T')[0])
+  if(!data||!data.length) return null
+  if(mileage==null) return data[0]
+  return data.find(e=>e.mileage_at_service==null||Math.abs((e.mileage_at_service||0)-mileage)<=toleranceMiles)||null
+}
+
+async function deduplicateFuelEntry(date, totalCost, toleranceDays=1, tolerancePounds=1.0){
+  const from=new Date(date); from.setDate(from.getDate()-toleranceDays)
+  const to  =new Date(date); to.setDate(to.getDate()+toleranceDays)
+  const{data}=await sb.from('fuel_entries').select('*')
+    .eq('vehicle_id',vehicle.id)
+    .gte('date',from.toISOString().split('T')[0])
+    .lte('date',to.toISOString().split('T')[0])
+  if(!data||!data.length) return null
+  if(totalCost==null) return data[0]
+  return data.find(e=>e.total_cost==null||Math.abs((e.total_cost||0)-totalCost)<=tolerancePounds)||null
+}
+
+async function createLinkedRecord(docType,ai,insertedDocId){
   try{
-    if((docType==='service_invoice'||docType==='repair_invoice')&&(ai.extracted_amount||ai.garage_name)){
-      await sb.from('service_entries').insert({
-        vehicle_id:vehicle.id,
-        user_id:userId,
-        date:ai.document_date||new Date().toISOString().split('T')[0],
-        mileage_at_service:ai.extracted_mileage||null,
+    const date=ai.document_date||new Date().toISOString().split('T')[0]
+    const mileage=ai.extracted_mileage||null
+    const cost=ai.extracted_amount||null
+
+    // Always write ocr_extracted_data so iOS app can display document details and search it
+    const extractedData=buildExtractedData(ai)
+    const docUpdate={ocr_attributed:true}
+    if(extractedData) docUpdate.ocr_extracted_data=extractedData
+    await sb.from('documents').update(docUpdate).eq('id',insertedDocId)
+
+    if(docType==='service_invoice'||docType==='repair_invoice'){
+      if(!cost&&!ai.garage_name) return
+
+      // Dedup — mirrors iOS findExistingServiceEntry
+      const existing=await deduplicateServiceEntry(date,mileage)
+      if(existing){
+        const merge={}
+        if(!existing.total_cost&&cost)                  merge.total_cost=cost
+        if(!existing.garage_name&&ai.garage_name)       merge.garage_name=ai.garage_name
+        if(!existing.invoice_number&&ai.invoice_number) merge.invoice_number=ai.invoice_number
+        if(!existing.mileage_at_service&&mileage)       merge.mileage_at_service=mileage
+        if(!existing.document_id)                       merge.document_id=insertedDocId
+        if(Object.keys(merge).length) await sb.from('service_entries').update(merge).eq('id',existing.id)
+        // Add cost_entry if the existing entry didn't have one
+        if(!existing.total_cost&&cost){
+          await sb.from('cost_entries').insert({
+            vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
+            currency:'GBP',category:'service',source_table:'service_entries',source_id:existing.id
+          })
+        }
+        toast('Matched & merged with existing service record')
+        return
+      }
+
+      // Create new — source:'ocr' and document_id to match iOS
+      const{data:newSvc,error:svcErr}=await sb.from('service_entries').insert({
+        vehicle_id:vehicle.id,user_id:userId,date,
+        mileage_at_service:mileage,
         garage_name:ai.garage_name||null,
         garage_type:'specialist',
         description:ai.description||null,
-        total_cost:ai.extracted_amount||null,
-        source:'document_ai'
-      })
-      toast('Service record auto-created from document ✓')
-    } else if(docType==='fuel_receipt'&&ai.extracted_amount){
-      await sb.from('fuel_entries').insert({
-        vehicle_id:vehicle.id,
-        user_id:userId,
-        date:ai.document_date||new Date().toISOString().split('T')[0],
-        mileage_at_fill:ai.extracted_mileage||null,
-        total_cost:ai.extracted_amount||null,
+        total_cost:cost,
+        invoice_number:ai.invoice_number||null,
+        source:'ocr',
+        document_id:insertedDocId
+      }).select().single()
+      if(svcErr){console.warn('service_entries insert failed:',svcErr);return}
+      // cost_entry — iOS always creates this; feeds cost analytics
+      if(cost){
+        await sb.from('cost_entries').insert({
+          vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
+          currency:'GBP',category:'service',source_table:'service_entries',source_id:newSvc.id
+        })
+      }
+      toast('Service record created from document')
+
+    }else if(docType==='mot_certificate'){
+      // Update vehicle mot_expiry
+      if(ai.mot_expiry) await sb.from('vehicles').update({mot_expiry:ai.mot_expiry}).eq('id',vehicle.id)
+      // Create/merge service entry for the MOT test
+      const existing=await deduplicateServiceEntry(date,mileage,3,500)
+      if(existing){
+        const merge={}
+        if(!existing.document_id)                 merge.document_id=insertedDocId
+        if(!existing.garage_name&&ai.garage_name) merge.garage_name=ai.garage_name
+        if(!existing.description)                 merge.description='MOT Test'
+        if(Object.keys(merge).length) await sb.from('service_entries').update(merge).eq('id',existing.id)
+      }else{
+        await sb.from('service_entries').insert({
+          vehicle_id:vehicle.id,user_id:userId,date,
+          mileage_at_service:mileage,
+          garage_name:ai.garage_name||null,
+          description:'MOT Test',source:'ocr',document_id:insertedDocId
+        })
+      }
+      toast(ai.mot_expiry?'MOT expiry updated':'MOT document saved')
+
+    }else if(docType==='fuel_receipt'){
+      if(!cost) return
+      const existing=await deduplicateFuelEntry(date,cost)
+      if(existing){
+        const merge={}
+        if(!existing.total_cost&&cost)             merge.total_cost=cost
+        if(!existing.station_name&&ai.garage_name) merge.station_name=ai.garage_name
+        if(!existing.document_id)                  merge.document_id=insertedDocId
+        if(Object.keys(merge).length) await sb.from('fuel_entries').update(merge).eq('id',existing.id)
+        toast('Matched & merged with existing fuel entry')
+        return
+      }
+      const{data:newFuel,error:fuelErr}=await sb.from('fuel_entries').insert({
+        vehicle_id:vehicle.id,user_id:userId,date,
+        mileage_at_fill:mileage,total_cost:cost,
         station_name:ai.garage_name||null,
-        source:'document_ai'
+        source:'ocr',document_id:insertedDocId
+      }).select().single()
+      if(fuelErr){console.warn('fuel_entries insert failed:',fuelErr);return}
+      await sb.from('cost_entries').insert({
+        vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
+        currency:'GBP',category:'fuel',source_table:'fuel_entries',source_id:newFuel.id
       })
-      toast('Fuel entry auto-created from receipt ✓')
+      toast('Fuel entry created from receipt')
     }
-    // Mark document as attributed so iOS app doesn't re-process it
-    if(insertedDocId){
-      await sb.from('documents').update({ocr_attributed:true}).eq('id',insertedDocId)
-    }
-  }catch(e){console.warn('Linked record creation failed:',e)}
+  }catch(e){console.warn('Attribution failed:',e)}
 }
+
 </script>
 </body>
 </html>
