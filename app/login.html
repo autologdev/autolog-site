@@ -380,12 +380,12 @@ body::after{
     </div>
   </div>
 
-  <!-- ── Success: email sent ── -->
+  <!-- ── Success: email sent (fallback only) ── -->
   <div class="view" id="v-sent">
     <div class="success-wrap">
       <div class="success-icon">✉️</div>
       <div class="success-title" id="sent-title">Check your inbox</div>
-      <div class="success-body" id="sent-body">We've sent a confirmation email. Open it and click <strong>Activate my account</strong> to continue. Check your spam folder if it doesn't arrive within a minute.<span id="sent-email" style="display:none"></span></div>
+      <div class="success-body" id="sent-body">Your account has been created. If you don't get redirected automatically, check your email or try signing in below.<span id="sent-email" style="display:none"></span></div>
       <button class="btn-ghost" onclick="show('v-signin')" style="margin-top:0">← Back to sign in</button>
     </div>
   </div>
@@ -399,7 +399,6 @@ const sb = supabase.createClient(
 )
 
 // Lightweight consent-aware analytics for login page
-// login.html does not load app-common.js, so we define a local logEvent
 async function logLoginEvent(eventName, properties = {}) {
   if (!window.AutoLogConsent || !window.AutoLogConsent.hasAnalyticsConsent()) return
   try {
@@ -492,21 +491,39 @@ async function doSignUp(){
   if(pass.length<8){ showErr('su','Password must be at least 8 characters.'); return }
   setLoading('su', true)
   await logLoginEvent('signup_started', { source: 'web' })
-  const {error} = await sb.auth.signUp({
-    email, password:pass,
-    options:{
-      data:{full_name:name},
-      emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://www.autologapp.co.uk/app/confirm?reg='+encodeURIComponent(r):'https://www.autologapp.co.uk/app/confirm'})()
+
+  const reg = new URLSearchParams(location.search).get('reg')
+  const emailRedirectTo = reg
+    ? 'https://www.autologapp.co.uk/app/confirm?reg='+encodeURIComponent(reg)
+    : 'https://www.autologapp.co.uk/app/confirm'
+
+  const {error: signUpError} = await sb.auth.signUp({
+    email, password: pass,
+    options: {
+      data: { full_name: name },
+      emailRedirectTo
     }
   })
+  if(signUpError){ setLoading('su', false); showErr('su', friendlyErr(signUpError.message)); return }
+
+  // Immediately sign in — don't wait for email confirmation
+  const {error: signInError} = await sb.auth.signInWithPassword({ email, password: pass })
   setLoading('su', false)
-  if(error){ showErr('su', friendlyErr(error.message)); return }
+
+  if(signInError){
+    // Edge case: email confirmation still required in Supabase (safety net)
+    await logLoginEvent('signup_completed', { source: 'web' })
+    showSent(
+      'Account created',
+      `Your account has been created. If you don't get redirected automatically, check your email or try signing in below.`,
+      email
+    )
+    return
+  }
+
   await logLoginEvent('signup_completed', { source: 'web' })
-  showSent(
-    'Confirm your email',
-    `We\'ve sent a confirmation email to <strong>${email}</strong>.<br><br>Open it and click <strong>Activate my account</strong> to continue. Check your spam folder if it doesn\'t arrive within a minute.`,
-    email
-  )
+  // Redirect to dashboard, preserving ?reg= param if present
+  location.replace(reg ? '/app/dashboard?reg='+encodeURIComponent(reg) : '/app/dashboard')
 }
 
 async function doForgot(){
@@ -531,9 +548,13 @@ async function doMagic(){
   const email = document.getElementById('ml-email').value.trim()
   if(!email){ showErr('ml','Please enter your email.'); return }
   setLoading('ml', true)
+  const reg = new URLSearchParams(location.search).get('reg')
   const {error} = await sb.auth.signInWithOtp({
     email,
-    options:{emailRedirectTo:(function(){const r=new URLSearchParams(location.search).get('reg');return r?'https://www.autologapp.co.uk/app/confirm?reg='+encodeURIComponent(r):'https://www.autologapp.co.uk/app/confirm'})()}
+    options:{emailRedirectTo: reg
+      ? 'https://www.autologapp.co.uk/app/confirm?reg='+encodeURIComponent(reg)
+      : 'https://www.autologapp.co.uk/app/confirm'
+    }
   })
   setLoading('ml', false)
   if(error){ showErr('ml', friendlyErr(error.message)); return }

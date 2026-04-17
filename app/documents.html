@@ -101,9 +101,9 @@ async function checkFirstAction(actionType){
   }catch(e){}
 }
 
-// ── OCR usage tracking (Task 2) ────────────────────────────
+// ── OCR usage tracking ─────────────────────────────────────
 async function checkOCRUsage(){
-  if(isProPlan())return true // pro: unlimited
+  if(isProPlan())return true
   try{
     const today=new Date()
     const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
@@ -117,7 +117,6 @@ async function incrementOCRUsage(){
     const today=new Date()
     const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
     await sb.from('api_usage').upsert({user_id:userId,service:'ocr',period_start:periodStart,used_count:1},{onConflict:'user_id,service,period_start',ignoreDuplicates:false})
-    // increment via RPC or re-fetch and update
     const{data}=await sb.from('api_usage').select('id,used_count').eq('user_id',userId).eq('service','ocr').eq('period_start',periodStart).single()
     if(data)await sb.from('api_usage').update({used_count:data.used_count+1}).eq('id',data.id)
   }catch(e){}
@@ -173,6 +172,23 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
     }
   }
   await load()
+
+  // Task 5: Realtime sync — subscribe to documents changes for this vehicle
+  // Requires Supabase Realtime to be enabled on the documents table.
+  // If not enabled, this subscription will silently fail without breaking anything.
+  if(vehicle){
+    const docsChannel = sb.channel('documents-' + vehicle.id)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'documents',
+        filter: 'vehicle_id=eq.' + vehicle.id
+      }, async (payload) => {
+        // Re-fetch and re-render on any insert, update or delete
+        await load()
+      })
+      .subscribe()
+  }
 })()
 
 async function load(){
@@ -182,7 +198,6 @@ async function load(){
   const groups={}
   all.forEach(d=>{const t=d.document_type||'other';if(!groups[t])groups[t]=[];groups[t].push(d)})
 
-  // ── Upload limit banner for free users (Task 3) ────────
   const FREE_DOC_LIMIT=10
   const overLimit=!isProPlan()&&all.length>=FREE_DOC_LIMIT
 
@@ -201,7 +216,7 @@ async function load(){
       <span>📄 Basic Scan active — <a href="/app/settings#upgrade" style="color:var(--teal);font-weight:700" onclick="logEvent('paywall_viewed',{source:'web',trigger:'scan_upsell'})">Upgrade to Enhanced Scan ✨</a></span>
       <span style="font-size:.75rem;opacity:.7">${all.length}/${FREE_DOC_LIMIT} documents used</span>
     </div>`:''}
-    ${isProPlan()?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;gap:6px"><span>✨</span><strong>Enhanced Scan active</strong> — Google Vision + GPT-4o</div>`:''}
+    ${isProPlan()?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;gap:6px"><span>✨</span><strong>Enhanced Scan active</strong></div>`:''}
     ${all.length===0?`
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;gap:20px">
       <div style="width:72px;height:72px;background:var(--teal-light);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem">📄</div>
@@ -230,11 +245,13 @@ async function load(){
 
 function renderDocCard(doc,ti){
   const isImg=doc.file_type&&doc.file_type.startsWith('image/')
+  // Task 4: use best available label in priority order
+  const label = doc.notes || (DTYPES[doc.document_type]?.label) || doc.file_name || 'Document'
   return`<div class="doc-card" onclick="viewDoc('${doc.id}','${doc.storage_path}','${doc.file_type||''}')">
     <div style="display:flex;align-items:flex-start;gap:10px">
       <div class="doc-type-icon">${isImg?'🖼️':ti.icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:.875rem;font-weight:600;color:var(--text-primary);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${doc.file_name||ti.label}</div>
+        <div style="font-size:.875rem;font-weight:600;color:var(--text-primary);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>
         <div style="font-size:.75rem;color:var(--text-muted)">${fmtDate(doc.document_date||doc.created_at)}</div>
         ${doc.extracted_amount?`<div style="font-size:.75rem;font-weight:700;color:var(--teal);margin-top:2px">£${Number(doc.extracted_amount).toFixed(2)}</div>`:''}
         ${doc.ocr_status==='processing'?`<div style="margin-top:4px"><span class="ai-badge"><span class="ai-spinner"></span> Processing…</span></div>`:''}
@@ -272,7 +289,6 @@ async function delDoc(id,path){
 
 // ── AI Classification ──────────────────────────────────────
 async function classifyWithAI(file){
-  // Check OCR usage before proceeding (Task 2)
   const allowed=await checkOCRUsage()
   if(!allowed){
     await logEvent('paywall_viewed',{source:'web',trigger:'ocr_limit'})
@@ -313,7 +329,6 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
           }]
         }
 
-        // Pro: enhanced endpoint (Google Vision + GPT-4o); Free: standard endpoint
         const endpoint=isProPlan()
           ?'https://mechanic.autologapp.co.uk/ai-classify-enhanced'
           :'https://mechanic.autologapp.co.uk/ai-classify'
@@ -345,19 +360,16 @@ Analyse the document image and return ONLY valid JSON (no markdown, no explanati
 
 // ── Upload Modal ───────────────────────────────────────────
 function showUpload(){
-  // Gate: free users at limit
   if(!isProPlan()){
     sb.from('documents').select('id',{count:'exact',head:true}).eq('vehicle_id',vehicle.id).then(({count})=>{
       if(count>=10){
         logEvent('paywall_viewed',{source:'web',trigger:'upload_limit'})
-        // Replace upload button with locked state
         const btn=$('upload-btn')
         if(btn){
           btn.innerHTML='🔒 Upgrade to upload more'
           btn.disabled=true
           btn.style.opacity='0.7'
         }
-        // Show paywall banner inline
         let existing=document.getElementById('paywall-banner')
         if(!existing){
           const banner=document.createElement('div')
@@ -483,14 +495,26 @@ function _showUploadModal(){
         extracted_amount:docAmount||(aiResult?.extracted_amount||null),
         extracted_mileage:aiResult?.extracted_mileage||null
       }
-      await sb.from('documents').insert(docRecord)
 
-      // Analytics: document_uploaded (Task 4)
+      // Task 6 Part A: capture inserted doc id for follow-up updates
+      const{data:newDoc,error:insertError}=await sb.from('documents').insert(docRecord).select().single()
+      if(insertError){const e=bg.querySelector('#merr');e.textContent=insertError.message;e.classList.add('on');btn.disabled=false;btn.textContent='Upload';return}
+
+      const insertedDocId=newDoc.id
+
+      // Task 6 Part A: write ocr_raw_text from AI description
+      if(aiResult?.description){
+        await sb.from('documents').update({
+          ocr_raw_text:aiResult.description,
+          ocr_status:'complete'
+        }).eq('id',insertedDocId)
+      }
+
       await logEvent('document_uploaded',{source:'web',document_type:docType,vehicle_id:vehicle.id})
       await checkFirstAction('document')
 
       if(aiResult&&(docType==='service_invoice'||docType==='mot_certificate'||docType==='repair_invoice'||docType==='fuel_receipt')){
-        await createLinkedRecord(docType, aiResult, path)
+        await createLinkedRecord(docType, aiResult, insertedDocId)
       }
 
       uploaded++
@@ -500,7 +524,8 @@ function _showUploadModal(){
   }
 }
 
-async function createLinkedRecord(docType, ai, docPath){
+// Task 6 Part B: pass insertedDocId, set ocr_attributed after linked record created
+async function createLinkedRecord(docType, ai, insertedDocId){
   try{
     if((docType==='service_invoice'||docType==='repair_invoice')&&(ai.extracted_amount||ai.garage_name)){
       await sb.from('service_entries').insert({
@@ -526,6 +551,10 @@ async function createLinkedRecord(docType, ai, docPath){
         source:'document_ai'
       })
       toast('Fuel entry auto-created from receipt ✓')
+    }
+    // Mark document as attributed so iOS app doesn't re-process it
+    if(insertedDocId){
+      await sb.from('documents').update({ocr_attributed:true}).eq('id',insertedDocId)
     }
   }catch(e){console.warn('Linked record creation failed:',e)}
 }

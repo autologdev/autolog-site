@@ -57,6 +57,17 @@ const sbEl=$('sb'),sbOv=$('sb-ov')
 $('mob-menu-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
 sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
 let allVehicles=[],vehicle=null
+
+// Task 7A: Time-of-day icon helper
+function tripTimeIcon(dateStr){
+  if(!dateStr) return '🚗'
+  const h=new Date(dateStr).getHours()
+  if(h>=5&&h<12) return '🌅'
+  if(h>=12&&h<18) return '☀️'
+  if(h>=18&&h<21) return '🌆'
+  return '🌙'
+}
+
 function toggleVsw(){const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open');return}if(allVehicles.length<=1)return;$('vsw-btn').classList.add('open');const drop=document.createElement('div');drop.id='vsw-drop';drop.className='vsw-drop';drop.innerHTML=allVehicles.map(v=>`<div class="vsw-item${v.id===vehicle?.id?' cur':''}" onclick="switchV('${v.id}')"><div style="width:7px;height:7px;border-radius:50%;background:${v.id===vehicle?.id?'#1E7A8C':'#94a3b8'};flex-shrink:0"></div><div><div>${vName(v)}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div></div>`).join('');$('vsw').appendChild(drop);setTimeout(()=>document.addEventListener('click',()=>{const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open')}},{once:true}),10)}
 function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
 ;(async()=>{
@@ -93,13 +104,16 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   const pc={personal:'#94a3b8',business:'#1E7A8C',commute:'#f59e0b',other:'#94a3b8'}
   const pl={personal:'Personal',business:'Business',commute:'Commute',other:'Other'}
   function dur(s,e){if(!s||!e)return null;const m=Math.round((new Date(e)-new Date(s))/60000);return m<60?m+'m':Math.floor(m/60)+'h '+(m%60?m%60+'m':'')}
+
   $('content').innerHTML=`
     <div class="pg-head"><div class="pg-head-text"><h1>Trips</h1><p>${vName(vehicle)}</p></div></div>
-    <div class="stats">
-      <div class="stat"><div class="stat-l">This Month</div><div class="stat-v">${miMon.toFixed(0)}</div><div class="stat-s">miles</div></div>
-      <div class="stat"><div class="stat-l">This Year</div><div class="stat-v">${miYear.toFixed(0)}</div><div class="stat-s">miles</div></div>
-      ${bizMi>0?`<div class="stat"><div class="stat-l">Business Miles</div><div class="stat-v">${bizMi.toFixed(0)}</div><div class="stat-s">this year</div></div><div class="stat"><div class="stat-l">HMRC Claimable</div><div class="stat-v" style="color:#15803d">£${hmrc.toFixed(0)}</div><div class="stat-s">@ 45p/mi</div></div>`:''}
-      <div class="stat"><div class="stat-l">Total Trips</div><div class="stat-v">${all.length}</div></div>
+    <div class="card" style="margin-bottom:20px;padding:16px 20px">
+      <div class="stats" style="margin-bottom:0">
+        <div class="stat"><div class="stat-label">This Month</div><div class="stat-value">${miMon.toFixed(0)}</div><div class="stat-sub">miles</div></div>
+        <div class="stat"><div class="stat-label">This Year</div><div class="stat-value">${miYear.toFixed(0)}</div><div class="stat-sub">miles</div></div>
+        ${bizMi>0?`<div class="stat"><div class="stat-label">Business Miles</div><div class="stat-value">${bizMi.toFixed(0)}</div><div class="stat-sub">this year</div></div><div class="stat"><div class="stat-label">HMRC Claimable</div><div class="stat-value" style="color:#15803d">£${hmrc.toFixed(0)}</div><div class="stat-sub">@ 45p/mi</div></div>`:''}
+        <div class="stat"><div class="stat-label">Total Trips</div><div class="stat-value">${all.length}</div></div>
+      </div>
     </div>
     <div style="background:#E8F4F6;border-radius:10px;padding:10px 14px;font-size:.8125rem;color:#1E7A8C;font-weight:500;margin-bottom:20px;display:flex;align-items:center;gap:8px"><span>🚗</span>Trips are recorded automatically via the AutoLog iPhone app.</div>
     ${all.length===0?`<div class="empty"><div class="empty-icon">🗺️</div><h3>No trips yet</h3><p>Trips are tracked automatically via Bluetooth or GPS in the iOS app.</p></div>`
@@ -112,13 +126,15 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
         </div>
         ${rows.map(t=>{
           const p=t.purpose||'personal',c=pc[p]||'#94a3b8',d=dur(t.start_time,t.end_time)
+          const timeIcon=tripTimeIcon(t.start_time||t.date)
           return`<div class="trip-card">
-            <div style="width:36px;height:36px;border-radius:10px;background:${c}18;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <div style="width:36px;height:36px;border-radius:10px;background:${c}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.125rem">
+              ${timeIcon}
             </div>
             <div style="flex:1;min-width:0">
               <div style="font-size:.875rem;font-weight:700;color:#0f172a">${pl[p]||'Trip'}</div>
-              <div style="font-size:.75rem;color:#94a3b8;margin-top:2px">${fmtDate(t.date||t.start_time)}${d?' · '+d:''}</div>
+              <div style="display:inline-block;margin-top:3px;padding:1px 8px;border-radius:100px;font-size:.6875rem;font-weight:700;background:${c}18;color:${c}">${pl[p]||'Trip'}</div>
+              <div style="font-size:.75rem;color:#94a3b8;margin-top:4px">${fmtDate(t.date||t.start_time)}${d?' · '+d:''}</div>
             </div>
             <div style="text-align:right;flex-shrink:0">
               ${t.distance?`<div style="font-size:.9375rem;font-weight:800;color:#0f172a">${Number(t.distance).toFixed(1)} mi</div>`:'—'}

@@ -62,6 +62,13 @@ const sbEl=$('sb'),sbOv=$('sb-ov')
 $('mob-menu-btn').onclick=()=>{sbEl.classList.toggle('open');sbOv.classList.toggle('on')}
 sbOv.onclick=()=>{sbEl.classList.remove('open');sbOv.classList.remove('on')}
 let allVehicles=[],vehicle=null,userId=null
+
+// Task 8A: Garage type colour helper
+function garageTypeColor(type){
+  const map={dealer:'#7c3aed',chain:'#0284c7',specialist:'#1E7A8C',diy:'#15803d',mobile:'#b45309',other:'#64748b'}
+  return map[type]||'#64748b'
+}
+
 function toggleVsw(){
   const d=$('vsw-drop');if(d){d.remove();$('vsw-btn').classList.remove('open');return}
   if(allVehicles.length<=1)return
@@ -92,7 +99,6 @@ function showPageError(msg){
   $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${msg}</p><button class="btn btn-primary" onclick="load()">Try again</button></div>`
 }
 async function load(){
-  // Analytics: service_log_viewed — CONSENT GATED, session-deduplicated
   if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()&&userId){
     if(!sessionStorage.getItem('al_evt_service_log_viewed')){
       try{await sb.from('analytics_events').insert({user_id:userId,event_name:'service_log_viewed',properties:{source:'web'}});sessionStorage.setItem('al_evt_service_log_viewed','1')}catch(e){}
@@ -110,20 +116,22 @@ async function load(){
   $('content').innerHTML=`
     <div class="pg-head"><div class="pg-head-text"><h1>Service History</h1><p>${vName(vehicle)}</p></div></div>
     <div class="stats">
-      <div class="stat"><div class="stat-l">Records</div><div class="stat-v">${allSvcs.length}</div></div>
-      <div class="stat"><div class="stat-l">Total Spent</div><div class="stat-v">£${total.toFixed(0)}</div></div>
-      <div class="stat"><div class="stat-l">MOT History</div><div class="stat-v">${motAll.length}</div><div class="stat-s">from DVSA</div></div>
+      <div class="stat"><div class="stat-label">Records</div><div class="stat-value">${allSvcs.length}</div></div>
+      <div class="stat"><div class="stat-label">Total Spent</div><div class="stat-value">£${total.toFixed(0)}</div></div>
+      <div class="stat"><div class="stat-label">MOT History</div><div class="stat-value">${motAll.length}</div><div class="stat-sub">from DVSA</div></div>
     </div>
     <div class="card">
       <div class="card-head"><span class="card-title">Service Records</span><span style="font-size:.75rem;color:var(--text-muted)">Click a row to view & edit</span></div>
       ${allSvcs.length===0?`<div class="empty"><div class="empty-icon">🔧</div><h3>No service records yet</h3><p>Log your first service to start building history.</p><button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="showAdd()">Log Service</button></div>`:`
       <div class="tbl-wrap"><table class="tbl">
-        <thead><tr><th>Date</th><th>Mileage</th><th>Garage</th><th>Description</th><th style="text-align:right">Cost</th><th></th></tr></thead>
-        <tbody>${allSvcs.map((e,i)=>`<tr style="cursor:pointer" onclick="showDetail(${i})">
+        <thead><tr><th>Date</th><th>Mileage</th><th>Service</th><th style="text-align:right">Cost</th><th></th></tr></thead>
+        <tbody>${allSvcs.map((e,i)=>`<tr style="cursor:pointer;border-left:3px solid ${garageTypeColor(e.garage_type)}" onclick="showDetail(${i})">
           <td style="white-space:nowrap">${fmtDate(e.date)}</td>
           <td>${fmtMi(e.mileage_at_service)}</td>
-          <td>${e.garage_name||(e.garage_type||'').replace(/_/g,' ')||'—'}</td>
-          <td style="color:#64748b;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.description||e.notes||'—'}</td>
+          <td>
+            <div style="font-weight:600;color:var(--text-primary)">${e.garage_name||(e.garage_type||'').replace(/_/g,' ')||'—'}</div>
+            ${e.description?`<div style="font-size:.75rem;color:var(--text-muted);margin-top:1px">${e.description}</div>`:''}
+          </td>
           <td style="text-align:right;font-weight:700">${e.total_cost?'£'+Number(e.total_cost).toFixed(2):'—'}</td>
           <td><button class="btn-icon" onclick="event.stopPropagation();del('${e.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
         </tr>`).join('')}</tbody>
@@ -203,7 +211,6 @@ function showAdd(){
     if(svcInsert.error){const e=bg.querySelector('#merr');e.textContent=svcInsert.error.message;e.classList.add('on');btn.disabled=false;btn.textContent='Save Service';return}
     const svcCost=parseFloat(bg.querySelector('#s-cost').value)||null
     if(svcInsert.data&&svcCost){await sb.from('cost_entries').insert({vehicle_id:vehicle.id,user_id:userId,date:bg.querySelector('#s-d').value,amount:svcCost,category:'service',source_id:svcInsert.data.id,source_table:'service_entries'})}
-    // Analytics: first_action_taken — CONSENT GATED
     if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
       try{const{data:p}=await sb.from('profiles').select('first_action_completed').eq('id',userId).single();if(p&&!p.first_action_completed){await sb.from('analytics_events').insert({user_id:userId,event_name:'first_action_taken',properties:{source:'web',action_type:'service'}});await sb.from('profiles').update({first_action_completed:true}).eq('id',userId)}}catch(e){}
     }

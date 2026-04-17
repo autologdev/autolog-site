@@ -81,7 +81,6 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   vehicle=allVehicles.find(v=>v.id===selId)||null
   $('vsw-name').textContent=vehicle?vName(vehicle):'No vehicle'
   if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
-  // Analytics: maintenance_viewed — CONSENT GATED, session-deduplicated
   if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()&&session.user.id){
     if(!sessionStorage.getItem('al_evt_maintenance_viewed')){
       try{await sb.from('analytics_events').insert({user_id:session.user.id,event_name:'maintenance_viewed',properties:{source:'web'}});sessionStorage.setItem('al_evt_maintenance_viewed','1')}catch(e){}
@@ -93,9 +92,12 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   window.allMaintItems=all
   const groups={overdue:all.filter(i=>i.status==='overdue'),due_soon:all.filter(i=>i.status==='due_soon'),ok:all.filter(i=>i.status==='ok'),unknown:all.filter(i=>!i.status||i.status==='unknown')}
   const cfg={overdue:{label:'Overdue',color:'#dc2626',bg:'rgba(220,38,38,.1)'},due_soon:{label:'Due Soon',color:'#b45309',bg:'rgba(245,158,11,.1)'},ok:{label:'Up to Date',color:'#15803d',bg:'rgba(34,197,94,.1)'},unknown:{label:'Not Set',color:'#64748b',bg:'#f1f5f9'}}
+
   function renderGroup(key,items){
     if(!items.length)return''
     const c=cfg[key]
+    // Task 10B: sort by category then name
+    items.sort((a,b)=>(a.category||'').localeCompare(b.category||'')||a.name.localeCompare(b.name))
     return`<div style="margin-bottom:24px">
       <div class="section-head">
         <div class="section-dot" style="background:${c.color}"></div>
@@ -113,11 +115,17 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
             </div>
             ${item.last_done_date?`<div style="font-size:.75rem;color:#94a3b8;margin-top:5px">Last done: ${fmtDate(item.last_done_date)}${item.last_done_mileage?' @ '+fmtMi(item.last_done_mileage):''}</div>`:''}
           </div>
-          ${item.specialist_cost_min&&item.specialist_cost_min>0?`<div style="text-align:right;flex-shrink:0;margin-top:2px"><div style="font-size:.8125rem;font-weight:700;color:#1E7A8C">£${Math.round(item.specialist_cost_min)}–£${Math.round(item.specialist_cost_max)}</div><div style="font-size:.6875rem;color:#94a3b8;margin-top:1px">specialist est.</div></div>`:``}
+          ${(item.specialist_cost_min||item.chain_cost_min||item.dealer_cost_min)?`
+          <div style="text-align:right;flex-shrink:0;margin-top:2px">
+            ${item.chain_cost_min?`<div style="font-size:.6875rem;color:#15803d;font-weight:600">£${Math.round(item.chain_cost_min||0)}–${Math.round(item.chain_cost_max||0)} chain</div>`:''}
+            ${item.specialist_cost_min?`<div style="font-size:.6875rem;color:#1E7A8C;font-weight:600">£${Math.round(item.specialist_cost_min||0)}–${Math.round(item.specialist_cost_max||0)} independent</div>`:''}
+            ${item.dealer_cost_min?`<div style="font-size:.6875rem;color:#7c3aed;font-weight:600">£${Math.round(item.dealer_cost_min||0)}–${Math.round(item.dealer_cost_max||0)} dealer</div>`:''}
+          </div>`:''}
         </div>
       </div>`).join('')}
     </div>`
   }
+
   $('content').innerHTML=`
     <div class="pg-head"><div class="pg-head-text"><h1>Maintenance Schedule</h1><p>${vName(vehicle)} · ${all.length} items tracked</p></div></div>
     ${all.length===0?`<div class="empty"><div class="empty-icon">📅</div><h3>No schedule loaded</h3><p>Open the AutoLog iPhone app to generate your vehicle's maintenance schedule from OEM data.</p></div>`:`
