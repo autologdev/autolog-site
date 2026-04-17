@@ -232,6 +232,26 @@
     <div class="loading-text">Loading analytics…</div>
   </div>
 
+  <!-- Auth gate: shown if not signed in -->
+  <div id="auth-gate" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:400px;width:100%;text-align:center">
+      <div style="font-size:1.5rem;margin-bottom:12px">🔒</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Sign in to view analytics</div>
+      <div style="font-size:.8125rem;color:var(--muted);margin-bottom:24px;line-height:1.6">Sign in with your AutoLog owner account to access the dashboard.</div>
+      <div id="auth-err" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;font-size:.8125rem;color:#fca5a5;margin-bottom:16px"></div>
+      <input type="email" id="auth-email" placeholder="your@email.com"
+        style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:10px"
+        onkeydown="if(event.key==='Enter')doSignIn()">
+      <input type="password" id="auth-pass" placeholder="Password"
+        style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:16px"
+        onkeydown="if(event.key==='Enter')doSignIn()">
+      <button onclick="doSignIn()" id="auth-btn"
+        style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-family:var(--sans);font-size:.9375rem;font-weight:700;cursor:pointer">
+        Sign In
+      </button>
+    </div>
+  </div>
+
   <div id="main" style="display:none"></div>
 
 </div>
@@ -239,6 +259,26 @@
 const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
 const sb = supabase.createClient(SURL, SKEY)
+
+const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
+
+async function doSignIn() {
+  const email = document.getElementById('auth-email').value.trim()
+  const pass  = document.getElementById('auth-pass').value
+  const btn   = document.getElementById('auth-btn')
+  const err   = document.getElementById('auth-err')
+  err.style.display = 'none'
+  btn.textContent = 'Signing in…'; btn.disabled = true
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass })
+  if (error) {
+    err.textContent = error.message; err.style.display = 'block'
+    btn.textContent = 'Sign In'; btn.disabled = false
+    return
+  }
+  document.getElementById('auth-gate').style.display = 'none'
+  document.getElementById('loading').style.display = 'flex'
+  main()
+}
 
 let allEvents = [], allProfiles = []
 let currentPlatform = 'all'
@@ -680,6 +720,19 @@ function setPlatform(p) {
 }
 
 async function main() {
+  // Check for existing session
+  const { data: { session } } = await sb.auth.getSession()
+
+  if (!session || session.user.id !== OWNER_ID) {
+    document.getElementById('loading').style.display = 'none'
+    const gate = document.getElementById('auth-gate')
+    gate.style.display = 'flex'
+    gate.style.flexDirection = 'column'
+    gate.style.alignItems = 'center'
+    gate.style.justifyContent = 'center'
+    gate.style.minHeight = '100vh'
+    return
+  }
   const [eventsRes, profilesRes] = await Promise.all([
     sb.from('analytics_events').select('event_name, properties, created_at, user_id').order('created_at', { ascending: false }).limit(500),
     sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name').order('created_at', { ascending: false })
