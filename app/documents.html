@@ -414,6 +414,20 @@ function _showUploadModal(){
 
   let files=[]
   let aiResult=null
+  let scanInProgress=false
+
+  const setScanState=(scanning)=>{
+    scanInProgress=scanning
+    const btn=bg.querySelector('#u-sv')
+    if(!btn)return
+    if(scanning){
+      btn.disabled=true
+      btn.textContent='Scanning…'
+    } else {
+      btn.disabled=files.length===0
+      btn.textContent='Upload'
+    }
+  }
 
   const updateFileList=()=>{
     const el=bg.querySelector('#u-file-list')
@@ -423,9 +437,12 @@ function _showUploadModal(){
       <span style="color:var(--text-muted)">${(f.size/1024).toFixed(0)}KB</span>
       <button onclick="removeFile(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;padding:0;line-height:1">×</button>
     </div>`).join('')
-    bg.querySelector('#u-sv').disabled=files.length===0
+    bg.querySelector('#u-sv').disabled=files.length===0||scanInProgress
     if(files.length===1&&files[0].type.startsWith('image/')){
-      runAIClassification(files[0])
+      // reset previous result, lock upload button while scan runs
+      aiResult=null
+      setScanState(true)
+      runAIClassification(files[0]).then(()=>setScanState(false))
     }
   }
 
