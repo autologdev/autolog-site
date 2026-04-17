@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoLog Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #080d14;
+    --surface: #0f172a;
+    --surface2: #111827;
+    --surface3: #1a2236;
+    --border: rgba(255,255,255,0.07);
+    --teal: #1E7A8C;
+    --teal-bright: #2dd4ef;
+    --teal-glow: rgba(30,122,140,0.2);
+    --ios-color: #a78bfa;
+    --ios-bg: rgba(139,92,246,0.12);
+    --web-color: #2dd4ef;
+    --web-bg: rgba(45,212,239,0.1);
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --faint: #1e293b;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-bright); box-shadow: 0 0 14px var(--teal-bright); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
+  .logo-name { font-size: 1rem; font-weight: 700; letter-spacing: -.02em; }
+  .logo-name span { color: var(--teal-bright); }
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .header-meta { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
+
+  /* ── Platform filter tabs ── */
+  .platform-tabs { display: flex; gap: 6px; }
+  .tab {
+    padding: 6px 14px; border-radius: 8px; font-size: .75rem; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted); font-family: var(--mono); transition: all .14s;
+  }
+  .tab.active-all { border-color: var(--teal); color: var(--teal-bright); background: rgba(45,212,239,0.08); }
+  .tab.active-ios { border-color: var(--ios-color); color: var(--ios-color); background: var(--ios-bg); }
+  .tab.active-web { border-color: var(--web-color); color: var(--web-color); background: var(--web-bg); }
+  .tab:hover:not(.active-all):not(.active-ios):not(.active-web) { border-color: rgba(255,255,255,.15); color: var(--text); }
+
+  .refresh-btn {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    padding: 6px 12px; border-radius: 8px; font-family: var(--mono); font-size: .75rem;
+    cursor: pointer; transition: all .15s;
+  }
+  .refresh-btn:hover { border-color: var(--teal); color: var(--teal-bright); }
+
+  /* ── Platform badge ── */
+  .plat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
+  .plat-ios { background: var(--ios-bg); color: var(--ios-color); }
+  .plat-web { background: var(--web-bg); color: var(--web-color); }
+  .plat-unknown { background: rgba(255,255,255,.05); color: var(--muted); }
+
+  /* ── Section ── */
+  .section-label {
+    font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); margin: 36px 0 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── KPIs ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 18px; position: relative; overflow: hidden; transition: border-color .2s;
+  }
+  .kpi:hover { border-color: rgba(45,212,239,0.2); }
+  .kpi-glow { position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, var(--teal-glow) 0%, transparent 70%); pointer-events: none; }
+  .kpi-label { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-size: 2.25rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+  .kpi-sub { font-size: .6875rem; color: var(--muted); margin-top: 6px; }
+  .kpi-delta { font-size: .6875rem; font-weight: 600; margin-top: 5px; }
+  .good { color: var(--green); } .warn { color: var(--amber); } .bad { color: var(--red); }
+
+  /* ── Split stat (iOS vs web) ── */
+  .kpi-split { display: flex; gap: 12px; margin-top: 8px; }
+  .kpi-split-item { flex: 1; }
+  .kpi-split-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+  .kpi-split-val { font-size: 1rem; font-weight: 700; font-family: var(--mono); }
+
+  /* ── Two col ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+  /* ── Card ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
+  .card-title { font-size: .8125rem; font-weight: 700; margin-bottom: 18px; letter-spacing: -.01em; }
+  .card-sub { font-size: .6875rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+  /* ── Funnel ── */
+  .funnel { display: flex; flex-direction: column; gap: 5px; }
+  .funnel-row { display: grid; grid-template-columns: 150px 1fr 50px 60px; align-items: center; gap: 12px; }
+  .funnel-label { font-size: .75rem; color: var(--muted); text-align: right; }
+  .funnel-bar-wrap { height: 8px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+  .funnel-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--teal), var(--teal-bright)); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
+  .funnel-n { font-family: var(--mono); font-size: .8125rem; font-weight: 500; text-align: right; }
+  .funnel-pct { font-family: var(--mono); font-size: .6875rem; color: var(--muted); text-align: right; }
+  .funnel-drop { grid-column: 1/-1; text-align: right; padding-right: 110px; }
+  .funnel-drop span { font-size: .625rem; color: var(--red); font-family: var(--mono); opacity: .7; }
+
+  /* ── Event rows ── */
+  .event-list { display: flex; flex-direction: column; gap: 6px; }
+  .event-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 12px; background: var(--surface2); border-radius: 8px;
+    border: 1px solid transparent; transition: border-color .14s;
+  }
+  .event-row:hover { border-color: var(--border); }
+  .event-left { display: flex; align-items: center; gap: 8px; }
+  .event-name { font-family: var(--mono); font-size: .75rem; color: var(--teal-bright); }
+  .event-right { display: flex; align-items: center; gap: 10px; }
+  .event-bar-wrap { width: 60px; height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+  .event-bar { height: 100%; border-radius: 100px; background: var(--teal); }
+  .event-count { font-family: var(--mono); font-size: .8125rem; font-weight: 500; min-width: 24px; text-align: right; }
+
+  /* ── Split bar (iOS vs web) ── */
+  .split-bar-wrap { display: flex; gap: 2px; height: 6px; border-radius: 100px; overflow: hidden; width: 80px; flex-shrink: 0; }
+  .split-bar-ios { background: var(--ios-color); border-radius: 100px 0 0 100px; transition: width .8s; }
+  .split-bar-web { background: var(--web-color); border-radius: 0 100px 100px 0; transition: width .8s; }
+
+  /* ── Timeline ── */
+  .timeline { display: flex; flex-direction: column; }
+  .tl-row { display: flex; align-items: flex-start; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-time { font-family: var(--mono); font-size: .6875rem; color: var(--muted); white-space: nowrap; padding-top: 2px; min-width: 90px; }
+  .tl-body { flex: 1; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .ev-badge { padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
+  .ev-onboarding { background: rgba(34,197,94,.1); color: var(--green); }
+  .ev-vehicle { background: rgba(45,212,239,.1); color: var(--teal-bright); }
+  .ev-paywall { background: rgba(245,158,11,.1); color: var(--amber); }
+  .ev-action { background: rgba(139,92,246,.1); color: #a78bfa; }
+  .ev-auth { background: rgba(30,122,140,.12); color: #67e8f9; }
+  .ev-feature { background: rgba(99,102,241,.1); color: #818cf8; }
+  .ev-other { background: rgba(255,255,255,.05); color: var(--muted); }
+  .tl-props { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
+
+  /* ── Insight ── */
+  .insight { background: rgba(30,122,140,0.07); border: 1px solid rgba(45,212,239,0.13); border-radius: 10px; padding: 14px 18px; margin-top: 10px; }
+  .insight-title { font-size: .75rem; font-weight: 700; color: var(--teal-bright); margin-bottom: 5px; }
+  .insight-body { font-size: .75rem; color: var(--muted); line-height: 1.65; }
+  .insight-body strong { color: var(--text); }
+
+  .warn-insight { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 14px 18px; margin-top: 10px; }
+  .warn-insight .insight-title { color: var(--amber); }
+
+  /* ── iOS fix notice ── */
+  .ios-notice {
+    background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 12px; padding: 16px 20px; margin-top: 14px;
+  }
+  .ios-notice-title { font-size: .8125rem; font-weight: 700; color: var(--ios-color); margin-bottom: 8px; }
+  .ios-notice-body { font-size: .8125rem; color: var(--muted); line-height: 1.65; }
+  .ios-notice-body code { background: rgba(139,92,246,.15); color: var(--ios-color); padding: 1px 6px; border-radius: 4px; font-family: var(--mono); font-size: .75rem; }
+  .ios-notice-body strong { color: var(--text); }
+
+  /* ── SQL queries ── */
+  .query-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .query-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; transition: background .14s; }
+  .query-header:hover { background: rgba(255,255,255,.02); }
+  .query-title { font-size: .8125rem; font-weight: 600; }
+  .query-desc { font-size: .6875rem; color: var(--muted); margin-top: 2px; }
+  .query-chevron { font-size: .7rem; color: var(--muted); transition: transform .18s; }
+  .query-card.open .query-chevron { transform: rotate(180deg); }
+  .query-body { display: none; padding: 0 16px 16px; }
+  .query-card.open .query-body { display: block; }
+  pre { background: rgba(0,0,0,.4); border-radius: 8px; padding: 14px; font-family: var(--mono); font-size: .6875rem; color: #7dd3fc; overflow-x: auto; white-space: pre-wrap; line-height: 1.75; border: 1px solid rgba(255,255,255,.05); }
+  .copy-btn { margin-top: 8px; background: var(--faint); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-family: var(--mono); font-size: .6875rem; cursor: pointer; transition: all .14s; }
+  .copy-btn:hover { color: var(--teal-bright); border-color: var(--teal); }
+
+  /* ── Loading ── */
+  #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; }
+  .spinner { width: 26px; height: 26px; border: 2.5px solid rgba(45,212,239,.15); border-top-color: var(--teal-bright); border-radius: 50%; animation: spin .65s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
+
+  .empty-msg { font-size: .8125rem; color: var(--muted); padding: 8px 0; }
+
+  /* ── Legend ── */
+  .legend { display: flex; gap: 16px; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .6875rem; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading analytics…</div>
+  </div>
+
+  <div id="main" style="display:none"></div>
+
+</div>
+<script>
+const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
+const sb = supabase.createClient(SURL, SKEY)
+
+let allEvents = [], allProfiles = []
+let currentPlatform = 'all'
+
+function fmtDate(d) {
+  if (!d) return '—'
+  const dt = new Date(d)
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+    dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Detect platform from event properties
+function getPlatform(e) {
+  const p = e.properties || {}
+  // Events from our new web implementation always have source:'web'
+  if (p.source === 'web') return 'web'
+  // iOS app events that have explicit platform
+  if (p.platform === 'ios') return 'ios'
+  // iOS-only events that can't come from the web (web has no onboarding flow currently)
+  if (['onboarding_complete', 'subscription_started', 'first_action_taken'].includes(e.event_name) && p.source !== 'web') return 'ios'
+  // vehicle_added from web always has source:'web'; without it assume iOS
+  if (e.event_name === 'vehicle_added' && p.source !== 'web') return 'ios'
+  // page view events (fuel_log_viewed etc) are web-only
+  if (e.event_name.endsWith('_viewed') || e.event_name === 'dashboard_viewed') return 'web'
+  if (['signin_completed','signup_completed','signup_started','signin_started','magic_link_sent'].includes(e.event_name)) return 'web'
+  return 'unknown'
+}
+
+function filterEvents(events) {
+  if (currentPlatform === 'all') return events
+  return events.filter(e => getPlatform(e) === currentPlatform)
+}
+
+function evBadgeClass(name) {
+  if (name.includes('onboarding')) return 'ev-onboarding'
+  if (name.includes('vehicle')) return 'ev-vehicle'
+  if (name.includes('paywall') || name.includes('subscription')) return 'ev-paywall'
+  if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service')) return 'ev-feature'
+  if (['signin_completed','signup_completed','signup_started','signin_started','magic_link_sent'].includes(name)) return 'ev-auth'
+  if (name.endsWith('_viewed')) return 'ev-feature'
+  return 'ev-other'
+}
+
+function platBadge(platform) {
+  if (platform === 'ios') return `<span class="plat plat-ios">iOS</span>`
+  if (platform === 'web') return `<span class="plat plat-web">Web</span>`
+  return `<span class="plat plat-unknown">?</span>`
+}
+
+function render() {
+  const events = filterEvents(allEvents)
+  const profiles = allProfiles
+
+  // ── Metrics ──
+  const totalUsers = profiles.length
+  const completedOnboarding = profiles.filter(p => p.onboarding_completed).length
+  const tookFirstAction = profiles.filter(p => p.first_action_completed).length
+  const freeUsers = profiles.filter(p => p.plan === 'free').length
+  const paidUsers = profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  const onbRate = totalUsers > 0 ? Math.round(completedOnboarding/totalUsers*100) : 0
+  const actRate = completedOnboarding > 0 ? Math.round(tookFirstAction/completedOnboarding*100) : 0
+  const convRate = totalUsers > 0 ? Math.round(paidUsers/totalUsers*100) : 0
+
+  // Event counts
+  const counts = {}
+  const iosCounts = {}, webCounts = {}
+  events.forEach(e => {
+    counts[e.event_name] = (counts[e.event_name] || 0) + 1
+  })
+  allEvents.forEach(e => {
+    const plat = getPlatform(e)
+    if (plat === 'ios') iosCounts[e.event_name] = (iosCounts[e.event_name] || 0) + 1
+    else if (plat === 'web') webCounts[e.event_name] = (webCounts[e.event_name] || 0) + 1
+  })
+  const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1])
+  const maxCount = sortedCounts[0]?.[1] || 1
+
+  // iOS vs web event totals
+  const iosTotal = allEvents.filter(e => getPlatform(e) === 'ios').length
+  const webTotal = allEvents.filter(e => getPlatform(e) === 'web').length
+  const unknownTotal = allEvents.filter(e => getPlatform(e) === 'unknown').length
+
+  // Paywall by trigger
+  const paywallAll = allEvents.filter(e => e.event_name === 'paywall_viewed')
+  const paywallBySource = {}
+  paywallAll.forEach(e => {
+    const src = e.properties?.source || e.properties?.trigger || 'unknown'
+    const plat = getPlatform(e)
+    const key = src
+    if (!paywallBySource[key]) paywallBySource[key] = { total: 0, ios: 0, web: 0 }
+    paywallBySource[key].total++
+    if (plat === 'ios') paywallBySource[key].ios++
+    else if (plat === 'web') paywallBySource[key].web++
+  })
+  const sortedPaywall = Object.entries(paywallBySource).sort((a,b) => b[1].total-a[1].total)
+
+  const now = new Date()
+  const sevenDaysAgo = new Date(now - 7*24*60*60*1000)
+  const recentEvents = allEvents.filter(e => new Date(e.created_at) > sevenDaysAgo)
+  const lastEvent = allEvents[0]?.created_at ? fmtDate(allEvents[0].created_at) : 'None yet'
+
+  // Check if iOS is sending platform property
+  const iosHasPlatformProp = allEvents.some(e => e.properties?.platform === 'ios')
+
+  document.getElementById('loading').style.display = 'none'
+  const main = document.getElementById('main')
+  main.style.display = 'block'
+
+  main.innerHTML = `
+    <div class="header">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <div class="logo-name">Auto<span>Log</span> Analytics</div>
+      </div>
+      <div class="header-right">
+        <div class="header-meta">Last event: ${lastEvent}</div>
+        <div class="platform-tabs">
+          <div class="tab ${currentPlatform==='all'?'active-all':''}" onclick="setPlatform('all')">All</div>
+          <div class="tab ${currentPlatform==='ios'?'active-ios':''}" onclick="setPlatform('ios')">iOS app</div>
+          <div class="tab ${currentPlatform==='web'?'active-web':''}" onclick="setPlatform('web')">Web</div>
+        </div>
+        <button class="refresh-btn" onclick="location.reload()">↻ Refresh</button>
+      </div>
+    </div>
+
+    ${!iosHasPlatformProp ? `
+    <div class="ios-notice">
+      <div class="ios-notice-title">📱 iOS platform detection: using inference (not explicit)</div>
+      <div class="ios-notice-body">
+        The iOS app isn't yet sending a <code>platform: "ios"</code> property, so platform is inferred from event names and existing properties.
+        This is mostly accurate but not perfect. To make it definitive, add one line to your iOS <strong>AnalyticsService.swift</strong>:<br><br>
+        Find where you build the properties dictionary in <code>logEvent()</code> and add:<br>
+        <code>var enriched = properties</code><br>
+        <code>enriched["platform"] = "ios"</code><br>
+        <code>enriched["app_version"] = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"</code><br><br>
+        Then pass <code>enriched</code> instead of <code>properties</code> to the Supabase insert. After that change, the iOS/Web split will be exact.
+      </div>
+    </div>` : ''}
+
+    <!-- ── KPIs ── -->
+    <div class="section-label">User funnel</div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Total users</div>
+        <div class="kpi-value">${totalUsers}</div>
+        <div class="kpi-split">
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--muted)">Free</div>
+            <div class="kpi-split-val">${freeUsers}</div>
+          </div>
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--amber)">Paid</div>
+            <div class="kpi-split-val" style="color:var(--amber)">${paidUsers}</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Onboarding rate</div>
+        <div class="kpi-value">${onbRate}%</div>
+        <div class="kpi-delta ${onbRate>=70?'good':onbRate>=50?'warn':'bad'}">${completedOnboarding} of ${totalUsers} completed</div>
+        <div class="kpi-sub">Target ≥70%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Activation rate</div>
+        <div class="kpi-value">${actRate}%</div>
+        <div class="kpi-delta ${actRate>=60?'good':actRate>=30?'warn':'bad'}">${tookFirstAction} took first action</div>
+        <div class="kpi-sub">Of onboarded users</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Paid conversion</div>
+        <div class="kpi-value">${convRate}%</div>
+        <div class="kpi-delta ${convRate>=5?'good':convRate>=2?'warn':'bad'}">${paidUsers} paying users</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Events (7d)</div>
+        <div class="kpi-value">${recentEvents.length}</div>
+        <div class="kpi-split">
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--ios-color)">iOS</div>
+            <div class="kpi-split-val" style="color:var(--ios-color)">${recentEvents.filter(e=>getPlatform(e)==='ios').length}</div>
+          </div>
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--web-color)">Web</div>
+            <div class="kpi-split-val" style="color:var(--web-color)">${recentEvents.filter(e=>getPlatform(e)==='web').length}</div>
+          </div>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-glow"></div>
+        <div class="kpi-label">Total events</div>
+        <div class="kpi-value">${allEvents.length}</div>
+        <div class="kpi-split">
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--ios-color)">iOS</div>
+            <div class="kpi-split-val" style="color:var(--ios-color)">${iosTotal}</div>
+          </div>
+          <div class="kpi-split-item">
+            <div class="kpi-split-label" style="color:var(--web-color)">Web</div>
+            <div class="kpi-split-val" style="color:var(--web-color)">${webTotal}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insight banners -->
+    ${onbRate < 70 && currentPlatform !== 'web' ? `
+    <div class="warn-insight">
+      <div class="insight-title">⚠ Onboarding drop-off: ${100-onbRate}% of signups never finish</div>
+      <div class="insight-body">
+        <strong>${totalUsers - completedOnboarding} users</strong> signed up but never completed onboarding.
+        Check Supabase for <code>onboarding_completed = false</code> accounts. 
+        Root cause is almost always the vehicle-add step — either the DVLA lookup failed or the user got confused and dropped off.
+        Fix: make the reg plate input the first screen, require nothing before seeing value.
+      </div>
+    </div>` : ''}
+    ${actRate < 50 && completedOnboarding > tookFirstAction ? `
+    <div class="warn-insight" style="margin-top:10px">
+      <div class="insight-title">⚠ Activation gap: onboarded but never logged anything</div>
+      <div class="insight-body">
+        <strong>${completedOnboarding - tookFirstAction} users</strong> have a vehicle but have never added a fuel fill-up, service or document.
+        This is the most important retention signal. These users will churn.
+        Action: reach out directly — you can find their emails in the "Onboarded but never took first action" SQL query below.
+      </div>
+    </div>` : ''}
+
+    <!-- ── Funnel ── -->
+    <div class="section-label" style="margin-top:36px">Drop-off waterfall</div>
+    <div class="card">
+      <div class="funnel">
+        ${[
+          ['Signed up', totalUsers, totalUsers],
+          ['Completed onboarding', completedOnboarding, totalUsers],
+          ['Took first action', tookFirstAction, totalUsers],
+          ['Converted to paid', paidUsers, totalUsers],
+        ].map(([label, n, base], i, arr) => {
+          const pct = base > 0 ? Math.round(n/base*100) : 0
+          const prevN = i > 0 ? arr[i-1][1] : n
+          const drop = prevN - n
+          const dropPct = prevN > 0 ? Math.round(drop/prevN*100) : 0
+          return `
+            ${i > 0 && drop > 0 ? `<div class="funnel-drop"><span>▼ lost ${drop} here (${dropPct}% drop)</span></div>` : ''}
+            <div class="funnel-row">
+              <div class="funnel-label">${label}</div>
+              <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%"></div></div>
+              <div class="funnel-n">${n}</div>
+              <div class="funnel-pct">${pct}%</div>
+            </div>`
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- ── Events + Paywall ── -->
+    <div class="section-label">Event breakdown ${currentPlatform!=='all'?`<span style="font-size:.6875rem;color:var(--muted);text-transform:none;letter-spacing:0">— filtered: ${currentPlatform}</span>`:'(iOS + Web)'}</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Event totals <span class="card-sub">with iOS / Web split</span></div>
+        ${sortedCounts.length === 0 
+          ? `<div class="empty-msg">No events match this filter yet.</div>`
+          : `<div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--ios-color)"></div>iOS</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--web-color)"></div>Web</div>
+            </div>
+            <div class="event-list">
+              ${sortedCounts.map(([name, count]) => {
+                const ios = iosCounts[name] || 0
+                const web = webCounts[name] || 0
+                const total = ios + web || 1
+                return `<div class="event-row">
+                  <div class="event-left">
+                    <div class="event-name">${name}</div>
+                  </div>
+                  <div class="event-right">
+                    <div class="split-bar-wrap">
+                      <div class="split-bar-ios" style="width:${Math.round(ios/total*100)}%"></div>
+                      <div class="split-bar-web" style="width:${Math.round(web/total*100)}%"></div>
+                    </div>
+                    <div class="event-bar-wrap"><div class="event-bar" style="width:${Math.round(count/maxCount*100)}%"></div></div>
+                    <div class="event-count">${count}</div>
+                  </div>
+                </div>`
+              }).join('')}
+            </div>`
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-title">Paywall views <span class="card-sub">by trigger</span></div>
+        ${sortedPaywall.length === 0
+          ? `<div class="empty-msg">No paywall events yet.</div>`
+          : `<div style="display:flex;flex-direction:column;gap:0">
+              ${sortedPaywall.map(([src, data]) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+                  <div>
+                    <div style="font-family:var(--mono);font-size:.75rem;color:var(--text)">${src || '(unknown)'}</div>
+                    <div style="display:flex;gap:6px;margin-top:4px">
+                      ${data.ios ? `<span style="font-family:var(--mono);font-size:.625rem;color:var(--ios-color)">iOS ${data.ios}</span>` : ''}
+                      ${data.web ? `<span style="font-family:var(--mono);font-size:.625rem;color:var(--web-color)">Web ${data.web}</span>` : ''}
+                    </div>
+                  </div>
+                  <div style="font-family:var(--mono);font-size:.9375rem;font-weight:700;color:var(--amber)">${data.total}</div>
+                </div>`).join('')}
+            </div>
+            <div class="insight" style="margin-top:14px">
+              <div class="insight-title">Paywall intelligence</div>
+              <div class="insight-body">
+                The trigger with the highest count is your strongest conversion moment — optimise that paywall screen first.
+                If <strong>settings_upgrade</strong> dominates, users are actively looking to upgrade but something is blocking them (price, feature clarity, trust).
+                If <strong>upload_limit</strong> or <strong>second_vehicle</strong> dominates, your free tier limits are working as intended.
+              </div>
+            </div>`
+        }
+      </div>
+    </div>
+
+    <!-- ── Activity feed ── -->
+    <div class="section-label">Recent activity — last 60 events ${currentPlatform!=='all'?`(${currentPlatform} only)`:''}</div>
+    <div class="card">
+      <div class="timeline">
+        ${events.slice(0, 60).map(e => {
+          const plat = getPlatform(e)
+          const props = e.properties || {}
+          const propStr = Object.entries(props)
+            .filter(([k]) => k !== 'platform')
+            .map(([k,v]) => `${k}: ${v}`)
+            .join('  ·  ')
+          return `<div class="tl-row">
+            <div class="tl-time">${fmtDate(e.created_at)}</div>
+            <div class="tl-body">
+              ${platBadge(plat)}
+              <span class="ev-badge ${evBadgeClass(e.event_name)}">${e.event_name}</span>
+              ${propStr ? `<span class="tl-props">${propStr}</span>` : ''}
+            </div>
+          </div>`
+        }).join('')}
+        ${events.length === 0 ? `<div class="empty-msg">No events match this filter.</div>` : ''}
+      </div>
+    </div>
+
+    <!-- ── SQL queries ── -->
+    <div class="section-label">SQL queries for Supabase SQL Editor</div>
+    ${[
+      { name: 'Drop-off: stuck in onboarding', desc: 'Signups with onboarding_completed = false',
+        sql: `SELECT p.id, u.email, p.created_at,
+  u.last_sign_in_at,
+  (SELECT count(*) FROM vehicles WHERE owner_id = p.id) as vehicles_added
+FROM profiles p
+JOIN auth.users u ON u.id = p.id
+WHERE p.onboarding_completed = false
+ORDER BY p.created_at DESC;` },
+      { name: 'Drop-off: onboarded but never activated', desc: 'Users with a vehicle who never logged anything',
+        sql: `SELECT p.id, u.email, p.plan, p.created_at,
+  (SELECT count(*) FROM vehicles WHERE owner_id = p.id AND is_active = true) as vehicles,
+  (SELECT count(*) FROM fuel_entries WHERE user_id = p.id) as fuel_entries,
+  (SELECT count(*) FROM service_entries WHERE user_id = p.id) as service_entries
+FROM profiles p
+JOIN auth.users u ON u.id = p.id
+WHERE p.onboarding_completed = true
+  AND p.first_action_completed = false
+ORDER BY p.created_at DESC;` },
+      { name: 'Daily new signups (last 30d)', desc: 'New users per day trend',
+        sql: `SELECT date_trunc('day', created_at)::date as day,
+  count(*) as new_users
+FROM profiles
+WHERE created_at > now() - interval '30 days'
+GROUP BY 1 ORDER BY 1;` },
+      { name: 'Platform split by event', desc: 'iOS vs Web counts for every event type',
+        sql: `SELECT
+  event_name,
+  count(*) filter (where properties->>'source' = 'web' OR properties->>'platform' = 'web') as web_count,
+  count(*) filter (where properties->>'platform' = 'ios' OR (properties->>'source' != 'web' AND properties->>'platform' IS DISTINCT FROM 'web')) as ios_count,
+  count(*) as total
+FROM analytics_events
+GROUP BY event_name
+ORDER BY total DESC;` },
+      { name: 'Feature usage by page (web)', desc: 'Which sections web users actually visit',
+        sql: `SELECT event_name,
+  count(*) as visits,
+  count(distinct user_id) as unique_users,
+  max(created_at) as last_visit
+FROM analytics_events
+WHERE event_name LIKE '%_viewed'
+GROUP BY event_name
+ORDER BY visits DESC;` },
+      { name: 'Free users approaching doc limit', desc: 'Free users with 7+ documents on any vehicle',
+        sql: `SELECT v.owner_id, u.email, v.registration, v.make,
+  count(d.id) as doc_count
+FROM vehicles v
+JOIN auth.users u ON u.id = v.owner_id
+JOIN profiles p ON p.id = v.owner_id
+LEFT JOIN documents d ON d.vehicle_id = v.id
+WHERE v.is_active = true AND p.plan = 'free'
+GROUP BY v.owner_id, u.email, v.registration, v.make
+HAVING count(d.id) >= 7
+ORDER BY doc_count DESC;` },
+      { name: 'Paywall → conversion: did seeing it lead to upgrade?', desc: 'Users who viewed the paywall, with their current plan',
+        sql: `SELECT u.email, p.plan,
+  count(e.id) as paywall_views,
+  min(e.created_at) as first_paywall,
+  max(e.created_at) as last_paywall,
+  array_agg(distinct e.properties->>'source') as triggers
+FROM profiles p
+JOIN auth.users u ON u.id = p.id
+JOIN analytics_events e ON e.user_id = p.id AND e.event_name = 'paywall_viewed'
+GROUP BY u.email, p.plan
+ORDER BY paywall_views DESC;` },
+    ].map(q => `
+      <div class="query-card">
+        <div class="query-header" onclick="this.parentElement.classList.toggle('open')">
+          <div>
+            <div class="query-title">${q.name}</div>
+            <div class="query-desc">${q.desc}</div>
+          </div>
+          <div class="query-chevron">▼</div>
+        </div>
+        <div class="query-body">
+          <pre>${q.sql}</pre>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy SQL',2000)})">Copy SQL</button>
+        </div>
+      </div>`).join('')}
+
+    <div style="margin-top:28px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:.75rem;color:var(--muted);line-height:1.8">
+      <strong style="color:var(--text)">Run queries in Supabase SQL Editor →</strong>
+      <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright);margin-left:8px" target="_blank">Open SQL Editor</a>
+      &nbsp;·&nbsp; Queries joining <code style="color:var(--teal-bright)">auth.users</code> require the SQL Editor (not table editor).
+      &nbsp;·&nbsp; This dashboard uses the anon key and can only read <code style="color:var(--teal-bright)">analytics_events</code> and <code style="color:var(--teal-bright)">profiles</code> via RLS.
+    </div>
+  `
+}
+
+function setPlatform(p) {
+  currentPlatform = p
+  render()
+  window.scrollTo(0, 0)
+}
+
+async function main() {
+  const [eventsRes, profilesRes] = await Promise.all([
+    sb.from('analytics_events').select('event_name, properties, created_at, user_id').order('created_at', { ascending: false }).limit(500),
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name').order('created_at', { ascending: false })
+  ])
+  if (eventsRes.error) throw new Error(eventsRes.error.message)
+  allEvents = eventsRes.data || []
+  allProfiles = profilesRes.data || []
+  render()
+}
+
+main().catch(err => {
+  document.getElementById('loading').innerHTML = `
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px 20px;color:#fca5a5;font-size:.875rem;max-width:500px">
+      Failed to load: ${err.message}
+    </div>`
+})
+</script>
+</body>
+</html>
