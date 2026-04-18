@@ -18,6 +18,11 @@
   <title>Terms of Service — AutoLog</title>
   <meta name="description" content="AutoLog Terms of Service.">
   <link rel="stylesheet" href="style.css">
+  <!-- Consent management -->
+  <script src="/app/consent.js"></script>
+  <script src="/app/consent-banner.js" defer></script>
+  <!-- Analytics tracker -->
+  <script src="/analytics.js?v=1" defer></script>
   <style>
     .legal-hero {
       background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
@@ -110,6 +115,7 @@
 
         <h2>5. Data and Privacy</h2>
         <p>Your use of AutoLog is also governed by our <a href="privacy.html">Privacy Policy</a>, which is incorporated into these Terms by reference. By using AutoLog, you consent to the collection and use of your data as described in the Privacy Policy.</p>
+        <p>AutoLog collects pseudonymous product analytics (such as which features you use and how you navigate the site and app) only where you have given affirmative consent via our cookie banner. You can review or withdraw analytics consent at any time using the "Cookie preferences" link in the footer of any page. Full details of what is collected, how long it is retained, and your rights are set out in our Privacy Policy.</p>
 
         <h2>6. DVLA and DVSA Data</h2>
         <p>AutoLog retrieves vehicle information from the DVLA Vehicle Enquiry API and the DVSA MOT History API, both operated by UK government agencies. While we strive to present this data accurately, AutoLog is not responsible for errors, omissions or inaccuracies in data sourced from these government systems.</p>
@@ -183,6 +189,7 @@
       <div class="footer-bottom">
         <span>© 2026 AutoLog. All rights reserved.</span>
         <span>Built in the UK 🇬🇧</span>
+        <span><a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--text-muted);text-decoration:none;font-size:0.8125rem;">Cookie preferences</a></span>
       </div>
     </div>
   </footer>

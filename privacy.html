@@ -19,6 +19,8 @@
   <!-- Consent management -->
   <script src="/app/consent.js"></script>
   <script src="/app/consent-banner.js" defer></script>
+  <!-- Analytics tracker -->
+  <script src="/analytics.js?v=1" defer></script>
   <style>
     .legal-hero {
       background: linear-gradient(135deg, #e8f4f6 0%, #f8fafc 100%);
@@ -115,7 +117,7 @@
         <p>AutoLog is operated as an independent UK-based service. Our contact email is <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>.</p>
 
         <h2>1. Data We Collect</h2>
-        <p>We collect only the data necessary to provide the AutoLog service. The table below summarises what we collect and why.</p>
+        <p>We collect only the data necessary to provide the AutoLog service and to understand how it is used. The table below summarises what we collect and why.</p>
 
         <table class="data-table">
           <thead>
@@ -154,8 +156,8 @@
               <td>Used only for trip distance calculation; never stored permanently</td>
             </tr>
             <tr>
-              <td>App usage data</td>
-              <td>Subscription management and service improvement</td>
+              <td>Pseudonymous website and app usage data (see section 8a below)</td>
+              <td>Subject to your consent — used to understand and improve AutoLog</td>
             </tr>
           </tbody>
         </table>
@@ -167,6 +169,7 @@
           <li>Contact lists or address book data</li>
           <li>Payment card or bank information (all payments are handled entirely by Apple)</li>
           <li>Browsing history or data from other apps</li>
+          <li>Any data from third-party tracking pixels or advertising networks</li>
         </ul>
 
         <h2>3. Legal Basis for Processing</h2>
@@ -174,7 +177,7 @@
         <ul>
           <li><strong>Contract performance</strong> — processing necessary to provide the service you signed up for (e.g. storing vehicle records, sending MOT reminders).</li>
           <li><strong>Legitimate interests</strong> — improving the reliability and performance of AutoLog, provided these interests are not overridden by your rights.</li>
-          <li><strong>Consent</strong> — where you explicitly grant permission (e.g. location access for trip detection).</li>
+          <li><strong>Consent</strong> — where you explicitly grant permission (e.g. location access for trip detection, analytics collection via our cookie banner).</li>
         </ul>
 
         <h2>4. Third-Party Services</h2>
@@ -191,8 +194,8 @@
           <tbody>
             <tr>
               <td>Supabase (EU London region)</td>
-              <td>Database and authentication</td>
-              <td>Account and vehicle data</td>
+              <td>Database, authentication and analytics storage</td>
+              <td>Account, vehicle and pseudonymous usage data</td>
             </tr>
             <tr>
               <td>DVLA Vehicle Enquiry API (UK Government)</td>
@@ -211,8 +214,8 @@
             </tr>
             <tr>
               <td>Cloudflare</td>
-              <td>Website hosting and mechanic share pages</td>
-              <td>Standard web request data</td>
+              <td>Website hosting, DDoS protection, country-level IP geolocation</td>
+              <td>Standard web request data. Cloudflare may derive country from IP; we store only the two-letter country code (e.g. "GB"), not the IP address.</td>
             </tr>
             <tr>
               <td>Apple (App Store, Sign in with Apple, StoreKit)</td>
@@ -227,13 +230,14 @@
           </tbody>
         </table>
 
-        <p>We do not sell your data to any third party.</p>
+        <p><strong>We do not sell your data to any third party. We do not use third-party analytics providers (such as Google Analytics, Mixpanel or Meta Pixel). All analytics data is stored in our own Supabase database.</strong></p>
 
         <h2>5. Data Security</h2>
         <p>All data is transmitted over encrypted HTTPS connections. Scanned document images are stored encrypted at rest in private cloud storage accessible only to your account. We use Supabase's row-level security to ensure your data is accessible only to you.</p>
 
         <h2>6. Data Retention</h2>
         <p>Your account data is retained for as long as your account is active. If you delete your account, all associated personal data is permanently removed within <strong>30 days</strong>. Anonymised, aggregated statistics that cannot identify you may be retained for longer for service improvement purposes.</p>
+        <p>Pseudonymous analytics data collected under consent is retained for up to <strong>24 months</strong> from the date of collection. See section 8a for details.</p>
 
         <h2>7. Your Rights Under UK GDPR</h2>
         <p>You have the following rights regarding your personal data:</p>
@@ -244,34 +248,58 @@
           <li><strong>Right to data portability</strong> — request an export of your data in a machine-readable format.</li>
           <li><strong>Right to object</strong> — object to processing based on legitimate interests.</li>
           <li><strong>Right to restrict processing</strong> — request that we limit how we use your data in certain circumstances.</li>
+          <li><strong>Right to withdraw consent</strong> — where processing is based on consent (e.g. analytics), you may withdraw consent at any time via the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in any footer.</li>
         </ul>
         <p>To exercise any of these rights, contact us at <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>. We will respond within 30 days.</p>
         <p>You also have the right to lodge a complaint with the <strong>Information Commissioner's Office (ICO)</strong> at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
 
-        <h2>8. Cookies</h2>
+        <h2>8. Cookies and Browser Storage</h2>
         <p>The AutoLog website and web app use no third-party tracking cookies and no advertising cookies. The only information stored in your browser is:</p>
         <ul>
           <li><strong>Session tokens</strong> — strictly necessary to keep you signed in. Stored in browser local storage under keys beginning with <code>sb-</code>. These are essential for the service to function and cannot be disabled without logging you out.</li>
           <li><strong>Vehicle selection state</strong> (<code>al_vid</code>) — remembers which vehicle you last viewed. Strictly necessary for UX continuity.</li>
           <li><strong>Consent preference record</strong> (<code>al_consent_v1</code>) — stores your analytics consent choice (accepted or rejected). Storing this record is itself strictly necessary to implement the consent mechanism.</li>
           <li><strong>Banner dismissal flags</strong> (<code>al_first_action_prompted_*</code>, <code>al_history_prompt_*</code>) — remember whether you have dismissed certain UI prompts. These are only set if you have accepted analytics. Clearing them has no effect on core functionality.</li>
+          <li><strong>Analytics identifiers</strong> (<code>al_anon_id</code>, <code>al_session_id</code>, <code>al_utm</code>, <code>al_first_touch</code>, <code>al_page_start</code>, <code>al_session_ts</code>) — only set if you have accepted analytics. Details in section 8a below. Cleared if you withdraw consent.</li>
         </ul>
         <p>No third-party advertising or analytics cookies are set. AutoLog does not use Google Analytics, Meta Pixel, or any other external tracking service.</p>
         <p>You can review or change your analytics preference at any time using the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in the footer of any page.</p>
 
         <h2>8a. Analytics and Usage Data</h2>
-        <p>AutoLog collects product analytics data <strong>only with your explicit consent</strong>. You will be asked for consent when you first visit the site or app. If you do not accept, no analytics data is collected.</p>
-        <p>When you accept analytics, the following is collected:</p>
+        <p>AutoLog collects pseudonymous product analytics data <strong>only with your explicit consent</strong>. You will be asked for consent via a banner when you first visit the site. If you do not accept, no analytics data is collected. If you accept, the following is collected:</p>
+
+        <h3 style="font-size:1rem;margin-top:20px;margin-bottom:8px;">Website events</h3>
         <ul>
-          <li>Which features you used (e.g. fuel log viewed, service log viewed, documents viewed)</li>
-          <li>When you signed in</li>
+          <li>Which pages you visit, when, and how long you stay on each page</li>
+          <li>How far you scroll down a page (in 25% increments)</li>
+          <li>Whether you use the registration lookup tool, whether the lookup succeeded, and non-identifying vehicle details returned by DVLA (make, year, fuel type) — the registration plate itself is SHA-256 hashed on your device before transmission and we never see the raw plate</li>
+          <li>Whether you submit the early-access (TestFlight) form, and the attribution parameters of your visit (see below)</li>
+          <li>Whether you click the App Store button, TestFlight button, or navigate to external links</li>
+          <li>Whether you submit feedback, and which category you selected</li>
+          <li>The referring website that brought you to AutoLog (e.g. google.com, reddit.com)</li>
+          <li>UTM campaign parameters present in the URL (utm_source, utm_medium, utm_campaign, utm_content, utm_term)</li>
+          <li>Device type (mobile / tablet / desktop) and viewport dimensions</li>
+          <li>Country-level geolocation derived from your IP address by Cloudflare. We store only the two-letter country code (e.g. "GB"). We do not store your IP address.</li>
+        </ul>
+
+        <h3 style="font-size:1rem;margin-top:20px;margin-bottom:8px;">App events (iOS)</h3>
+        <ul>
+          <li>Which features you use (e.g. fuel log viewed, service log viewed, documents viewed)</li>
+          <li>When you sign in</li>
           <li>Whether you added a vehicle or completed your first action</li>
           <li>Whether you viewed the upgrade screen and which trigger caused it</li>
         </ul>
-        <p>This data is <strong>pseudonymous</strong> — it is linked to your account identifier (a randomly generated UUID, not your name or email address). It cannot directly identify you without access to the accounts database.</p>
-        <p>Analytics data is stored in AutoLog's own database (Supabase, EU London region). It is not shared with any third-party analytics provider. AutoLog does not use Google Analytics, Mixpanel, Hotjar or any equivalent service.</p>
-        <p>Analytics data collected before you withdraw consent is retained for up to <strong>12 months</strong> from the date of collection and used only in aggregated form for product improvement. It is not used for advertising or sold to third parties.</p>
-        <p>You can withdraw analytics consent at any time using the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in the footer of this page. Withdrawing consent stops future analytics collection but does not delete previously collected data.</p>
+
+        <h3 style="font-size:1rem;margin-top:20px;margin-bottom:8px;">How events are identified</h3>
+        <p>Every event is tagged with two identifiers: a long-lived <strong>anonymous ID</strong> (a randomly generated UUID stored in your browser's local storage) and a <strong>session ID</strong> (a randomly generated UUID that resets after 30 minutes of inactivity). If you subsequently sign in or create an account, events after that point are also tagged with your account identifier.</p>
+        <p>These identifiers are <strong>pseudonymous</strong>: they let us count unique visitors and analyse session behaviour without storing your name, email address, or IP address alongside each event. Email addresses and registration plates referenced in events are SHA-256 hashed on your device before transmission.</p>
+
+        <h3 style="font-size:1rem;margin-top:20px;margin-bottom:8px;">Where it goes and who sees it</h3>
+        <p>Analytics data is stored in AutoLog's own Supabase database, in the EU London region. It is not shared with any third-party analytics provider. AutoLog does not use Google Analytics, Mixpanel, Hotjar or any equivalent external service. The data is accessible only by AutoLog's owner and is used solely to improve the product.</p>
+
+        <h3 style="font-size:1rem;margin-top:20px;margin-bottom:8px;">Retention and withdrawal</h3>
+        <p>Analytics data is retained for up to <strong>24 months</strong> from the date of collection and used only in aggregated form for product improvement and marketing attribution. It is not used for advertising, is not sold to third parties, and is deleted once the retention period expires.</p>
+        <p>You can withdraw analytics consent at any time using the <a href="#" onclick="if(window.alShowConsentPreferences){window.alShowConsentPreferences();return false;}" style="color:var(--teal)">Cookie preferences</a> link in the footer of any page. Withdrawing consent stops future analytics collection and clears the analytics identifiers from your browser. It does not delete previously collected pseudonymous events, but those events cannot be tied back to you once the anonymous ID is cleared from your device. You may also request deletion of all events tied to your anonymous ID by contacting <a href="mailto:hello@autologapp.co.uk">hello@autologapp.co.uk</a>.</p>
 
         <h2>9. Children's Privacy</h2>
         <p>AutoLog is not directed at children under the age of 13. We do not knowingly collect personal data from children. If you believe a child has provided us with personal data, please contact us and we will delete it promptly.</p>

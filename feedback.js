@@ -9,6 +9,12 @@ function initSb() {
   }
 }
 
+function track(name, props) {
+  try {
+    if (window.AutoLogTrack) window.AutoLogTrack.track(name, props || {});
+  } catch (e) { /* silent */ }
+}
+
 function selectType(btn) {
   var buttons = document.querySelectorAll('.type-btn');
   for (var i = 0; i < buttons.length; i++) {
@@ -16,6 +22,7 @@ function selectType(btn) {
   }
   btn.classList.add('selected');
   selectedType = btn.getAttribute('data-type');
+  track('feedback_type_selected', { type: selectedType });
 }
 
 async function submitFeedback() {
@@ -30,12 +37,14 @@ async function submitFeedback() {
   if (!desc || desc.length < 10) {
     errEl.textContent = 'Please enter at least 10 characters in the description.';
     errEl.classList.add('on');
+    track('feedback_submit_failed', { reason: 'too_short', type: selectedType });
     return;
   }
 
   if (!sb) {
     errEl.textContent = 'Could not connect — please refresh and try again.';
     errEl.classList.add('on');
+    track('feedback_submit_failed', { reason: 'sdk_unavailable', type: selectedType });
     return;
   }
 
@@ -68,11 +77,20 @@ async function submitFeedback() {
     btn.disabled = false;
     spin.style.display = 'none';
     label.textContent = 'Send Feedback';
+    track('feedback_submit_failed', { reason: 'db_error', type: selectedType });
     return;
   }
 
   document.getElementById('form-wrap').style.display = 'none';
   document.getElementById('success-wrap').classList.add('on');
+
+  track('feedback_submitted', {
+    type: selectedType,
+    has_context: !!ctx,
+    has_email: !!email,
+    description_length: desc.length,
+    signed_in: !!userId
+  });
 }
 
 document.addEventListener('keydown', function(e) {

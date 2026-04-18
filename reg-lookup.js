@@ -1,8 +1,25 @@
 // ── Reg Lookup Hero Widget ─────────────────────────────────
-// Handles the UK reg plate input in the marketing hero section
+// Handles the UK reg plate input in the marketing hero section.
+// All high-intent events are tracked (attempt / success / fail / CTA click)
+// with the reg plate SHA-256 hashed so we never store raw plates.
 
 (function() {
   var WORKER = 'https://mechanic.autologapp.co.uk/dvla-lookup';
+
+  function track(name, props) {
+    try {
+      if (window.AutoLogTrack) window.AutoLogTrack.track(name, props || {});
+    } catch (e) { /* silent */ }
+  }
+
+  async function hashReg(reg) {
+    try {
+      if (window.AutoLogTrack && window.AutoLogTrack.hash) {
+        return await window.AutoLogTrack.hash(reg);
+      }
+    } catch (e) {}
+    return null;
+  }
 
   function pad(n) { return n < 10 ? '0' + n : n; }
 
@@ -42,10 +59,13 @@
 
     if (!reg || reg.length < 2) {
       err.textContent = 'Enter a UK registration plate.';
+      track('reg_lookup_failed', { reason: 'invalid_format' });
       return;
     }
 
-    // Show loading
+    var regHash = await hashReg(reg);
+    track('reg_lookup_attempted', { reg_hash: regHash, reg_length: reg.length });
+
     btn.disabled = true;
     btn.textContent = 'Looking up\u2026';
     loading.style.display = 'flex';
@@ -60,10 +80,13 @@
         err.textContent = 'We couldn\u2019t find that registration in the DVLA database. Check the plate and try again, or sign up to add your vehicle manually.';
         btn.disabled = false;
         btn.textContent = 'Look Up \u2192';
+        track('reg_lookup_failed', {
+          reg_hash: regHash,
+          reason: data.error ? 'api_error' : 'not_found'
+        });
         return;
       }
 
-      // Build result card
       var motExp = fmtDate(data.motExpiry);
       var taxExp = fmtDate(data.taxExpiry);
       var displayName = [data.year, cap(data.make), cap(data.colour)].filter(Boolean).join(' ');
@@ -87,11 +110,22 @@
       btn.disabled = false;
       btn.textContent = 'Look Up \u2192';
 
+      // Success event — vehicle make/year/fuel sent as non-PII context for
+      // marketing ("what cars are visitors driving?")
+      track('reg_lookup_succeeded', {
+        reg_hash: regHash,
+        make: data.make || null,
+        year: data.year || null,
+        fuel_type: data.fuelType || null,
+        mot_status: data.motExpiry ? (new Date(data.motExpiry) < new Date() ? 'expired' : 'valid') : 'unknown'
+      });
+
     } catch(e) {
       loading.style.display = 'none';
       err.textContent = 'Could not connect \u2014 please try again.';
       btn.disabled = false;
       btn.textContent = 'Look Up \u2192';
+      track('reg_lookup_failed', { reg_hash: regHash, reason: 'network_error' });
     }
   };
 
@@ -102,25 +136,25 @@
   window.rlInput = function(e) {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9 ]/g, '');
   };
+
   // Route the main CTA based on whether user is already signed in
   window.rlHandleCTA = async function(encodedReg, e) {
     e.preventDefault()
     const reg = decodeURIComponent(encodedReg)
-    // Check for existing Supabase session
+    var regHash = await hashReg(reg);
+    track('reg_lookup_cta_clicked', { reg_hash: regHash });
+
     try {
       const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
       const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
       const sb = supabase.createClient(SURL, SKEY)
       const { data: { session } } = await sb.auth.getSession()
       if (session) {
-        // Already signed in — go straight to dashboard with reg
         location.href = '/app/dashboard?reg=' + encodeURIComponent(reg)
       } else {
-        // Not signed in — go to signup
         location.href = '/app/login?reg=' + encodeURIComponent(reg) + '&view=signup'
       }
     } catch(err) {
-      // Fallback to signup if session check fails
       location.href = '/app/login?reg=' + encodeURIComponent(reg) + '&view=signup'
     }
   }

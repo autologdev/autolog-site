@@ -8,6 +8,21 @@ function initSb() {
   }
 }
 
+function track(name, props) {
+  try {
+    if (window.AutoLogTrack) window.AutoLogTrack.track(name, props || {});
+  } catch (e) { /* silent */ }
+}
+
+async function hashEmail(email) {
+  try {
+    if (window.AutoLogTrack && window.AutoLogTrack.hash) {
+      return await window.AutoLogTrack.hash(email);
+    }
+  } catch (e) {}
+  return null;
+}
+
 // ── Waitlist signup ────────────────────────────────────────
 window.joinWaitlist = async function joinWaitlist() {
   var input = document.getElementById('wl-email');
@@ -22,17 +37,37 @@ window.joinWaitlist = async function joinWaitlist() {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     msg.textContent = 'Please enter a valid email address.';
     msg.className = 'wl-msg wl-msg-err';
+    track('waitlist_signup_failed', { reason: 'invalid_email' });
     return;
   }
 
   btn.disabled = true;
   btn.textContent = 'Joining\u2026';
 
+  var emailHash = await hashEmail(email);
+  track('waitlist_signup_attempted', {
+    email_hash: emailHash,
+    time_on_page_sec: window.AutoLogTrack ? window.AutoLogTrack.getTimeOnPage() : null
+  });
+
   try {
+    var utms = (window.AutoLogTrack && window.AutoLogTrack.getUTMs()) || {};
+    var anonId = window.AutoLogTrack ? window.AutoLogTrack.getAnonymousId() : null;
+
     var res = await fetch('https://dkpvxlxarsmiljnvnbck.supabase.co/functions/v1/join-waitlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email })
+      body: JSON.stringify({
+        email: email,
+        utm_source:   utms.utm_source   || null,
+        utm_medium:   utms.utm_medium   || null,
+        utm_campaign: utms.utm_campaign || null,
+        utm_content:  utms.utm_content  || null,
+        utm_term:     utms.utm_term     || null,
+        referrer:     utms.referrer     || null,
+        landing_path: utms.landing_path || null,
+        anonymous_id: anonId
+      })
     });
     var data = await res.json();
 
@@ -40,10 +75,12 @@ window.joinWaitlist = async function joinWaitlist() {
       form.style.display = 'none';
       document.getElementById('wl-success').style.display = 'block';
       document.getElementById('wl-success-msg').textContent = "You're already signed up \u2014 check your email for the TestFlight link.";
+      track('waitlist_signup_succeeded', { email_hash: emailHash, duplicate: true });
     } else if (res.ok) {
       form.style.display = 'none';
       document.getElementById('wl-success').style.display = 'block';
       document.getElementById('wl-success-msg').textContent = "Check your email \u2014 we've sent you the TestFlight link.";
+      track('waitlist_signup_succeeded', { email_hash: emailHash, duplicate: false });
     } else {
       throw new Error('bad response');
     }
@@ -52,15 +89,14 @@ window.joinWaitlist = async function joinWaitlist() {
     msg.className = 'wl-msg wl-msg-err';
     btn.disabled = false;
     btn.textContent = 'Join Early Access \u2192';
+    track('waitlist_signup_failed', { reason: 'network_error' });
   }
 }
 
-// Allow Enter key to submit
 window.wlKeydown = function wlKeydown(e) {
   if (e.key === 'Enter') window.joinWaitlist();
 };
 
-// ── Auth-aware nav ─────────────────────────────────────────
 async function initNav() {
   initSb();
   if (!sb) return;
@@ -76,7 +112,6 @@ async function initNav() {
   } catch(e) {}
 }
 
-// ── Hamburger ──────────────────────────────────────────────
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     initNav();
@@ -109,7 +144,6 @@ async function initNav() {
       });
     }
 
-    // Fade-in animations
     var fadeEls = document.querySelectorAll('.fade-in');
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry) {
@@ -120,5 +154,23 @@ async function initNav() {
       });
     }, { threshold: 0.1 });
     fadeEls.forEach(function(el) { observer.observe(el); });
+
+    // Section visibility tracking
+    var sectionTargets = document.querySelectorAll('[data-section]');
+    if (sectionTargets.length && window.AutoLogTrack) {
+      var seen = {};
+      var sectionObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var name = entry.target.getAttribute('data-section');
+            if (name && !seen[name]) {
+              seen[name] = true;
+              window.AutoLogTrack.track('section_viewed', { section: name });
+            }
+          }
+        });
+      }, { threshold: 0.4 });
+      sectionTargets.forEach(function(el) { sectionObs.observe(el); });
+    }
   });
 })();

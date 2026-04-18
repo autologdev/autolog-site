@@ -14,6 +14,7 @@
     --surface2: #111827;
     --surface3: #1a2236;
     --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
     --teal: #1E7A8C;
     --teal-bright: #2dd4ef;
     --teal-glow: rgba(30,122,140,0.2);
@@ -40,36 +41,37 @@
   }
   .wrapper { position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 28px 24px 80px; }
 
-  /* ── Header ── */
+  /* Header */
   .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-bright); box-shadow: 0 0 14px var(--teal-bright); animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
   .logo-name { font-size: 1rem; font-weight: 700; letter-spacing: -.02em; }
   .logo-name span { color: var(--teal-bright); }
-  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .header-meta { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
 
-  /* ── Tabs ── */
-  .platform-tabs { display: flex; gap: 6px; }
-  .tab { padding: 6px 14px; border-radius: 8px; font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: var(--mono); transition: all .14s; }
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 6px 12px; border-radius: 7px; font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: var(--mono); transition: all .14s; }
   .tab.active-all { border-color: var(--teal); color: var(--teal-bright); background: rgba(45,212,239,0.08); }
   .tab.active-ios { border-color: var(--ios-color); color: var(--ios-color); background: var(--ios-bg); }
   .tab.active-web { border-color: var(--web-color); color: var(--web-color); background: var(--web-bg); }
-  .tab:hover:not(.active-all):not(.active-ios):not(.active-web) { border-color: rgba(255,255,255,.15); color: var(--text); }
-  .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 8px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; }
+  .tab:hover:not([class*="active"]) { border-color: rgba(255,255,255,.15); color: var(--text); }
+  .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; }
   .refresh-btn:hover { border-color: var(--teal); color: var(--teal-bright); }
 
-  /* ── Platform badge ── */
+  /* Badges */
   .plat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
   .plat-ios { background: var(--ios-bg); color: var(--ios-color); }
   .plat-web { background: var(--web-bg); color: var(--web-color); }
+  .plat-legacy { background: rgba(245,158,11,.1); color: var(--amber); }
 
-  /* ── Section label ── */
+  /* Section label */
   .section-label { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
   .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
-  /* ── KPIs ── */
+  /* KPIs */
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px; position: relative; overflow: hidden; transition: border-color .2s; }
   .kpi:hover { border-color: rgba(45,212,239,0.2); }
@@ -79,94 +81,84 @@
   .kpi-sub { font-size: .6875rem; color: var(--muted); margin-top: 6px; }
   .kpi-delta { font-size: .6875rem; font-weight: 600; margin-top: 5px; }
   .good { color: var(--green); } .warn { color: var(--amber); } .bad { color: var(--red); } .neutral { color: var(--muted); }
-  .kpi-split { display: flex; gap: 12px; margin-top: 8px; }
-  .kpi-split-item { flex: 1; }
-  .kpi-split-label { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
-  .kpi-split-val { font-size: 1rem; font-weight: 700; font-family: var(--mono); }
 
-  /* ── Grid layouts ── */
+  /* Grid layouts */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
   @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
 
-  /* ── Card ── */
+  /* Card */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
-  .card-title { font-size: .8125rem; font-weight: 700; margin-bottom: 18px; letter-spacing: -.01em; }
-  .card-sub { font-size: .6875rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .card-title { font-size: .8125rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+  .card-sub { font-size: .6875rem; color: var(--muted); font-weight: 400; margin-bottom: 16px; }
 
-  /* ── Funnel ── */
-  .funnel { display: flex; flex-direction: column; gap: 5px; }
-  .funnel-row { display: grid; grid-template-columns: 150px 1fr 50px 60px; align-items: center; gap: 12px; }
-  .funnel-label { font-size: .75rem; color: var(--muted); text-align: right; }
-  .funnel-bar-wrap { height: 8px; background: var(--faint); border-radius: 100px; overflow: hidden; }
-  .funnel-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--teal), var(--teal-bright)); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
-  .funnel-n { font-family: var(--mono); font-size: .8125rem; font-weight: 500; text-align: right; }
-  .funnel-pct { font-family: var(--mono); font-size: .6875rem; color: var(--muted); text-align: right; }
-  .funnel-drop { grid-column: 1/-1; text-align: right; padding-right: 110px; }
-  .funnel-drop span { font-size: .625rem; color: var(--red); font-family: var(--mono); opacity: .7; }
+  /* Master funnel */
+  .mfunnel { display: flex; flex-direction: column; gap: 0; }
+  .mfunnel-row { display: grid; grid-template-columns: 200px 1fr 80px 70px; align-items: center; gap: 14px; padding: 10px 0; }
+  .mfunnel-label { font-size: .8125rem; color: var(--text); font-weight: 500; }
+  .mfunnel-sub { font-size: .6875rem; color: var(--muted); margin-top: 2px; }
+  .mfunnel-bar-wrap { height: 10px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+  .mfunnel-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--teal), var(--teal-bright)); transition: width 1.2s cubic-bezier(.16,1,.3,1); }
+  .mfunnel-n { font-family: var(--mono); font-size: 1rem; font-weight: 700; text-align: right; }
+  .mfunnel-pct { font-family: var(--mono); font-size: .75rem; color: var(--muted); text-align: right; }
+  .mfunnel-drop { grid-column: 1/-1; text-align: right; padding: 0 80px 4px 0; font-size: .625rem; color: var(--red); font-family: var(--mono); opacity: .65; }
+  @media (max-width: 700px) { .mfunnel-row { grid-template-columns: 1fr 60px 50px; } .mfunnel-bar-wrap { display: none; } }
 
-  /* ── Event rows ── */
-  .event-list { display: flex; flex-direction: column; gap: 6px; }
-  .event-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: var(--surface2); border-radius: 8px; border: 1px solid transparent; transition: border-color .14s; }
+  /* Source / campaign table */
+  .src-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+  .src-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .src-table th.num { text-align: right; }
+  .src-table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.03); }
+  .src-table td.num { text-align: right; font-family: var(--mono); }
+  .src-table tr:last-child td { border-bottom: none; }
+  .src-name { font-size: .8125rem; color: var(--text); font-weight: 500; }
+  .src-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+  .src-bar { height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; margin-top: 4px; max-width: 240px; }
+  .src-bar-fill { height: 100%; background: var(--teal); border-radius: 100px; }
+
+  /* Event rows */
+  .event-list { display: flex; flex-direction: column; gap: 5px; }
+  .event-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface2); border-radius: 7px; border: 1px solid transparent; transition: border-color .14s; }
   .event-row:hover { border-color: var(--border); }
-  .event-left { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
   .event-name { font-family: var(--mono); font-size: .75rem; color: var(--teal-bright); }
   .event-right { display: flex; align-items: center; gap: 10px; }
-  .event-bar-wrap { width: 60px; height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+  .event-bar-wrap { width: 80px; height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; }
   .event-bar { height: 100%; border-radius: 100px; background: var(--teal); }
-  .event-count { font-family: var(--mono); font-size: .8125rem; font-weight: 500; min-width: 24px; text-align: right; }
-  .split-bar-wrap { display: flex; gap: 2px; height: 6px; border-radius: 100px; overflow: hidden; width: 80px; flex-shrink: 0; }
-  .split-bar-ios { background: var(--ios-color); border-radius: 100px 0 0 100px; transition: width .8s; }
-  .split-bar-web { background: var(--web-color); border-radius: 0 100px 100px 0; transition: width .8s; }
+  .event-count { font-family: var(--mono); font-size: .8125rem; font-weight: 500; min-width: 30px; text-align: right; }
 
-  /* ── Timeline ── */
+  /* Timeline */
   .timeline { display: flex; flex-direction: column; }
-  .tl-row { display: flex; align-items: flex-start; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .tl-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .tl-row:last-child { border-bottom: none; }
-  .tl-time { font-family: var(--mono); font-size: .6875rem; color: var(--muted); white-space: nowrap; padding-top: 2px; min-width: 90px; }
+  .tl-time { font-family: var(--mono); font-size: .6875rem; color: var(--muted); white-space: nowrap; padding-top: 2px; min-width: 80px; }
   .tl-body { flex: 1; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .ev-badge { padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
-  .ev-onboarding { background: rgba(34,197,94,.1); color: var(--green); }
+  .ev-signup { background: rgba(34,197,94,.1); color: var(--green); }
   .ev-vehicle { background: rgba(45,212,239,.1); color: var(--teal-bright); }
   .ev-paywall { background: rgba(245,158,11,.1); color: var(--amber); }
   .ev-action { background: rgba(139,92,246,.1); color: #a78bfa; }
-  .ev-auth { background: rgba(30,122,140,.12); color: #67e8f9; }
-  .ev-feature { background: rgba(99,102,241,.1); color: #818cf8; }
+  .ev-reg { background: rgba(245,200,66,.1); color: #f5c842; }
+  .ev-page { background: rgba(255,255,255,.04); color: var(--muted); }
   .ev-other { background: rgba(255,255,255,.05); color: var(--muted); }
   .tl-props { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
 
-  /* ── Insight banners ── */
-  .insight { background: rgba(30,122,140,0.07); border: 1px solid rgba(45,212,239,0.13); border-radius: 10px; padding: 14px 18px; margin-top: 10px; }
-  .insight-title { font-size: .75rem; font-weight: 700; color: var(--teal-bright); margin-bottom: 5px; }
-  .insight-body { font-size: .75rem; color: var(--muted); line-height: 1.65; }
-  .insight-body strong { color: var(--text); }
-  .warn-insight { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 14px 18px; margin-top: 10px; }
-  .warn-insight .insight-title { color: var(--amber); }
-
-  /* ── Retention cohort table ── */
+  /* Retention cohort + heatmap */
   .cohort-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
-  .cohort-table th { text-align: left; padding: 8px 12px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .cohort-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
+  .cohort-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .cohort-table td { padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
   .cohort-table tr:last-child td { border-bottom: none; }
-  .cohort-name { font-size: .8125rem; color: var(--text); font-weight: 500; }
-  .cohort-sub { font-size: .6875rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
-  .ret-cell { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 28px; border-radius: 6px; font-family: var(--mono); font-size: .75rem; font-weight: 600; }
+  .ret-cell { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 26px; border-radius: 5px; font-family: var(--mono); font-size: .75rem; font-weight: 600; }
   .ret-active { background: rgba(34,197,94,.15); color: var(--green); }
-  .ret-warn   { background: rgba(245,158,11,.12); color: var(--amber); }
   .ret-cold   { background: rgba(239,68,68,.1);   color: var(--red); }
   .ret-none   { background: rgba(255,255,255,.03); color: var(--muted); }
-  .ret-bar-wrap { height: 4px; background: var(--faint); border-radius: 100px; overflow: hidden; width: 60px; margin-top: 4px; }
-  .ret-bar { height: 100%; border-radius: 100px; }
 
-  /* ── Feature heatmap ── */
   .heatmap-wrap { overflow-x: auto; }
   .heatmap-table { border-collapse: collapse; font-size: .75rem; min-width: 100%; }
-  .heatmap-table th { padding: 6px 10px; font-size: .5625rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  .heatmap-table th { padding: 6px 8px; font-size: .5625rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--border); }
   .heatmap-table th.user-col { text-align: left; min-width: 120px; }
-  .heatmap-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.025); text-align: center; }
-  .heatmap-table tr:last-child td { border-bottom: none; }
-  .hm-cell { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 24px; border-radius: 5px; font-size: .625rem; font-family: var(--mono); font-weight: 600; }
+  .heatmap-table td { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.025); text-align: center; }
+  .hm-cell { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; border-radius: 4px; font-size: .625rem; font-family: var(--mono); font-weight: 600; }
   .hm-done  { background: rgba(34,197,94,.18); color: var(--green); }
   .hm-never { background: rgba(255,255,255,.03); color: rgba(255,255,255,.12); }
   .hm-user  { font-size: .8125rem; color: var(--text); text-align: left; font-weight: 500; }
@@ -174,59 +166,54 @@
   .hm-total-row td { background: rgba(45,212,239,.04); border-top: 1px solid var(--border); border-bottom: none; }
   .hm-total-row .hm-user { color: var(--muted); font-size: .6875rem; }
 
-  /* ── User detail drawer ── */
+  /* User detail drill-down */
   .user-row-clickable { cursor: pointer; transition: background .12s; }
   .user-row-clickable:hover td { background: rgba(255,255,255,.025); }
   .user-detail-row { display: none; }
   .user-detail-row.open { display: table-row; }
-  .user-detail-inner { padding: 14px 16px; background: rgba(45,212,239,.03); border-radius: 10px; margin: 4px 12px 10px; }
-  .user-event-feed { display: flex; flex-direction: column; gap: 0; max-height: 280px; overflow-y: auto; }
+  .user-event-feed { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
   .user-event-feed::-webkit-scrollbar { width: 4px; }
-  .user-event-feed::-webkit-scrollbar-track { background: transparent; }
   .user-event-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* ── SQL queries ── */
-  .query-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
-  .query-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; transition: background .14s; }
-  .query-header:hover { background: rgba(255,255,255,.02); }
-  .query-title { font-size: .8125rem; font-weight: 600; }
-  .query-desc { font-size: .6875rem; color: var(--muted); margin-top: 2px; }
-  .query-chevron { font-size: .7rem; color: var(--muted); transition: transform .18s; }
-  .query-card.open .query-chevron { transform: rotate(180deg); }
-  .query-body { display: none; padding: 0 16px 16px; }
-  .query-card.open .query-body { display: block; }
-  pre { background: rgba(0,0,0,.4); border-radius: 8px; padding: 14px; font-family: var(--mono); font-size: .6875rem; color: #7dd3fc; overflow-x: auto; white-space: pre-wrap; line-height: 1.75; border: 1px solid rgba(255,255,255,.05); }
-  .copy-btn { margin-top: 8px; background: var(--faint); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 6px; font-family: var(--mono); font-size: .6875rem; cursor: pointer; transition: all .14s; }
-  .copy-btn:hover { color: var(--teal-bright); border-color: var(--teal); }
+  /* Insight banner */
+  .insight { background: rgba(30,122,140,0.07); border: 1px solid rgba(45,212,239,0.13); border-radius: 10px; padding: 14px 18px; margin-top: 10px; font-size: .75rem; color: var(--muted); line-height: 1.6; }
+  .insight strong { color: var(--text); }
+  .warn-insight { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); color: rgba(255,255,255,0.7); }
 
-  /* ── Misc ── */
+  /* Misc */
   #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; }
   .spinner { width: 26px; height: 26px; border: 2.5px solid rgba(45,212,239,.15); border-top-color: var(--teal-bright); border-radius: 50%; animation: spin .65s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
-  .empty-msg { font-size: .8125rem; color: var(--muted); padding: 8px 0; }
-  .legend { display: flex; gap: 16px; margin-bottom: 14px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .6875rem; color: var(--muted); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .empty-msg { font-size: .8125rem; color: var(--muted); padding: 12px 0; text-align: center; }
+
+  /* Sparkline */
+  .spark-wrap { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 4px; }
+  .spark-bar { flex: 1; background: var(--teal); border-radius: 2px 2px 0 0; min-height: 2px; opacity: .85; transition: opacity .14s; }
+  .spark-bar:hover { opacity: 1; }
+  .spark-bar.empty { background: var(--faint); opacity: .4; }
+
+  /* Sparkline details */
+  .spark-labels { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: .5625rem; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="wrapper">
-  <div id="loading"><div class="spinner"></div><div class="loading-text">Loading analytics\u2026</div></div>
+<div id="loading"><div class="spinner"></div><div class="loading-text">Loading analytics\u2026</div></div>
 
-  <div id="auth-gate" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px">
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:400px;width:100%;text-align:center">
-      <div style="font-size:1.5rem;margin-bottom:12px">&#128274;</div>
-      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Sign in to view analytics</div>
-      <div style="font-size:.8125rem;color:var(--muted);margin-bottom:24px;line-height:1.6">Sign in with your AutoLog owner account to access the dashboard.</div>
-      <div id="auth-err" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;font-size:.8125rem;color:#fca5a5;margin-bottom:16px"></div>
-      <input type="email" id="auth-email" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:10px" onkeydown="if(event.key==='Enter')doSignIn()">
-      <input type="password" id="auth-pass" placeholder="Password" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:16px" onkeydown="if(event.key==='Enter')doSignIn()">
-      <button onclick="doSignIn()" id="auth-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-family:var(--sans);font-size:.9375rem;font-weight:700;cursor:pointer">Sign In</button>
-    </div>
+<div id="auth-gate" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:400px;width:100%;text-align:center">
+    <div style="font-size:1.5rem;margin-bottom:12px">&#128274;</div>
+    <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Sign in to view analytics</div>
+    <div style="font-size:.8125rem;color:var(--muted);margin-bottom:24px;line-height:1.6">Owner account only.</div>
+    <div id="auth-err" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;font-size:.8125rem;color:#fca5a5;margin-bottom:16px"></div>
+    <input type="email" id="auth-email" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:10px" onkeydown="if(event.key==='Enter')doSignIn()">
+    <input type="password" id="auth-pass" placeholder="Password" style="width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:var(--mono);font-size:.875rem;outline:none;margin-bottom:16px" onkeydown="if(event.key==='Enter')doSignIn()">
+    <button onclick="doSignIn()" id="auth-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-family:var(--sans);font-size:.9375rem;font-weight:700;cursor:pointer">Sign In</button>
   </div>
+</div>
 
-  <div id="main" style="display:none"></div>
+<div id="main" style="display:none"></div>
 </div>
 
 <script>
@@ -235,34 +222,32 @@ const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb = supabase.createClient(SURL, SKEY)
 const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 
-let allEvents = [], allProfiles = []
+let allEvents = [], allProfiles = [], allWaitlist = []
 let currentPlatform = 'all'
 let currentRange = '30d'
-let scaledView = false
-let feedLimit = 60
+let feedLimit = 40
 
-// ─── Feature definitions for the heatmap ───────────────────────────────────
-// Each feature maps to one or more event names that count as "done"
+// Feature heatmap definitions — collapse v2 screen_viewed and pre-v2 legacy names
 const FEATURES = [
-  { key: 'onboarding',   label: 'Onboarded',      events: ['onboarding_complete'] },
-  { key: 'vehicle',      label: 'Added vehicle',   events: ['vehicle_added'] },
-  { key: 'fuel',         label: 'Fuel entry',      events: ['fuel_entry_added', 'fuel_added'] },
-  { key: 'service',      label: 'Service log',     events: ['service_entry_added', 'service_added', 'first_action_taken'] },
-  { key: 'document',     label: 'Doc upload',      events: ['document_uploaded', 'document_added'] },
-  { key: 'paywall',      label: 'Saw paywall',     events: ['paywall_viewed'] },
-  { key: 'subscription', label: 'Subscribed',      events: ['subscription_started'] },
-  { key: 'dashboard',    label: 'Dashboard view',  events: ['dashboard_viewed'] },
-  { key: 'fuel_log',     label: 'Fuel log view',   events: ['fuel_log_viewed'] },
-  { key: 'service_log',  label: 'Service view',    events: ['service_log_viewed'] },
-  { key: 'docs_view',    label: 'Docs view',       events: ['documents_viewed'] },
+  { key: 'onboarding',  label: 'Onboarded',     match: e => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' },
+  { key: 'vehicle',     label: 'Added vehicle', match: e => e.event_name === 'vehicle_added' },
+  { key: 'action',      label: 'First action',  match: e => e.event_name === 'first_action_taken' },
+  { key: 'fuel',        label: 'Fuel entry',    match: e => e.event_name === 'fuel_entry_added' || e.event_name === 'fuel_added' },
+  { key: 'service',     label: 'Service log',   match: e => e.event_name === 'service_entry_added' || e.event_name === 'service_added' },
+  { key: 'document',    label: 'Doc upload',    match: e => e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
+  { key: 'paywall',     label: 'Saw paywall',   match: e => e.event_name === 'paywall_viewed' },
+  { key: 'subscribe',   label: 'Subscribed',    match: e => e.event_name === 'subscription_started' },
+  { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'dashboard' },
+  { key: 'fuel_log',    label: 'Fuel log',      match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'fuel_log' },
+  { key: 'service_log', label: 'Service view',  match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'service_log' },
+  { key: 'docs_view',   label: 'Docs view',     match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'documents' },
 ]
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return '\u2014'
   const dt = new Date(d)
-  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
-    dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' + dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 function fmtDateShort(d) {
   if (!d) return '\u2014'
@@ -272,124 +257,168 @@ function daysSince(d) {
   if (!d) return Infinity
   return Math.floor((Date.now() - new Date(d)) / 86400000)
 }
-
 function getPlatform(e) {
+  if (e.platform && e.platform !== 'legacy') return e.platform
+  // Legacy inference for old rows
   const p = e.properties || {}
   if (p.platform === 'ios') return 'ios'
-  if (p.platform === 'web') return 'web'
-  if (p.source === 'web') return 'web'
-  if (['onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
-  if (['signin_completed','signup_completed','signup_started','signin_started','magic_link_sent'].includes(e.event_name)) return 'web'
-  if (e.event_name.endsWith('_viewed')) return 'web'
-  if (['vehicle_added','first_action_taken'].includes(e.event_name) && !p.source) return 'ios'
-  if (e.event_name === 'paywall_viewed') {
-    if (['web','settings_upgrade','upload_limit_web','scan_upsell'].includes(p.trigger || p.source)) return 'web'
-    return 'ios'
-  }
+  if (p.platform === 'web' || p.source === 'web') return 'web'
+  if (['onboarding_completed','onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
+  if (e.event_name === 'screen_viewed' && p.source === 'web') return 'web'
   return 'unknown'
 }
-function filterEvents(events) {
+function filterEventsByPlatform(events) {
   if (currentPlatform === 'all') return events
   return events.filter(e => getPlatform(e) === currentPlatform)
 }
+function filterEventsByRange(events) {
+  if (currentRange === 'all') return events
+  const ms = currentRange === '7d' ? 7*864e5 : currentRange === '30d' ? 30*864e5 : 90*864e5
+  const start = Date.now() - ms
+  return events.filter(e => new Date(e.created_at).getTime() > start)
+}
 function evBadgeClass(name) {
-  if (name.includes('onboarding')) return 'ev-onboarding'
+  if (name.includes('signup') || name.includes('onboarding')) return 'ev-signup'
   if (name.includes('vehicle')) return 'ev-vehicle'
   if (name.includes('paywall') || name.includes('subscription')) return 'ev-paywall'
-  if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service')) return 'ev-feature'
-  if (['signin_completed','signup_completed','signup_started','signin_started','magic_link_sent'].includes(name)) return 'ev-auth'
-  if (name.endsWith('_viewed')) return 'ev-feature'
+  if (name.includes('reg_lookup')) return 'ev-reg'
+  if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service') || name.includes('feedback')) return 'ev-action'
+  if (name.includes('page_') || name.includes('scroll') || name.includes('section_')) return 'ev-page'
   return 'ev-other'
 }
 function platBadge(platform) {
   if (platform === 'ios') return `<span class="plat plat-ios">iOS</span>`
   if (platform === 'web') return `<span class="plat plat-web">Web</span>`
-  return `<span class="plat" style="background:rgba(245,158,11,.1);color:var(--amber)">legacy</span>`
+  return `<span class="plat plat-legacy">legacy</span>`
 }
-
 function setPlatform(p) { currentPlatform = p; render(); window.scrollTo(0,0) }
 function setRange(r)    { currentRange = r;    render() }
 
-// ─── Toggle user detail row ────────────────────────────────────────────────
 function toggleUserDetail(uid) {
   const row = document.getElementById('detail-' + uid)
   if (!row) return
   const isOpen = row.classList.contains('open')
-  // Close all open detail rows first
   document.querySelectorAll('.user-detail-row.open').forEach(r => r.classList.remove('open'))
   if (!isOpen) row.classList.add('open')
 }
 
-// ─── Main render ──────────────────────────────────────────────────────────
+// Normalise UTM source (coalesce referrers into sources)
+function normalizeSource(e) {
+  const p = e.properties || {}
+  if (p.utm_source) return p.utm_source.toLowerCase()
+  if (p.referrer) {
+    try {
+      const host = new URL(p.referrer).hostname.replace(/^www\./, '')
+      if (host.includes('google')) return 'google (organic)'
+      if (host.includes('reddit')) return 'reddit (organic)'
+      if (host.includes('bing')) return 'bing (organic)'
+      if (host.includes('duckduckgo')) return 'duckduckgo (organic)'
+      if (host.includes('facebook') || host.includes('fb.com')) return 'facebook (organic)'
+      if (host.includes('twitter') || host.includes('x.com') || host.includes('t.co')) return 'twitter (organic)'
+      if (host.includes('linkedin')) return 'linkedin (organic)'
+      if (host.includes('pistonheads')) return 'pistonheads (organic)'
+      return host
+    } catch { return 'unknown' }
+  }
+  return '(direct)'
+}
+
+// ─── Main render ────────────────────────────────────────────────────────────
 function render() {
-  const totalUsers  = allProfiles.length
-  const isSmallBase = !scaledView && totalUsers < 20
+  const rangeLabel = currentRange === 'all' ? 'all time' : currentRange
+  const platformLabel = currentPlatform === 'all' ? 'all platforms' : currentPlatform
 
-  // Date range filtering
-  const rangeMs    = currentRange === '7d' ? 7*864e5 : currentRange === '30d' ? 30*864e5 : Infinity
-  const rangeStart = new Date(Date.now() - rangeMs)
-  const rangedEvents = currentRange === 'all' ? allEvents : allEvents.filter(e => new Date(e.created_at) > rangeStart)
-  const events = filterEvents(rangedEvents)
+  const rangedEvents = filterEventsByRange(allEvents)
+  const events = filterEventsByPlatform(rangedEvents)
+  const webEvents = rangedEvents.filter(e => getPlatform(e) === 'web')
+  const iosEvents = rangedEvents.filter(e => getPlatform(e) === 'ios')
 
-  // ── Core metrics (all-time) ──
+  const totalUsers = allProfiles.length
   const completedOnboarding = allProfiles.filter(p => p.onboarding_completed).length
-  const tookFirstAction     = allProfiles.filter(p => p.first_action_completed).length
-  const freeUsers  = allProfiles.filter(p => p.plan === 'free').length
-  const paidUsers  = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
-  const onbRate  = Math.round((completedOnboarding / (totalUsers  || 1)) * 100)
-  const actRate  = Math.round((tookFirstAction     / (completedOnboarding || 1)) * 100)
-  const convRate = Math.round((paidUsers           / (totalUsers  || 1)) * 100)
+  const tookFirstAction = allProfiles.filter(p => p.first_action_completed).length
+  const paidUsers = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  const isSmallBase = totalUsers < 20
 
-  // ── Event counts (ranged) ──
-  const counts = {}, iosCounts = {}, webCounts = {}
+  // ── Waitlist funnel (new attribution) ──
+  const waitlistInRange = (() => {
+    if (currentRange === 'all') return allWaitlist
+    const ms = currentRange === '7d' ? 7*864e5 : currentRange === '30d' ? 30*864e5 : 90*864e5
+    const start = Date.now() - ms
+    return allWaitlist.filter(w => new Date(w.created_at).getTime() > start)
+  })()
+
+  // ── Web visitor funnel ──
+  const uniqueAnonymous = new Set(webEvents.filter(e => e.anonymous_id).map(e => e.anonymous_id)).size
+  const uniqueSessions = new Set(webEvents.filter(e => e.session_id).map(e => e.session_id)).size
+  const pageViews = webEvents.filter(e => e.event_name === 'page_viewed').length
+  const regLookupAttempts = webEvents.filter(e => e.event_name === 'reg_lookup_attempted').length
+  const regLookupSuccesses = webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').length
+  const regCtaClicks = webEvents.filter(e => e.event_name === 'reg_lookup_cta_clicked').length
+  const waitlistAttempts = webEvents.filter(e => e.event_name === 'waitlist_signup_attempted').length
+  const waitlistSuccess = webEvents.filter(e => e.event_name === 'waitlist_signup_succeeded').length
+
+  // ── Event counts (filtered) ──
+  const counts = {}
   events.forEach(e => { counts[e.event_name] = (counts[e.event_name]||0) + 1 })
-  rangedEvents.forEach(e => {
-    const pl = getPlatform(e)
-    if (pl === 'ios') iosCounts[e.event_name] = (iosCounts[e.event_name]||0) + 1
-    else if (pl === 'web') webCounts[e.event_name] = (webCounts[e.event_name]||0) + 1
-  })
   const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1])
   const maxCount = sortedCounts[0]?.[1] || 1
 
-  const iosTotal = rangedEvents.filter(e => getPlatform(e)==='ios').length
-  const webTotal = rangedEvents.filter(e => getPlatform(e)==='web').length
-
-  // ── Paywall by trigger ──
-  const paywallBySource = {}
-  rangedEvents.filter(e => e.event_name==='paywall_viewed').forEach(e => {
-    const src = e.properties?.source || e.properties?.trigger || 'unknown'
-    const pl  = getPlatform(e)
-    if (!paywallBySource[src]) paywallBySource[src] = { total:0, ios:0, web:0 }
-    paywallBySource[src].total++
-    if (pl==='ios') paywallBySource[src].ios++
-    else if (pl==='web') paywallBySource[src].web++
+  // ── Reg lookup breakdown: makes / failures ──
+  const regMakes = {}
+  const regFailReasons = {}
+  webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').forEach(e => {
+    const mk = (e.properties?.make || 'unknown').toLowerCase()
+    regMakes[mk] = (regMakes[mk]||0) + 1
   })
-  const sortedPaywall = Object.entries(paywallBySource).sort((a,b) => b[1].total-a[1].total)
+  webEvents.filter(e => e.event_name === 'reg_lookup_failed').forEach(e => {
+    const r = e.properties?.reason || 'unknown'
+    regFailReasons[r] = (regFailReasons[r]||0) + 1
+  })
 
-  const now         = Date.now()
-  const sevenDaysAgo = now - 7*864e5
-  const recentEvents = allEvents.filter(e => new Date(e.created_at) > sevenDaysAgo)
-  const lastEvent    = allEvents[0]?.created_at ? fmtDate(allEvents[0].created_at) : 'None yet'
+  // ── Traffic sources ──
+  const sourceCounts = {}
+  webEvents.filter(e => e.event_name === 'page_viewed').forEach(e => {
+    const src = normalizeSource(e)
+    if (!sourceCounts[src]) sourceCounts[src] = { pageviews: 0, anonymous: new Set(), waitlist_signups: 0 }
+    sourceCounts[src].pageviews++
+    if (e.anonymous_id) sourceCounts[src].anonymous.add(e.anonymous_id)
+  })
+  // Attribute waitlist signups to source
+  webEvents.filter(e => e.event_name === 'waitlist_signup_succeeded').forEach(e => {
+    const src = normalizeSource(e)
+    if (!sourceCounts[src]) sourceCounts[src] = { pageviews: 0, anonymous: new Set(), waitlist_signups: 0 }
+    sourceCounts[src].waitlist_signups++
+  })
+  const sortedSources = Object.entries(sourceCounts)
+    .map(([src, d]) => ({ src, pageviews: d.pageviews, visitors: d.anonymous.size, waitlist_signups: d.waitlist_signups, conv_rate: d.anonymous.size ? (d.waitlist_signups / d.anonymous.size * 100) : 0 }))
+    .sort((a,b) => b.pageviews - a.pageviews)
+  const maxSourcePV = sortedSources[0]?.pageviews || 1
 
-  // ── Sparkline (14 days, all events) ──
+  // ── Section visibility ──
+  const sectionCounts = {}
+  webEvents.filter(e => e.event_name === 'section_viewed').forEach(e => {
+    const s = e.properties?.section || 'unknown'
+    sectionCounts[s] = (sectionCounts[s]||0) + 1
+  })
+  const sortedSections = Object.entries(sectionCounts).sort((a,b) => b[1]-a[1])
+  const maxSectionCount = sortedSections[0]?.[1] || 1
+
+  // ── Sparkline (14 day) ──
   const sparkBuckets = []
   for (let i = 13; i >= 0; i--) {
-    const d   = new Date(); d.setDate(d.getDate() - i)
+    const d = new Date(); d.setDate(d.getDate() - i)
     const key = d.toISOString().split('T')[0]
-    sparkBuckets.push({ key, count: allEvents.filter(e => e.created_at?.startsWith(key)).length,
-      label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
+    sparkBuckets.push({ key, count: allEvents.filter(e => e.created_at?.startsWith(key)).length, label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
   }
   const sparkMax = Math.max(...sparkBuckets.map(b => b.count), 1)
 
-  // ── PHASE A-1: Retention data ──
-  // For each user: first seen, last seen, sessions per window
+  // ── Retention cohort ──
   const retentionRows = allProfiles.map(p => {
     const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
     const firstSeen = ue[0]?.created_at || p.created_at
-    const lastSeen  = ue[ue.length-1]?.created_at || null
-    const daysOld   = daysSince(firstSeen)
-    const daysAgo   = daysSince(lastSeen)
-    // Count distinct days active in D1, D7, D30 windows from signup
+    const lastSeen = ue[ue.length-1]?.created_at || null
+    const daysOld = daysSince(firstSeen)
+    const daysAgo = daysSince(lastSeen)
     const firstDate = new Date(firstSeen)
     const activeDays = new Set(ue.map(e => e.created_at?.split('T')[0])).size
     const d1  = ue.filter(e => new Date(e.created_at) - firstDate <= 864e5).length > 0
@@ -398,230 +427,270 @@ function render() {
     return { profile: p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
   }).sort((a,b) => new Date(b.firstSeen) - new Date(a.firstSeen))
 
-  // ── PHASE A-2: Feature heatmap data ──
-  // For each user, which features have they ever triggered?
+  // ── Heatmap ──
   const heatmapRows = allProfiles.map(p => {
     const ue = allEvents.filter(e => e.user_id === p.id)
-    const fired = new Set(ue.map(e => e.event_name))
     const lastSeen = ue.sort((a,b) => new Date(b.created_at)-new Date(a.created_at))[0]?.created_at
     const featureMap = {}
-    FEATURES.forEach(f => {
-      featureMap[f.key] = f.events.some(ev => fired.has(ev))
-    })
+    FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e)) })
     const score = Object.values(featureMap).filter(Boolean).length
     return { profile: p, featureMap, score, lastSeen, totalEvents: ue.length }
   }).sort((a,b) => b.score - a.score)
-
-  // Column adoption % for heatmap footer
   const featureAdoption = {}
-  FEATURES.forEach(f => {
-    featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length
-  })
+  FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Render DOM ───────────────────────────────────────────────────────────
   document.getElementById('loading').style.display = 'none'
   const mainEl = document.getElementById('main')
   mainEl.style.display = 'block'
+  const lastEvent = allEvents[0]?.created_at ? fmtDate(allEvents[0].created_at) : 'None yet'
 
   mainEl.innerHTML = `
-  <!-- ══ HEADER ══ -->
+  <!-- HEADER -->
   <div class="header">
-    <div class="logo">
-      <div class="logo-dot"></div>
-      <div class="logo-name">Auto<span>Log</span> Analytics</div>
-    </div>
+    <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics v2</div></div>
     <div class="header-right">
       <div class="header-meta">Last event: ${lastEvent}</div>
-      <div class="platform-tabs">
+      <div class="tabs">
         <div class="tab ${currentRange==='7d'?'active-all':''}"  onclick="setRange('7d')">7d</div>
         <div class="tab ${currentRange==='30d'?'active-all':''}" onclick="setRange('30d')">30d</div>
-        <div class="tab ${currentRange==='all'?'active-all':''}" onclick="setRange('all')">All time</div>
+        <div class="tab ${currentRange==='90d'?'active-all':''}" onclick="setRange('90d')">90d</div>
+        <div class="tab ${currentRange==='all'?'active-all':''}" onclick="setRange('all')">All</div>
       </div>
-      <div class="platform-tabs">
+      <div class="tabs">
         <div class="tab ${currentPlatform==='all'?'active-all':''}" onclick="setPlatform('all')">All</div>
-        <div class="tab ${currentPlatform==='ios'?'active-ios':''}" onclick="setPlatform('ios')">iOS app</div>
         <div class="tab ${currentPlatform==='web'?'active-web':''}" onclick="setPlatform('web')">Web</div>
+        <div class="tab ${currentPlatform==='ios'?'active-ios':''}" onclick="setPlatform('ios')">iOS</div>
       </div>
-      <button class="refresh-btn" onclick="scaledView=!scaledView;render()" style="${scaledView?'border-color:var(--amber);color:var(--amber)':''}">
-        ${scaledView ? '\uD83D\uDCCA Scaled view' : '\uD83D\uDD2C Early stage'}
-      </button>
       <button class="refresh-btn" onclick="location.reload()">\u21BB Refresh</button>
     </div>
   </div>
 
-  <!-- ══ KPIs ══ -->
-  <div class="section-label">User funnel</div>
+  <!-- KPIs -->
+  <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Total users</div>
+      <div class="kpi-label">Unique visitors</div>
+      <div class="kpi-value">${uniqueAnonymous}</div>
+      <div class="kpi-sub">${uniqueSessions} sessions \u00B7 ${pageViews} pageviews</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Reg lookups</div>
+      <div class="kpi-value">${regLookupAttempts}</div>
+      <div class="kpi-sub">${regLookupSuccesses} succeeded \u00B7 ${regCtaClicks} clicked CTA</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Waitlist signups</div>
+      <div class="kpi-value">${waitlistSuccess}</div>
+      <div class="kpi-sub">${waitlistAttempts} tried \u00B7 ${waitlistAttempts-waitlistSuccess} failed</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Total accounts</div>
       <div class="kpi-value">${totalUsers}</div>
-      <div class="kpi-split">
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--muted)">Free</div><div class="kpi-split-val">${freeUsers}</div></div>
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--amber)">Paid</div><div class="kpi-split-val" style="color:var(--amber)">${paidUsers}</div></div>
-      </div>
+      <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Onboarding rate</div>
-      <div class="kpi-value">${onbRate}%</div>
-      <div class="kpi-delta ${isSmallBase?'neutral':onbRate>=70?'good':onbRate>=50?'warn':'bad'}">${completedOnboarding} of ${totalUsers} completed</div>
-      <div class="kpi-sub">${isSmallBase?'Tracking \u2014 need 20+ users':'Target \u226570%'}</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Activation rate</div>
-      <div class="kpi-value">${actRate}%</div>
-      <div class="kpi-delta ${isSmallBase?'neutral':actRate>=60?'good':actRate>=30?'warn':'bad'}">${tookFirstAction} took first action</div>
-      <div class="kpi-sub">${isSmallBase?'Tracking \u2014 need 20+ users':'Of onboarded users'}</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Paid conversion</div>
-      <div class="kpi-value">${convRate}%</div>
-      <div class="kpi-delta ${isSmallBase?'neutral':convRate>=5?'good':convRate>=2?'warn':'bad'}">${paidUsers} paying users</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Events (7d)</div>
-      <div class="kpi-value">${recentEvents.length}</div>
-      <div class="kpi-split">
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--ios-color)">iOS</div><div class="kpi-split-val" style="color:var(--ios-color)">${recentEvents.filter(e=>getPlatform(e)==='ios').length}</div></div>
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--web-color)">Web</div><div class="kpi-split-val" style="color:var(--web-color)">${recentEvents.filter(e=>getPlatform(e)==='web').length}</div></div>
-      </div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Total events</div>
-      <div class="kpi-value">${allEvents.length}</div>
-      <div class="kpi-split">
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--ios-color)">iOS</div><div class="kpi-split-val" style="color:var(--ios-color)">${iosTotal}</div></div>
-        <div class="kpi-split-item"><div class="kpi-split-label" style="color:var(--web-color)">Web</div><div class="kpi-split-val" style="color:var(--web-color)">${webTotal}</div></div>
-      </div>
+      <div class="kpi-label">Events total</div>
+      <div class="kpi-value">${rangedEvents.length}</div>
+      <div class="kpi-sub">Web ${webEvents.length} \u00B7 iOS ${iosEvents.length}</div>
     </div>
   </div>
 
-  <!-- insight banners -->
-  ${isSmallBase ? `
-  <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-top:14px;font-size:.75rem;color:var(--muted);line-height:1.65">
-    <strong style="color:var(--text)">Early stage</strong> \u2014 ${totalUsers} accounts in the system (testers + owner + family/friends).
-    Funnel percentages and insight alerts are suppressed below 20 users. Data is being collected correctly.
-  </div>` : `
-  ${onbRate < 70 && currentPlatform !== 'web' ? `<div class="warn-insight"><div class="insight-title">\u26A0 Onboarding drop-off: ${100-onbRate}% of signups never finish</div><div class="insight-body"><strong>${totalUsers-completedOnboarding} users</strong> signed up but never completed onboarding. Root cause is almost always the vehicle-add step \u2014 DVLA lookup failed or user dropped off.</div></div>` : ''}
-  ${actRate < 50 && completedOnboarding > tookFirstAction ? `<div class="warn-insight" style="margin-top:10px"><div class="insight-title">\u26A0 Activation gap: onboarded but never logged anything</div><div class="insight-body"><strong>${completedOnboarding-tookFirstAction} users</strong> have a vehicle but have never added a fill-up, service, or document. These users will churn. Reach out directly.</div></div>` : ''}
-  `}
-
-  <!-- ══ SPARKLINE ══ -->
-  <div class="section-label">Daily activity \u2014 last 14 days</div>
-  <div class="card" style="padding:16px 22px">
-    <div style="display:flex;align-items:flex-end;gap:4px;height:60px">
-      ${sparkBuckets.map(b => `<div style="flex:1;display:flex;flex-direction:column;align-items:center" title="${b.label}: ${b.count} events"><div style="width:100%;background:${b.count>0?'var(--teal)':'var(--faint)'};border-radius:3px 3px 0 0;height:${Math.max(b.count/sparkMax*52,b.count>0?4:2)}px;opacity:${b.count>0?1:0.4}"></div></div>`).join('')}
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span style="font-family:var(--mono);font-size:.5625rem;color:var(--muted)">${sparkBuckets[0].label}</span>
-      <span style="font-family:var(--mono);font-size:.5625rem;color:var(--muted)">today</span>
-    </div>
-  </div>
-
-  <!-- ══ FUNNEL ══ -->
-  <div class="section-label" style="margin-top:36px">Drop-off waterfall</div>
-  <div class="card"><div class="funnel">
-    ${[['Signed up',totalUsers,totalUsers],['Completed onboarding',completedOnboarding,totalUsers],['Took first action',tookFirstAction,totalUsers],['Converted to paid',paidUsers,totalUsers]]
-      .map(([label,n,base],i,arr) => {
-        const pct = Math.round(n/(base||1)*100)
-        const prev = i>0?arr[i-1][1]:n; const drop=prev-n; const dpct=Math.round(drop/(prev||1)*100)
-        return `${i>0&&drop>0?`<div class="funnel-drop"><span>\u25BC lost ${drop} here (${dpct}% drop)</span></div>`:''}
-          <div class="funnel-row"><div class="funnel-label">${label}</div><div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%"></div></div><div class="funnel-n">${n}</div><div class="funnel-pct">${pct}%</div></div>`
-      }).join('')}
-  </div></div>
-
-  <!-- ══ PHASE A-1: RETENTION COHORT ══ -->
-  <div class="section-label">Retention \u2014 per-user activity &amp; return signals</div>
+  <!-- DAILY SPARKLINE -->
+  <div class="section-label">Daily activity \u2014 last 14 days (all events)</div>
   <div class="card">
-    <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="font-size:.8125rem;font-weight:700">User retention overview</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <span style="font-size:.6875rem;color:var(--muted)">
-          <span class="ret-cell ret-active" style="width:auto;padding:0 8px;display:inline-flex">active</span>
-          &nbsp;active in window
-        </span>
-        <span style="font-size:.6875rem;color:var(--muted)">
-          <span class="ret-cell ret-cold" style="width:auto;padding:0 8px;display:inline-flex">gone</span>
-          &nbsp;no activity in window
-        </span>
-        <span style="font-size:.6875rem;color:var(--muted)">
-          <span class="ret-cell ret-none" style="width:auto;padding:0 8px;display:inline-flex">n/a</span>
-          &nbsp;account too new
-        </span>
-      </div>
+    <div class="spark-wrap">
+      ${sparkBuckets.map(b => `<div class="spark-bar ${b.count===0?'empty':''}" title="${b.label}: ${b.count} events" style="height:${Math.max(b.count/sparkMax*44,b.count>0?4:2)}px"></div>`).join('')}
     </div>
+    <div class="spark-labels">
+      <span>${sparkBuckets[0].label}</span>
+      <span>today</span>
+    </div>
+  </div>
+
+  <!-- MASTER FUNNEL: visitor \u2192 activation -->
+  <div class="section-label">Master funnel \u2014 ${rangeLabel}</div>
+  <div class="card">
+    <div class="card-sub">End-to-end: anonymous visitor \u2192 reg lookup \u2192 CTA \u2192 waitlist \u2192 account \u2192 activated. Drop-off between steps is where your conversion bleeds.</div>
+    <div class="mfunnel">
+    ${(() => {
+      const steps = [
+        ['Unique web visitors',   uniqueAnonymous,   'anonymous_id tracked'],
+        ['Reg lookup attempted',  regLookupAttempts, 'typed a plate'],
+        ['Reg lookup succeeded',  regLookupSuccesses,'DVLA returned data'],
+        ['Clicked CTA after lookup', regCtaClicks,   'high-intent signal'],
+        ['Waitlist signup',       waitlistSuccess,   'gave us their email'],
+        ['Created account',       totalUsers,        'signed up in app'],
+        ['Completed onboarding',  completedOnboarding, 'added vehicle'],
+        ['Took first action',     tookFirstAction,   'logged real data'],
+        ['Converted to paid',     paidUsers,         'AutoLog+ subscriber']
+      ]
+      const topN = Math.max(...steps.map(s => s[1]), 1)
+      return steps.map(([label, n, sub], i) => {
+        const pct = Math.round(n/topN*100)
+        const prev = i>0 ? steps[i-1][1] : n
+        const drop = prev - n
+        const dpct = prev > 0 ? Math.round(drop/prev*100) : 0
+        return `${i>0 && drop>0 ? `<div class="mfunnel-drop">\u25BC dropped ${drop} (${dpct}%)</div>` : ''}
+          <div class="mfunnel-row">
+            <div><div class="mfunnel-label">${label}</div><div class="mfunnel-sub">${sub}</div></div>
+            <div class="mfunnel-bar-wrap"><div class="mfunnel-bar" style="width:${pct}%"></div></div>
+            <div class="mfunnel-n">${n}</div>
+            <div class="mfunnel-pct">${pct}%</div>
+          </div>`
+      }).join('')
+    })()}
+    </div>
+    ${isSmallBase ? `<div class="insight">
+      <strong>Early stage</strong> \u2014 ${totalUsers} accounts total. Drop-off percentages are informational until you cross ~20 users. Data is being collected correctly.
+    </div>` : ''}
+  </div>
+
+  <!-- TRAFFIC SOURCES -->
+  <div class="section-label">Traffic sources \u2014 where visitors come from</div>
+  <div class="card">
+    <div class="card-sub">Each row shows one source (UTM or referrer). "(direct)" means no referrer and no UTM. Organic sources inferred from referrer domain. Conversion = waitlist signups / unique visitors from that source.</div>
+    ${sortedSources.length === 0 ? `<div class="empty-msg">No traffic data yet \u2014 start sharing links with UTM parameters to see source attribution.</div>` : `
+    <table class="src-table">
+      <thead><tr>
+        <th>Source</th>
+        <th class="num">Visitors</th>
+        <th class="num">Pageviews</th>
+        <th class="num">Waitlist</th>
+        <th class="num">Conv %</th>
+      </tr></thead>
+      <tbody>
+        ${sortedSources.map(s => `<tr>
+          <td>
+            <div class="src-name">${s.src}</div>
+            <div class="src-bar"><div class="src-bar-fill" style="width:${s.pageviews/maxSourcePV*100}%"></div></div>
+          </td>
+          <td class="num">${s.visitors}</td>
+          <td class="num">${s.pageviews}</td>
+          <td class="num" style="color:${s.waitlist_signups>0?'var(--green)':'var(--muted)'}">${s.waitlist_signups}</td>
+          <td class="num" style="color:${s.conv_rate>=3?'var(--green)':s.conv_rate>0?'var(--amber)':'var(--muted)'}">${s.conv_rate.toFixed(1)}%</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`}
+  </div>
+
+  <!-- REG LOOKUP INTELLIGENCE -->
+  <div class="two-col" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">Reg lookup \u2014 vehicle makes</div>
+      <div class="card-sub">What cars do your visitors drive? Useful for ASO keywords, forum targeting, and Reddit subreddit selection.</div>
+      ${Object.keys(regMakes).length === 0 ? `<div class="empty-msg">No successful reg lookups yet.</div>` : `
+      <div class="event-list">
+        ${Object.entries(regMakes).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([mk,n]) => `
+          <div class="event-row">
+            <div class="event-name">${mk}</div>
+            <div class="event-right">
+              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regMakes))*100}%"></div></div>
+              <div class="event-count">${n}</div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    </div>
+    <div class="card">
+      <div class="card-title">Reg lookup \u2014 failure reasons</div>
+      <div class="card-sub">Where the hero widget fails. High "not_found" \u2192 visitors trying non-UK plates. High "api_error" \u2192 worker reliability issue.</div>
+      ${Object.keys(regFailReasons).length === 0 ? `<div class="empty-msg">No failures recorded.</div>` : `
+      <div class="event-list">
+        ${Object.entries(regFailReasons).sort((a,b) => b[1]-a[1]).map(([r,n]) => `
+          <div class="event-row">
+            <div class="event-name">${r}</div>
+            <div class="event-right">
+              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regFailReasons))*100}%;background:var(--red)"></div></div>
+              <div class="event-count">${n}</div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    </div>
+  </div>
+
+  <!-- SECTION VISIBILITY + EVENT BREAKDOWN -->
+  <div class="two-col" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">Section visibility \u2014 how far down the page people get</div>
+      <div class="card-sub">Each section fires once when it enters the viewport. Shows engagement depth on the homepage.</div>
+      ${sortedSections.length === 0 ? `<div class="empty-msg">No section views yet.</div>` : `
+      <div class="event-list">
+        ${sortedSections.map(([s,n]) => `
+          <div class="event-row">
+            <div class="event-name">${s}</div>
+            <div class="event-right">
+              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/maxSectionCount*100}%"></div></div>
+              <div class="event-count">${n}</div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    </div>
+    <div class="card">
+      <div class="card-title">All events \u2014 ${rangeLabel} \u00B7 ${platformLabel}</div>
+      <div class="card-sub">Every event name in the selected range. Click refresh to reload data.</div>
+      ${sortedCounts.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : `
+      <div class="event-list">
+        ${sortedCounts.map(([name, count]) => `
+          <div class="event-row">
+            <div class="event-name">${name}</div>
+            <div class="event-right">
+              <div class="event-bar-wrap"><div class="event-bar" style="width:${count/maxCount*100}%"></div></div>
+              <div class="event-count">${count}</div>
+            </div>
+          </div>`).join('')}
+      </div>`}
+    </div>
+  </div>
+
+  <!-- RETENTION COHORT -->
+  <div class="section-label">User retention \u2014 who comes back</div>
+  <div class="card">
     <table class="cohort-table">
       <thead><tr>
-        <th style="min-width:140px">User</th>
+        <th>User</th>
         <th>Joined</th>
         <th>Last seen</th>
-        <th>Days ago</th>
         <th>Active days</th>
         <th>Events</th>
-        <th title="Was active within 24h of signup">D1</th>
-        <th title="Was active within 7d of signup">D7</th>
-        <th title="Was active within 30d of signup">D30</th>
+        <th title="Active within 24h of signup">D1</th>
+        <th title="Active within 7d of signup">D7</th>
+        <th title="Active within 30d of signup">D30</th>
         <th>Status</th>
       </tr></thead>
       <tbody>
       ${retentionRows.map(r => {
         const { profile:p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents } = r
-
-        // Overall status
         let statusLabel, statusStyle
-        if (!lastSeen || totalEvents === 0) {
-          statusLabel = 'No events'; statusStyle = 'color:var(--muted);font-size:.6875rem'
-        } else if (daysAgo <= 3) {
-          statusLabel = '\u25CF Active'; statusStyle = 'color:var(--green);font-size:.6875rem;font-weight:700'
-        } else if (daysAgo <= 14) {
-          statusLabel = '\u25CF Recent'; statusStyle = 'color:var(--amber);font-size:.6875rem;font-weight:700'
-        } else {
-          statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-size:.6875rem;font-weight:700'
-        }
-
-        const retCell = (active, applicable) => {
-          if (!applicable) return `<span class="ret-cell ret-none">n/a</span>`
-          return active ? `<span class="ret-cell ret-active">\u2713</span>` : `<span class="ret-cell ret-cold">\u2715</span>`
-        }
-
+        if (!lastSeen || totalEvents === 0) { statusLabel = 'No events'; statusStyle = 'color:var(--muted)' }
+        else if (daysAgo <= 3) { statusLabel = '\u25CF Active'; statusStyle = 'color:var(--green);font-weight:700' }
+        else if (daysAgo <= 14) { statusLabel = '\u25CF Recent'; statusStyle = 'color:var(--amber);font-weight:700' }
+        else { statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-weight:700' }
+        const retCell = (active, applicable) => applicable ? (active ? `<span class="ret-cell ret-active">\u2713</span>` : `<span class="ret-cell ret-cold">\u2715</span>`) : `<span class="ret-cell ret-none">n/a</span>`
         return `<tr>
-          <td><div class="cohort-name">${p.display_name||'(no name)'}</div><div class="cohort-sub">${p.plan||'free'}</div></td>
+          <td><div>${p.display_name||'(no name)'}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${p.plan||'free'}</div></td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${fmtDateShort(firstSeen)}</td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${lastSeen?fmtDateShort(lastSeen):'\u2014'}</td>
-          <td style="font-family:var(--mono);font-size:.75rem;color:${daysAgo<=3?'var(--green)':daysAgo<=14?'var(--amber)':'var(--red)'}">${lastSeen?daysAgo+'d':'\u2014'}</td>
-          <td style="font-family:var(--mono);font-size:.875rem;font-weight:700;text-align:center">${activeDays}</td>
-          <td style="font-family:var(--mono);font-size:.875rem;text-align:center;color:${totalEvents>0?'var(--text)':'var(--muted)'}">${totalEvents}</td>
+          <td style="text-align:center;font-family:var(--mono);font-weight:700">${activeDays}</td>
+          <td style="text-align:center;font-family:var(--mono);color:${totalEvents>0?'var(--text)':'var(--muted)'}">${totalEvents}</td>
           <td style="text-align:center">${retCell(d1, daysOld >= 1)}</td>
           <td style="text-align:center">${retCell(d7, daysOld >= 7)}</td>
           <td style="text-align:center">${retCell(d30, daysOld >= 30)}</td>
-          <td><span style="${statusStyle}">${statusLabel}</span></td>
+          <td><span style="font-size:.6875rem;${statusStyle}">${statusLabel}</span></td>
         </tr>`
       }).join('')}
       </tbody>
     </table>
-    ${!isSmallBase ? (() => {
-      const d1Rate  = Math.round(retentionRows.filter(r=>r.daysOld>=1  && r.d1 ).length / (retentionRows.filter(r=>r.daysOld>=1 ).length||1)*100)
-      const d7Rate  = Math.round(retentionRows.filter(r=>r.daysOld>=7  && r.d7 ).length / (retentionRows.filter(r=>r.daysOld>=7 ).length||1)*100)
-      const d30Rate = Math.round(retentionRows.filter(r=>r.daysOld>=30 && r.d30).length / (retentionRows.filter(r=>r.daysOld>=30).length||1)*100)
-      return `<div style="display:flex;gap:24px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
-        <div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px">D1 retention</div><div style="font-size:1.5rem;font-weight:800;color:${d1Rate>=50?'var(--green)':d1Rate>=25?'var(--amber)':'var(--red)'}">${d1Rate}%</div></div>
-        <div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px">D7 retention</div><div style="font-size:1.5rem;font-weight:800;color:${d7Rate>=30?'var(--green)':d7Rate>=15?'var(--amber)':'var(--red)'}">${d7Rate}%</div></div>
-        <div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px">D30 retention</div><div style="font-size:1.5rem;font-weight:800;color:${d30Rate>=20?'var(--green)':d30Rate>=10?'var(--amber)':'var(--red)'}">${d30Rate}%</div></div>
-      </div>`
-    })() : `<div style="font-size:.75rem;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">Aggregate D1/D7/D30 rates shown at 20+ users. Individual rows are accurate now.</div>`}
   </div>
 
-  <!-- ══ PHASE A-2: FEATURE ADOPTION HEATMAP ══ -->
-  <div class="section-label">Feature adoption heatmap \u2014 who has used what</div>
+  <!-- FEATURE HEATMAP -->
+  <div class="section-label">Feature adoption \u2014 which features users have actually touched</div>
   <div class="card">
-    <div style="font-size:.75rem;color:var(--muted);margin-bottom:16px;line-height:1.6">
-      Each row is a user. Each column is a feature. <span style="background:rgba(34,197,94,.18);color:var(--green);padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:.6875rem">\u2713</span> means they've fired at least one event for that feature. The score column counts how many features they've touched.
-    </div>
     <div class="heatmap-wrap">
       <table class="heatmap-table">
         <thead><tr>
           <th class="user-col">User</th>
           <th>Score</th>
-          ${FEATURES.map(f => `<th title="${f.events.join(', ')}">${f.label}</th>`).join('')}
+          ${FEATURES.map(f => `<th title="${f.label}">${f.label}</th>`).join('')}
         </tr></thead>
         <tbody>
         ${heatmapRows.map(r => {
@@ -635,7 +704,6 @@ function render() {
             ${FEATURES.map(f => `<td><span class="hm-cell ${r.featureMap[f.key]?'hm-done':'hm-never'}">${r.featureMap[f.key]?'\u2713':'\u00B7'}</span></td>`).join('')}
           </tr>`
         }).join('')}
-        <!-- Adoption % row -->
         <tr class="hm-total-row">
           <td><div class="hm-user">Adoption %</div></td>
           <td></td>
@@ -648,23 +716,16 @@ function render() {
         </tbody>
       </table>
     </div>
-    <div class="insight" style="margin-top:14px">
-      <div class="insight-title">Reading this heatmap</div>
-      <div class="insight-body">
-        Any feature column that's mostly empty dots is a feature users aren't reaching \u2014 either discovery is broken, the feature isn't visible enough, or the onboarding doesn't lead there.
-        The <strong>Score</strong> column is your best single proxy for engagement depth. A user with score 7+ is a power user. A user with score 1\u20132 is at high churn risk.
-        The <strong>Adoption %</strong> row at the bottom shows which features have actually been tried by what share of your user base.
-      </div>
-    </div>
   </div>
 
-  <!-- ══ PHASE A-3: USER DETAIL DRILL-DOWN ══ -->
-  <div class="section-label">All accounts \u2014 click any row to expand event history</div>
+  <!-- PER-USER DRILL DOWN -->
+  <div class="section-label">All accounts \u2014 click a row for full event history</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:.8125rem">
       <thead><tr style="border-bottom:1px solid var(--border)">
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Name</th>
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Plan</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">UTM source</th>
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Onboarded</th>
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">First action</th>
         <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Events</th>
@@ -674,11 +735,9 @@ function render() {
       ${allProfiles.map(p => {
         const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(b.created_at)-new Date(a.created_at))
         const planColor = ['paid','business'].includes(p.plan) ? 'var(--amber)' : 'var(--muted)'
-
-        // Build the inline event history for this user
         const eventHistory = ue.slice(0, 40).map(e => {
           const props = e.properties || {}
-          const propStr = Object.entries(props).filter(([k]) => !['platform','source'].includes(k)).map(([k,v]) => `${k}: ${v}`).join(' \u00B7 ')
+          const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,40)}`).join(' \u00B7 ')
           const pl = getPlatform(e)
           return `<div class="tl-row" style="padding:7px 0">
             <div class="tl-time" style="min-width:80px;font-size:.625rem">${fmtDate(e.created_at)}</div>
@@ -689,28 +748,25 @@ function render() {
             </div>
           </div>`
         }).join('')
-
         return `
         <tr class="user-row-clickable" onclick="toggleUserDetail('${p.id}')">
           <td style="padding:11px 16px;color:var(--text);font-weight:500">
             <span style="font-size:.625rem;color:var(--muted);margin-right:6px">\u25B6</span>${p.display_name||'(no name)'}
           </td>
           <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:${planColor}">${p.plan||'free'}</td>
+          <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${p.utm_source||'\u2014'}</td>
           <td style="padding:11px 16px">${p.onboarding_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
           <td style="padding:11px 16px">${p.first_action_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
           <td style="padding:11px 16px;text-align:right;font-family:var(--mono);color:${ue.length>0?'var(--text)':'var(--muted)'}">${ue.length}</td>
           <td style="padding:11px 16px;text-align:right;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${p.created_at?fmtDateShort(p.created_at):'\u2014'}</td>
         </tr>
         <tr id="detail-${p.id}" class="user-detail-row">
-          <td colspan="6" style="padding:0 16px 12px;background:rgba(45,212,239,.02)">
+          <td colspan="7" style="padding:0 16px 12px;background:rgba(45,212,239,.02)">
             <div style="border-left:2px solid var(--teal);padding-left:14px;margin-top:4px">
               <div style="font-size:.6875rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">
-                ${p.display_name||'User'} \u2014 last ${Math.min(ue.length,40)} events
-                ${ue.length>40?`<span style="color:var(--muted);font-weight:400">(${ue.length-40} older events not shown)</span>`:''}
+                ${p.display_name||'User'} \u2014 last ${Math.min(ue.length,40)} events${ue.length>40?` <span style="color:var(--muted);font-weight:400">(${ue.length-40} older not shown)</span>`:''}
               </div>
-              ${ue.length === 0
-                ? `<div style="color:var(--muted);font-size:.8125rem;padding:8px 0">No events recorded for this user.</div>`
-                : `<div class="user-event-feed timeline">${eventHistory}</div>`}
+              ${ue.length === 0 ? `<div style="color:var(--muted);font-size:.8125rem;padding:8px 0">No events.</div>` : `<div class="user-event-feed timeline">${eventHistory}</div>`}
             </div>
           </td>
         </tr>`
@@ -719,205 +775,111 @@ function render() {
     </table>
   </div>
 
-  <!-- ══ EVENTS + PAYWALL ══ -->
-  <div class="section-label">Event breakdown \u2014 ${currentRange==='all'?'all time':currentRange}${currentPlatform!=='all'?` \u00B7 ${currentPlatform} only`:''}</div>
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">Event totals <span class="card-sub">with iOS / Web split</span></div>
-      ${sortedCounts.length===0 ? `<div class="empty-msg">No events match this filter yet.</div>` : `
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--ios-color)"></div>iOS</div>
-        <div class="legend-item"><div class="legend-dot" style="background:var(--web-color)"></div>Web</div>
-      </div>
-      <div class="event-list">
-        ${sortedCounts.map(([name,count]) => {
-          const ios=iosCounts[name]||0, web=webCounts[name]||0, tot=ios+web||1
-          const note = ios>0&&web>0
-            ? `<span style="font-size:.625rem;color:var(--muted);font-family:var(--mono)">iOS ${ios} \u00B7 Web ${web}</span>`
-            : ios>0 ? `<span class="plat plat-ios" style="font-size:.6rem;padding:1px 5px">iOS only</span>`
-            : web>0 ? `<span class="plat plat-web" style="font-size:.6rem;padding:1px 5px">Web only</span>` : ''
-          return `<div class="event-row">
-            <div class="event-left"><div class="event-name">${name}</div>${note}</div>
-            <div class="event-right">
-              <div class="split-bar-wrap"><div class="split-bar-ios" style="width:${Math.round(ios/tot*100)}%"></div><div class="split-bar-web" style="width:${Math.round(web/tot*100)}%"></div></div>
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${Math.round(count/maxCount*100)}%"></div></div>
-              <div class="event-count">${count}</div>
-            </div>
-          </div>`
-        }).join('')}
-      </div>`}
-    </div>
-    <div class="card">
-      <div class="card-title">Paywall views <span class="card-sub">by trigger</span></div>
-      ${sortedPaywall.length===0 ? `<div class="empty-msg">No paywall events yet.</div>` : `
-      <div style="display:flex;flex-direction:column;gap:0">
-        ${sortedPaywall.map(([src,data]) => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-family:var(--mono);font-size:.75rem;color:var(--text)">${src||'(unknown)'}</div>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              ${data.ios?`<span style="font-family:var(--mono);font-size:.625rem;color:var(--ios-color)">iOS ${data.ios}</span>`:''}
-              ${data.web?`<span style="font-family:var(--mono);font-size:.625rem;color:var(--web-color)">Web ${data.web}</span>`:''}
-            </div>
-          </div>
-          <div style="font-family:var(--mono);font-size:.9375rem;font-weight:700;color:var(--amber)">${data.total}</div>
-        </div>`).join('')}
-      </div>
-      <div class="insight" style="margin-top:14px">
-        <div class="insight-title">Paywall intelligence</div>
-        <div class="insight-body">The trigger with the highest count is your strongest conversion moment. If <strong>settings_upgrade</strong> dominates, users want to upgrade but something is blocking them. If <strong>upload_limit</strong> or <strong>second_vehicle</strong> dominates, your free tier limits are working as intended.</div>
-      </div>`}
-    </div>
+  <!-- WAITLIST ENTRIES -->
+  <div class="section-label">Waitlist entries \u2014 ${rangeLabel}</div>
+  <div class="card" style="padding:0;overflow:hidden">
+    ${waitlistInRange.length === 0 ? `<div class="empty-msg" style="padding:20px 0">No waitlist signups in this range.</div>` : `
+    <table style="width:100%;border-collapse:collapse;font-size:.8125rem">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Email</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Source</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Campaign</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Referrer</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Country</th>
+        <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Joined</th>
+      </tr></thead>
+      <tbody>
+      ${waitlistInRange.slice(0, 50).map(w => `
+        <tr style="border-bottom:1px solid rgba(255,255,255,.03)">
+          <td style="padding:10px 16px;font-family:var(--mono);font-size:.75rem">${w.email || '\u2014'}</td>
+          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:${w.utm_source?'var(--teal-bright)':'var(--muted)'}">${w.utm_source || '(direct)'}</td>
+          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.utm_campaign || '\u2014'}</td>
+          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.referrer ? (w.referrer.slice(0,40)+(w.referrer.length>40?'\u2026':'')) : '\u2014'}</td>
+          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.country || '\u2014'}</td>
+          <td style="padding:10px 16px;text-align:right;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${fmtDateShort(w.created_at)}</td>
+        </tr>
+      `).join('')}
+      </tbody>
+    </table>`}
   </div>
 
-  <!-- ══ ACTIVITY FEED ══ -->
-  <div class="section-label">Recent activity${currentPlatform!=='all'?` \u00B7 ${currentPlatform} only`:''}</div>
+  <!-- ACTIVITY FEED -->
+  <div class="section-label">Recent activity \u2014 ${platformLabel}</div>
   <div class="card">
     <div class="timeline">
-      ${events.slice(0,feedLimit).map(e => {
-        const plat=getPlatform(e), props=e.properties||{}
-        const propStr=Object.entries(props).filter(([k])=>!['platform','source'].includes(k)).map(([k,v])=>`${k}: ${v}`).join('  \u00B7  ')
-        const profile=allProfiles.find(p=>p.id===e.user_id)
+      ${events.slice(0, feedLimit).map(e => {
+        const plat = getPlatform(e)
+        const props = e.properties || {}
+        const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,50)}`).join(' \u00B7 ')
+        const profile = allProfiles.find(p => p.id === e.user_id)
         return `<div class="tl-row">
           <div class="tl-time">${fmtDate(e.created_at)}</div>
           <div class="tl-body">
-            <span style="font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${profile?.display_name||'(unknown)'}</span>
+            <span style="font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${profile?.display_name || (e.anonymous_id ? '(anon)' : '(\u2014)')}</span>
             ${platBadge(plat)}
             <span class="ev-badge ${evBadgeClass(e.event_name)}">${e.event_name}</span>
-            ${propStr?`<span class="tl-props">${propStr}</span>`:''}
+            ${propStr ? `<span class="tl-props">${propStr}</span>` : ''}
           </div>
         </div>`
       }).join('')}
-      ${events.length===0?`<div class="empty-msg">No events match this filter.</div>`:''}
+      ${events.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : ''}
     </div>
-    ${events.length>feedLimit?`<div style="text-align:center;padding:14px 0"><button onclick="feedLimit+=60;render()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:8px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Load more (${events.length-feedLimit} remaining)</button></div>`:''}
+    ${events.length > feedLimit ? `<div style="text-align:center;padding:12px 0"><button onclick="feedLimit+=40;render()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:8px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Load more (${events.length-feedLimit} remaining)</button></div>` : ''}
   </div>
 
-  <!-- ══ SQL QUERIES ══ -->
-  <div class="section-label">SQL queries for Supabase SQL Editor</div>
-  ${[
-    { name: 'Drop-off: stuck in onboarding', desc: 'Signups with onboarding_completed = false',
-      sql: `SELECT p.id, u.email, p.created_at, u.last_sign_in_at,
-  (SELECT count(*) FROM vehicles WHERE owner_id = p.id) as vehicles_added
-FROM profiles p JOIN auth.users u ON u.id = p.id
-WHERE p.onboarding_completed = false ORDER BY p.created_at DESC;` },
-    { name: 'Drop-off: onboarded but never activated', desc: 'Users with a vehicle who never logged anything',
-      sql: `SELECT p.id, u.email, p.plan, p.created_at,
-  (SELECT count(*) FROM vehicles WHERE owner_id = p.id AND is_active = true) as vehicles,
-  (SELECT count(*) FROM fuel_entries WHERE user_id = p.id) as fuel_entries,
-  (SELECT count(*) FROM service_entries WHERE user_id = p.id) as service_entries
-FROM profiles p JOIN auth.users u ON u.id = p.id
-WHERE p.onboarding_completed = true AND p.first_action_completed = false
-ORDER BY p.created_at DESC;` },
-    { name: 'Retention: D1 / D7 / D30 cohort rates', desc: 'What % of users came back at each milestone',
-      sql: `WITH user_activity AS (
-  SELECT user_id,
-    min(created_at) as first_event,
-    max(created_at) as last_event,
-    count(distinct date_trunc('day', created_at)) as active_days
-  FROM analytics_events GROUP BY user_id
-)
-SELECT
-  count(*) as total_users,
-  count(*) filter (where last_event - first_event >= interval '1 day')  as d1_retained,
-  count(*) filter (where last_event - first_event >= interval '7 days') as d7_retained,
-  count(*) filter (where last_event - first_event >= interval '30 days') as d30_retained,
-  round(100.0 * count(*) filter (where last_event - first_event >= interval '1 day')  / count(*)) as d1_pct,
-  round(100.0 * count(*) filter (where last_event - first_event >= interval '7 days') / count(*)) as d7_pct,
-  round(100.0 * count(*) filter (where last_event - first_event >= interval '30 days') / count(*)) as d30_pct
-FROM user_activity;` },
-    { name: 'Retention: users gone cold (no events in 14d)', desc: 'Active accounts with no recent activity',
-      sql: `SELECT p.display_name, p.plan, p.created_at,
-  max(e.created_at) as last_event,
-  now() - max(e.created_at) as silent_for,
-  count(e.id) as total_events
-FROM profiles p
-LEFT JOIN analytics_events e ON e.user_id = p.id
-GROUP BY p.id, p.display_name, p.plan, p.created_at
-HAVING max(e.created_at) < now() - interval '14 days' OR max(e.created_at) IS NULL
-ORDER BY last_event ASC NULLS FIRST;` },
-    { name: 'Feature adoption: which features are actually used', desc: 'Event name adoption across all users',
-      sql: `SELECT event_name,
-  count(distinct user_id) as unique_users,
-  count(*) as total_fires,
-  round(100.0 * count(distinct user_id) / (SELECT count(*) FROM profiles)) as adoption_pct
-FROM analytics_events
-GROUP BY event_name
-ORDER BY unique_users DESC;` },
-    { name: 'Daily new signups (last 30d)', desc: 'New users per day trend',
-      sql: `SELECT date_trunc('day', created_at)::date as day, count(*) as new_users
-FROM profiles WHERE created_at > now() - interval '30 days'
-GROUP BY 1 ORDER BY 1;` },
-    { name: 'Platform split by event (exact)', desc: 'iOS vs Web — requires iOS app sending platform:"ios"',
-      sql: `SELECT event_name,
-  count(*) filter (where properties->>'platform' = 'ios') as ios_explicit,
-  count(*) filter (where properties->>'source' = 'web' OR properties->>'platform' = 'web') as web_explicit,
-  count(*) filter (where properties->>'platform' IS NULL AND properties->>'source' IS NULL) as legacy_untagged,
-  count(*) as total
-FROM analytics_events GROUP BY event_name ORDER BY total DESC;` },
-    { name: 'Paywall \u2192 conversion', desc: 'Users who viewed the paywall, with their current plan',
-      sql: `SELECT u.email, p.plan, count(e.id) as paywall_views,
-  min(e.created_at) as first_paywall, max(e.created_at) as last_paywall,
-  array_agg(distinct e.properties->>'source') as triggers
-FROM profiles p JOIN auth.users u ON u.id = p.id
-JOIN analytics_events e ON e.user_id = p.id AND e.event_name = 'paywall_viewed'
-GROUP BY u.email, p.plan ORDER BY paywall_views DESC;` },
-    { name: 'Free users approaching doc limit', desc: 'Free users with 7+ documents on any vehicle',
-      sql: `SELECT v.owner_id, u.email, v.registration, v.make, count(d.id) as doc_count
-FROM vehicles v JOIN auth.users u ON u.id = v.owner_id
-JOIN profiles p ON p.id = v.owner_id
-LEFT JOIN documents d ON d.vehicle_id = v.id
-WHERE v.is_active = true AND p.plan = 'free'
-GROUP BY v.owner_id, u.email, v.registration, v.make
-HAVING count(d.id) >= 7 ORDER BY doc_count DESC;` },
-  ].map(q => `
-  <div class="query-card">
-    <div class="query-header" onclick="this.parentElement.classList.toggle('open')">
-      <div><div class="query-title">${q.name}</div><div class="query-desc">${q.desc}</div></div>
-      <div class="query-chevron">\u25BC</div>
-    </div>
-    <div class="query-body">
-      <pre>${q.sql}</pre>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>{this.textContent='\u2713 Copied';setTimeout(()=>this.textContent='Copy SQL',2000)})">Copy SQL</button>
-    </div>
-  </div>`).join('')}
-
   <div style="margin-top:28px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:.75rem;color:var(--muted);line-height:1.8">
-    <strong style="color:var(--text)">Run queries in Supabase SQL Editor \u2192</strong>
-    <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright);margin-left:8px" target="_blank">Open SQL Editor</a>
-    &nbsp;\u00B7&nbsp; Queries joining <code style="color:var(--teal-bright)">auth.users</code> require the SQL Editor.
-    &nbsp;\u00B7&nbsp; This dashboard reads <code style="color:var(--teal-bright)">analytics_events</code> and <code style="color:var(--teal-bright)">profiles</code> via anon key + RLS.
+    <strong style="color:var(--text)">v2 dashboard</strong> \u00B7 Events collected via consent-gated AutoLogTrack module.
+    Direct Supabase inserts from the public site (anon role, <code style="color:var(--teal-bright)">user_id IS NULL</code>, <code style="color:var(--teal-bright)">anonymous_id</code> required).
+    Legacy events preserved with <code style="color:var(--teal-bright)">properties.migrated_from</code>.
+    &nbsp;\u00B7&nbsp;
+    <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright)" target="_blank">Open SQL Editor \u2192</a>
   </div>
   `
 }
 
 async function doSignIn() {
-  const email=document.getElementById('auth-email').value.trim(), pass=document.getElementById('auth-pass').value
-  const btn=document.getElementById('auth-btn'), err=document.getElementById('auth-err')
-  err.style.display='none'; btn.textContent='Signing in\u2026'; btn.disabled=true
+  const email = document.getElementById('auth-email').value.trim()
+  const pass = document.getElementById('auth-pass').value
+  const btn = document.getElementById('auth-btn')
+  const err = document.getElementById('auth-err')
+  err.style.display = 'none'
+  btn.textContent = 'Signing in\u2026'
+  btn.disabled = true
   const { error } = await sb.auth.signInWithPassword({ email, password: pass })
-  if (error) { err.textContent=error.message; err.style.display='block'; btn.textContent='Sign In'; btn.disabled=false; return }
-  document.getElementById('auth-gate').style.display='none'
-  document.getElementById('loading').style.display='flex'
+  if (error) {
+    err.textContent = error.message
+    err.style.display = 'block'
+    btn.textContent = 'Sign In'
+    btn.disabled = false
+    return
+  }
+  document.getElementById('auth-gate').style.display = 'none'
+  document.getElementById('loading').style.display = 'flex'
   main()
 }
 
 async function main() {
   const { data: { session } } = await sb.auth.getSession()
   if (!session || session.user.id !== OWNER_ID) {
-    document.getElementById('loading').style.display='none'
-    const gate=document.getElementById('auth-gate')
-    gate.style.display='flex'; gate.style.flexDirection='column'
-    gate.style.alignItems='center'; gate.style.justifyContent='center'; gate.style.minHeight='100vh'
+    document.getElementById('loading').style.display = 'none'
+    const gate = document.getElementById('auth-gate')
+    gate.style.display = 'flex'
+    gate.style.flexDirection = 'column'
+    gate.style.alignItems = 'center'
+    gate.style.justifyContent = 'center'
+    gate.style.minHeight = '100vh'
     return
   }
-  const [eventsRes, profilesRes] = await Promise.all([
-    sb.from('analytics_events').select('event_name, properties, created_at, user_id').order('created_at',{ascending:false}).limit(500),
-    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name').order('created_at',{ascending:false})
+
+  const [eventsRes, profilesRes, waitlistRes] = await Promise.all([
+    sb.from('analytics_events').select('event_name, properties, created_at, user_id, anonymous_id, session_id, platform, url_path, country').order('created_at', { ascending: false }).limit(2000),
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, utm_medium, utm_campaign').order('created_at', { ascending: false }),
+    sb.from('waitlist').select('email, utm_source, utm_medium, utm_campaign, utm_content, referrer, landing_path, country, created_at').order('created_at', { ascending: false }).limit(500)
   ])
   if (eventsRes.error) throw new Error(eventsRes.error.message)
   allEvents   = eventsRes.data   || []
   allProfiles = profilesRes.data || []
+  allWaitlist = waitlistRes.data || []
   render()
 }
 
