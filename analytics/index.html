@@ -234,13 +234,13 @@ const FEATURES = [
   { key: 'action',      label: 'First action',  match: e => e.event_name === 'first_action_taken' },
   { key: 'fuel',        label: 'Fuel entry',    match: e => e.event_name === 'fuel_entry_added' || e.event_name === 'fuel_added' },
   { key: 'service',     label: 'Service log',   match: e => e.event_name === 'service_entry_added' || e.event_name === 'service_added' },
-  { key: 'document',    label: 'Doc upload',    match: e => e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
+  { key: 'document',    label: 'Doc upload',    match: e => e.event_name === 'document_upload_completed' || e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
+  { key: 'trip',        label: 'Trip logged',   match: e => e.event_name === 'trip_started' },
+  { key: 'costs',       label: 'Costs viewed',  match: e => e.event_name === 'costs_viewed' },
   { key: 'paywall',     label: 'Saw paywall',   match: e => e.event_name === 'paywall_viewed' },
   { key: 'subscribe',   label: 'Subscribed',    match: e => e.event_name === 'subscription_started' },
-  { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'dashboard' },
-  { key: 'fuel_log',    label: 'Fuel log',      match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'fuel_log' },
-  { key: 'service_log', label: 'Service view',  match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'service_log' },
-  { key: 'docs_view',   label: 'Docs view',     match: e => e.event_name === 'screen_viewed' && e.properties && e.properties.screen === 'documents' },
+  { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'dashboard_viewed' },
+  { key: 'docs_view',   label: 'Docs opened',   match: e => e.event_name === 'document_upload_started' || e.event_name === 'document_upload_completed' || e.event_name === 'document_upload_started' },
 ]
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -258,17 +258,13 @@ function daysSince(d) {
   return Math.floor((Date.now() - new Date(d)) / 86400000)
 }
 function getPlatform(e) {
-  if (e.platform === 'ios') return 'ios'
-  if (e.platform === 'web') return 'web'
-  if (e.platform === 'legacy') return 'legacy'
-  // Legacy inference for old rows and iOS events missing platform enrichment
+  if (e.platform && e.platform !== 'legacy') return e.platform
+  // Legacy inference for old rows
   const p = e.properties || {}
   if (p.platform === 'ios') return 'ios'
   if (p.platform === 'web' || p.source === 'web') return 'web'
+  if (['onboarding_completed','onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
   if (e.event_name === 'screen_viewed' && p.source === 'web') return 'web'
-  // Transition period: NULL top-level platform with no web signal = iOS app missing enrichment
-  // Web events always have platform='web' set server-side; NULL means sent from iOS without tag
-  if (!e.platform && p.source !== 'web') return 'ios'
   return 'unknown'
 }
 function filterEventsByPlatform(events) {
@@ -342,6 +338,12 @@ function render() {
   const tookFirstAction = allProfiles.filter(p => p.first_action_completed).length
   const paidUsers = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase = totalUsers < 20
+
+  // ── App session stats (iOS) ──
+  const appOpenEvents = iosEvents.filter(e => e.event_name === 'app_opened')
+  const appOpenUsers = new Set(appOpenEvents.filter(e => e.user_id).map(e => e.user_id)).size
+  const todayKey = new Date().toISOString().split('T')[0]
+  const dau = new Set(appOpenEvents.filter(e => e.created_at?.startsWith(todayKey) && e.user_id).map(e => e.user_id)).size
 
   // ── Waitlist funnel (new attribution) ──
   const waitlistInRange = (() => {
@@ -496,7 +498,12 @@ function render() {
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Events total</div>
       <div class="kpi-value">${rangedEvents.length}</div>
-      <div class="kpi-sub">Web ${webEvents.length} \u00B7 iOS ${iosEvents.length}</div>
+      <div class="kpi-sub">Web ${webEvents.length} &middot; iOS ${iosEvents.length}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">App opens</div>
+      <div class="kpi-value">${appOpenEvents.length}</div>
+      <div class="kpi-sub">${appOpenUsers} users &middot; ${dau} DAU today</div>
     </div>
   </div>
 
