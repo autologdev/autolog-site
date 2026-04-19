@@ -258,13 +258,17 @@ function daysSince(d) {
   return Math.floor((Date.now() - new Date(d)) / 86400000)
 }
 function getPlatform(e) {
-  if (e.platform && e.platform !== 'legacy') return e.platform
-  // Legacy inference for old rows
+  if (e.platform === 'ios') return 'ios'
+  if (e.platform === 'web') return 'web'
+  if (e.platform === 'legacy') return 'legacy'
+  // Legacy inference for old rows and iOS events missing platform enrichment
   const p = e.properties || {}
   if (p.platform === 'ios') return 'ios'
   if (p.platform === 'web' || p.source === 'web') return 'web'
-  if (['onboarding_completed','onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
   if (e.event_name === 'screen_viewed' && p.source === 'web') return 'web'
+  // Transition period: NULL top-level platform with no web signal = iOS app missing enrichment
+  // Web events always have platform='web' set server-side; NULL means sent from iOS without tag
+  if (!e.platform && p.source !== 'web') return 'ios'
   return 'unknown'
 }
 function filterEventsByPlatform(events) {
