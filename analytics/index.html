@@ -141,6 +141,25 @@
   .ev-reg { background: rgba(245,200,66,.1); color: #f5c842; }
   .ev-page { background: rgba(255,255,255,.04); color: var(--muted); }
   .ev-other { background: rgba(255,255,255,.05); color: var(--muted); }
+  .ev-tour { background: rgba(45,212,239,.12); color: var(--teal-bright); }
+
+  /* Feature tour funnel — narrower than master funnel because step names are long */
+  .tfunnel-row { display: grid; grid-template-columns: 230px 1fr 60px 60px; align-items: center; gap: 12px; padding: 8px 0; }
+  .tfunnel-label { font-size: .75rem; color: var(--text); font-weight: 500; }
+  .tfunnel-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+  .tfunnel-bar-wrap { height: 8px; background: var(--faint); border-radius: 100px; overflow: hidden; }
+  .tfunnel-bar { height: 100%; border-radius: 100px; background: linear-gradient(90deg, var(--teal), var(--teal-bright)); transition: width 1s cubic-bezier(.16,1,.3,1); }
+  .tfunnel-n { font-family: var(--mono); font-size: .875rem; font-weight: 700; text-align: right; }
+  .tfunnel-pct { font-family: var(--mono); font-size: .6875rem; color: var(--muted); text-align: right; }
+  @media (max-width: 700px) { .tfunnel-row { grid-template-columns: 1fr 50px 50px; } .tfunnel-bar-wrap { display: none; } }
+
+  /* Feature tour per-step table */
+  .tstep-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+  .tstep-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .tstep-table th.num { text-align: right; }
+  .tstep-table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.03); }
+  .tstep-table td.num { text-align: right; font-family: var(--mono); }
+  .tstep-table tr:last-child td { border-bottom: none; }
   .tl-props { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
 
   /* Retention cohort + heatmap */
@@ -241,6 +260,8 @@ const FEATURES = [
   { key: 'subscribe',   label: 'Subscribed',    match: e => e.event_name === 'subscription_started' },
   { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'dashboard_viewed' },
   { key: 'docs_view',   label: 'Docs opened',   match: e => e.event_name === 'document_upload_started' || e.event_name === 'document_upload_completed' || e.event_name === 'document_upload_started' },
+  { key: 'tour_saw',    label: 'Saw tour',      match: e => e.event_name === 'feature_tour_started' },
+  { key: 'tour_done',   label: 'Done tour',     match: e => e.event_name === 'feature_tour_completed' },
 ]
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -282,6 +303,7 @@ function evBadgeClass(name) {
   if (name.includes('vehicle')) return 'ev-vehicle'
   if (name.includes('paywall') || name.includes('subscription')) return 'ev-paywall'
   if (name.includes('reg_lookup')) return 'ev-reg'
+  if (name.includes('feature_tour')) return 'ev-tour'
   if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service') || name.includes('feedback')) return 'ev-action'
   if (name.includes('page_') || name.includes('scroll') || name.includes('section_')) return 'ev-page'
   return 'ev-other'
@@ -444,6 +466,68 @@ function render() {
   }).sort((a,b) => b.score - a.score)
   const featureAdoption = {}
   FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
+
+  // ── Feature tour analytics ──
+  // All tour events across all time (tour lifecycle is cross-range by nature).
+  // The tour has 11 sub-steps under 7 stops — this order matches FeatureTour.steps in iOS.
+  const TOUR_STEPS = [
+    { id: 'garage',                     stop: 1, label: 'Stop 1 · Garage' },
+    { id: 'dashboard_top',              stop: 2, label: 'Stop 2a · Dashboard top' },
+    { id: 'dashboard_costs',            stop: 2, label: 'Stop 2b · Dashboard costs' },
+    { id: 'dashboard_quick_actions',    stop: 2, label: 'Stop 2c · Quick actions' },
+    { id: 'fuel',                       stop: 3, label: 'Stop 3 · Fuel log' },
+    { id: 'documents',                  stop: 4, label: 'Stop 4 · Documents' },
+    { id: 'trips_auto_detect',          stop: 5, label: 'Stop 5a · Auto-detect' },
+    { id: 'trips_list',                 stop: 5, label: 'Stop 5b · Trips list' },
+    { id: 'service_add',                stop: 6, label: 'Stop 6a · Service add' },
+    { id: 'service_history',            stop: 6, label: 'Stop 6b · Service history' },
+    { id: 'costs',                      stop: 7, label: 'Stop 7 · Costs detail' },
+  ]
+
+  // Use rangedEvents so the section respects the range filter — lets Marius
+  // compare tour v1 vs v2 performance over time by switching ranges.
+  const tourEvents = rangedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
+  const tourStarted = tourEvents.filter(e => e.event_name === 'feature_tour_started')
+  const tourCompleted = tourEvents.filter(e => e.event_name === 'feature_tour_completed')
+  const tourSkipped = tourEvents.filter(e => e.event_name === 'feature_tour_skipped')
+  const tourSkippedImmediate = tourSkipped.filter(e => e.properties?.skip_type === 'immediate')
+  const tourSkippedMidway = tourSkipped.filter(e => e.properties?.skip_type === 'midway')
+  const tourReplayed = tourEvents.filter(e => e.event_name === 'feature_tour_replayed')
+
+  const startedCount = tourStarted.length
+  const completedCount = tourCompleted.length
+  const skippedCount = tourSkipped.length
+  const completionRate = startedCount > 0 ? Math.round(completedCount / startedCount * 100) : 0
+  const skipRate = startedCount > 0 ? Math.round(skippedCount / startedCount * 100) : 0
+
+  // Median total duration of completed tours (ms)
+  const durations = tourCompleted.map(e => e.properties?.total_duration_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
+  const medianDurationMs = durations.length ? durations[Math.floor(durations.length/2)] : 0
+
+  // Per-step stats: viewed count, completed count, median time on step (ms)
+  const stepStats = TOUR_STEPS.map(s => {
+    const viewed = tourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id).length
+    const completedEvs = tourEvents.filter(e => e.event_name === 'feature_tour_step_completed' && e.properties?.step_name === s.id)
+    const completed = completedEvs.length
+    const times = completedEvs.map(e => e.properties?.time_on_step_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
+    const medianTimeMs = times.length ? times[Math.floor(times.length/2)] : 0
+    const stepCompletionPct = viewed > 0 ? Math.round(completed / viewed * 100) : 0
+    return { ...s, viewed, completed, medianTimeMs, stepCompletionPct }
+  })
+  const tourMaxStepViews = Math.max(startedCount, ...stepStats.map(s => s.viewed), 1)
+
+  function fmtMs(ms) {
+    if (!ms) return '—'
+    if (ms < 1000) return ms + 'ms'
+    if (ms < 60000) return (ms/1000).toFixed(1) + 's'
+    return Math.floor(ms/60000) + 'm ' + Math.round((ms%60000)/1000) + 's'
+  }
+  function stepTimeColor(ms) {
+    if (!ms) return 'var(--muted)'
+    if (ms < 800) return 'var(--red)'      // skimmed — maybe copy unclear
+    if (ms > 8000) return 'var(--amber)'   // stuck — maybe copy too long
+    return 'var(--text)'
+  }
 
   // ─── Render DOM ───────────────────────────────────────────────────────────
   document.getElementById('loading').style.display = 'none'
@@ -727,6 +811,98 @@ function render() {
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- FEATURE TOUR ANALYTICS -->
+  <div class="section-label">Feature tour — first-open guided walkthrough</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Tour started</div>
+      <div class="kpi-value">${startedCount}</div>
+      <div class="kpi-sub">${tourReplayed.length} replays from Settings</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Completion rate</div>
+      <div class="kpi-value" style="color:${completionRate >= 70 ? 'var(--green)' : completionRate >= 40 ? 'var(--amber)' : 'var(--red)'}">${completionRate}%</div>
+      <div class="kpi-sub">${completedCount} of ${startedCount} finished the tour</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Skip rate</div>
+      <div class="kpi-value" style="color:${skipRate <= 20 ? 'var(--green)' : skipRate <= 40 ? 'var(--amber)' : 'var(--red)'}">${skipRate}%</div>
+      <div class="kpi-sub">${tourSkippedImmediate.length} bailed immediately · ${tourSkippedMidway.length} mid-tour</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Median duration</div>
+      <div class="kpi-value">${fmtMs(medianDurationMs)}</div>
+      <div class="kpi-sub">end-to-end, completed tours only</div>
+    </div>
+  </div>
+
+  <!-- TOUR FUNNEL -->
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">Step-by-step funnel</div>
+    <div class="card-sub">Views per sub-step. Drop-offs reveal where the tour loses attention — a sharp cliff means that step's copy or target is confusing.</div>
+    ${startedCount === 0 ? `<div class="empty-msg">No tour starts in this range yet. Tour events begin firing once the iOS build with this feature ships.</div>` : `
+    <div>
+      <div class="tfunnel-row" style="border-bottom:1px dashed var(--border)">
+        <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div><div class="tfunnel-sub">feature_tour_started</div></div>
+        <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:100%"></div></div>
+        <div class="tfunnel-n">${startedCount}</div>
+        <div class="tfunnel-pct">100%</div>
+      </div>
+      ${stepStats.map((s, i) => {
+        const pct = Math.round(s.viewed / tourMaxStepViews * 100)
+        const ofStarted = startedCount > 0 ? Math.round(s.viewed / startedCount * 100) : 0
+        const prevCount = i === 0 ? startedCount : stepStats[i-1].viewed
+        const drop = Math.max(0, prevCount - s.viewed)
+        const dpct = prevCount > 0 ? Math.round(drop / prevCount * 100) : 0
+        return `
+          ${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">▼ dropped ${drop} (${dpct}%)</div>` : ''}
+          <div class="tfunnel-row">
+            <div><div class="tfunnel-label">${s.label}</div><div class="tfunnel-sub">${s.id}</div></div>
+            <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${pct}%"></div></div>
+            <div class="tfunnel-n">${s.viewed}</div>
+            <div class="tfunnel-pct">${ofStarted}%</div>
+          </div>`
+      }).join('')}
+      <div class="tfunnel-row" style="border-top:1px dashed var(--border);margin-top:6px;padding-top:12px">
+        <div><div class="tfunnel-label" style="color:var(--green)">Tour completed</div><div class="tfunnel-sub">feature_tour_completed</div></div>
+        <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${startedCount > 0 ? Math.round(completedCount/startedCount*100) : 0}%;background:var(--green)"></div></div>
+        <div class="tfunnel-n">${completedCount}</div>
+        <div class="tfunnel-pct">${startedCount > 0 ? Math.round(completedCount/startedCount*100) : 0}%</div>
+      </div>
+    </div>
+    ${startedCount < 10 ? `<div class="insight">
+      <strong>Early data</strong> — ${startedCount} tour starts so far. Drop-off percentages become meaningful above ~20 starts.
+    </div>` : ''}`}
+  </div>
+
+  <!-- PER-STEP TIMING TABLE -->
+  <div class="card" style="margin-top:18px">
+    <div class="card-title">Per-step timing</div>
+    <div class="card-sub">Median time on each step. <span style="color:var(--red)">&lt;0.8s</span> = skimmed (copy may be unclear or too short). <span style="color:var(--amber)">&gt;8s</span> = stuck (copy may be too long or confusing).</div>
+    ${startedCount === 0 ? `<div class="empty-msg">No step timing data yet.</div>` : `
+    <table class="tstep-table">
+      <thead><tr>
+        <th>Step</th>
+        <th class="num">Viewed</th>
+        <th class="num">Completed</th>
+        <th class="num">Step completion</th>
+        <th class="num">Median time</th>
+      </tr></thead>
+      <tbody>
+        ${stepStats.map(s => `<tr>
+          <td>
+            <div>${s.label}</div>
+            <div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div>
+          </td>
+          <td class="num">${s.viewed}</td>
+          <td class="num">${s.completed}</td>
+          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '—'}</td>
+          <td class="num" style="color:${stepTimeColor(s.medianTimeMs)}">${fmtMs(s.medianTimeMs)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`}
   </div>
 
   <!-- PER-USER DRILL DOWN -->
