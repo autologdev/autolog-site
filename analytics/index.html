@@ -623,6 +623,12 @@ function render() {
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.75rem;color:var(--muted);cursor:pointer;user-select:none">
+              <input type="checkbox" id="bc-test-mode" style="accent-color:#7c3aed;width:14px;height:14px;" />
+              Test mode — send to me only
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <button class="bc-send-btn" id="bc-send-btn" onclick="sendBroadcast()">Send Broadcast &rarr;</button>
             <button onclick="toggleBroadcastPanel()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:9px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Cancel</button>
           </div>
@@ -1174,10 +1180,12 @@ async function sendBroadcast() {
   }
 
   btnEl.disabled = true; btnEl.textContent = 'Sending…'
+  const testMode = document.getElementById('bc-test-mode')?.checked
   const payload = { title, body,
     ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
     ...(ctaLabel ? { cta_label: ctaLabel } : {}),
-    ...(ctaUrl   ? { cta_url: ctaUrl }     : {})
+    ...(ctaUrl   ? { cta_url: ctaUrl }     : {}),
+    ...(testMode ? { target_user_id:  + OWNER_ID +  } : {})
   }
   try {
     const { data: { session } } = await sb.auth.getSession()
