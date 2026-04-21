@@ -1115,9 +1115,8 @@ function render() {
 }
 
 // ─── Broadcast Admin ────────────────────────────────────────────────────────
-// Service role key — required for INSERT (bypasses RLS).
-// Get from: Supabase dashboard → Project Settings → API → service_role
-const SERVICE_ROLE_KEY = 'PASTE_SERVICE_ROLE_KEY_HERE'
+// Broadcasts are sent via a Supabase Edge Function (send-broadcast).
+// The edge function holds the service role key server-side — nothing secret in git.
 
 let selectedBroadcastEmoji = null
 
@@ -1173,9 +1172,7 @@ async function sendBroadcast() {
   if (!title || !body) {
     msgEl.textContent = 'Title and message are required.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
   }
-  if (SERVICE_ROLE_KEY === 'PASTE_SERVICE_ROLE_KEY_HERE') {
-    msgEl.textContent = 'Paste your service_role key into SERVICE_ROLE_KEY in the analytics JS.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
-  }
+
   btnEl.disabled = true; btnEl.textContent = 'Sending…'
   const payload = { title, body,
     ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
@@ -1183,9 +1180,10 @@ async function sendBroadcast() {
     ...(ctaUrl   ? { cta_url: ctaUrl }     : {})
   }
   try {
-    const res = await fetch(SURL + '/rest/v1/broadcasts', {
+    const { data: { session } } = await sb.auth.getSession()
+    const res = await fetch(SURL + '/functions/v1/send-broadcast', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
       body: JSON.stringify(payload)
     })
     if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)) }
