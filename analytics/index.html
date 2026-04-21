@@ -1185,7 +1185,7 @@ async function sendBroadcast() {
     ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
     ...(ctaLabel ? { cta_label: ctaLabel } : {}),
     ...(ctaUrl   ? { cta_url: ctaUrl }     : {}),
-    ...(testMode ? { target_user_id:  + OWNER_ID +  } : {})
+    ...(testMode ? { target_user_id: '5501db10-cfff-4b9e-959c-54eb023ddd36' } : {})
   }
   try {
     const { data: { session } } = await sb.auth.getSession()
