@@ -224,6 +224,19 @@
   .bc-input:focus { border-color: rgba(168,85,247,0.5); }
   .bc-textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; resize: vertical; min-height: 96px; transition: border-color .14s; }
   .bc-textarea:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-toolbar { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-bottom: none; border-radius: 9px 9px 0 0; padding: 6px 8px; }
+  .bc-toolbar button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 3px 10px; font-size: .8rem; cursor: pointer; font-family: var(--sans); transition: background .15s; }
+  .bc-toolbar button:hover { background: rgba(168,85,247,0.18); border-color: #c084fc; }
+  .bc-toolbar-sep { width: 1px; background: var(--border); margin: 2px 4px; align-self: stretch; }
+  .bc-richbody { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 9px 9px; color: var(--text); font-family: var(--sans); font-size: .875rem; padding: 10px 12px; min-height: 110px; box-sizing: border-box; outline: none; line-height: 1.6; }
+  .bc-richbody:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-richbody:empty:before { content: attr(data-placeholder); color: #666; pointer-events: none; }
+  .bc-richbody ul, .bc-richbody ol { padding-left: 1.4em; margin: 4px 0; }
+  .bc-richbody li { margin: 2px 0; }
+  .bc-richbody h3 { font-size: 1rem; font-weight: 700; margin: 6px 0 2px; }
+  .bc-mock-body ul, .bc-mock-body ol { padding-left: 1.2em; margin: 3px 0; }
+  .bc-mock-body li { margin: 1px 0; }
+  .bc-mock-body h3 { font-size: .85rem; font-weight: 700; margin: 4px 0 1px; }
   .bc-emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .bc-emoji { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 1.1rem; cursor: pointer; transition: all .14s; user-select: none; }
   .bc-emoji:hover { border-color: rgba(168,85,247,0.4); }
@@ -610,7 +623,18 @@ function render() {
           </div>
           <div>
             <div class="bc-label">Message *</div>
-            <textarea class="bc-textarea" id="bc-body" placeholder="Write your message&hellip;" rows="5" oninput="updateBroadcastPreview()"></textarea>
+            <div class="bc-toolbar">
+              <button type="button" onclick="bcFormat('bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="bcFormat('italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="bcFormat('underline')" title="Underline"><u>U</u></button>
+              <span class="bc-toolbar-sep"></span>
+              <button type="button" onclick="bcFormat('insertUnorderedList')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="bcFormat('insertOrderedList')" title="Numbered list">1. List</button>
+              <span class="bc-toolbar-sep"></span>
+              <button type="button" onclick="bcFormatBlock('h3')" title="Heading">H</button>
+              <button type="button" onclick="bcFormatBlock('p')" title="Normal">¶</button>
+            </div>
+            <div class="bc-richbody" id="bc-body" contenteditable="true" data-placeholder="Write your message…" oninput="updateBroadcastPreview()"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -1150,7 +1174,7 @@ function selectEmoji(el) {
 
 function updateBroadcastPreview() {
   const title    = document.getElementById('bc-title')?.value?.trim()     || ''
-  const body     = document.getElementById('bc-body')?.value?.trim()      || ''
+  const body     = document.getElementById('bc-body')?.innerHTML?.trim()   || ''
   const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
   const iconEl   = document.getElementById('prev-icon')
   const titleEl  = document.getElementById('prev-title')
@@ -1161,15 +1185,26 @@ function updateBroadcastPreview() {
   else { iconEl.style.display = 'none' }
   if (title) { titleEl.textContent = title; titleEl.style.color = '#111'; titleEl.style.fontWeight = '700' }
   else { titleEl.textContent = 'Your title appears here'; titleEl.style.color = '#888'; titleEl.style.fontWeight = '400' }
-  if (body) { bodyEl.textContent = body; bodyEl.style.color = '#555' }
-  else { bodyEl.textContent = 'Your message appears here…'; bodyEl.style.color = '#aaa' }
+  if (body) { bodyEl.innerHTML = body; bodyEl.style.color = '#555' }
+  else { bodyEl.innerHTML = 'Your message appears here…'; bodyEl.style.color = '#aaa' }
   if (ctaLabel) { ctaEl.textContent = ctaLabel; ctaEl.style.display = 'block' }
   else { ctaEl.style.display = 'none' }
 }
 
+function bcFormat(cmd) {
+  document.getElementById('bc-body').focus()
+  document.execCommand(cmd, false, null)
+  updateBroadcastPreview()
+}
+function bcFormatBlock(tag) {
+  document.getElementById('bc-body').focus()
+  document.execCommand('formatBlock', false, tag)
+  updateBroadcastPreview()
+}
+
 async function sendBroadcast() {
   const title    = document.getElementById('bc-title')?.value?.trim()     || ''
-  const body     = document.getElementById('bc-body')?.value?.trim()      || ''
+  const body     = document.getElementById('bc-body')?.innerHTML?.trim()  || ''
   const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
   const ctaUrl   = document.getElementById('bc-cta-url')?.value?.trim()   || ''
   const msgEl    = document.getElementById('bc-msg')
@@ -1197,7 +1232,7 @@ async function sendBroadcast() {
     if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)) }
     msgEl.textContent = 'Broadcast sent ✓'; msgEl.className = 'bc-msg success'; msgEl.style.display = 'block'
     document.getElementById('bc-title').value = ''
-    document.getElementById('bc-body').value = ''
+    document.getElementById('bc-body').innerHTML = ''
     document.getElementById('bc-cta-label').value = ''
     document.getElementById('bc-cta-url').value = ''
     selectedBroadcastEmoji = null
