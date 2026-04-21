@@ -214,6 +214,36 @@
 
   /* Sparkline details */
   .spark-labels { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: .5625rem; color: var(--muted); }
+  /* Broadcast admin panel */
+  .broadcast-btn { background: rgba(168,85,247,0.10); border: 1px solid rgba(168,85,247,0.3); color: #c084fc; padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; font-weight: 600; }
+  .broadcast-btn:hover, .broadcast-btn.active { background: rgba(168,85,247,0.18); border-color: #c084fc; }
+  #broadcast-panel { display: none; background: var(--surface); border: 1px solid rgba(168,85,247,0.2); border-radius: 14px; padding: 22px 24px; margin-bottom: 28px; }
+  #broadcast-panel.open { display: block; }
+  .bc-label { font-size: .6875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .bc-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; transition: border-color .14s; }
+  .bc-input:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; resize: vertical; min-height: 96px; transition: border-color .14s; }
+  .bc-textarea:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bc-emoji { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 1.1rem; cursor: pointer; transition: all .14s; user-select: none; }
+  .bc-emoji:hover { border-color: rgba(168,85,247,0.4); }
+  .bc-emoji.selected { border-color: #c084fc; background: rgba(168,85,247,0.15); }
+  .bc-send-btn { background: #7c3aed; border: none; color: #fff; padding: 10px 22px; border-radius: 9px; font-family: var(--sans); font-size: .875rem; font-weight: 700; cursor: pointer; transition: background .14s; }
+  .bc-send-btn:hover { background: #6d28d9; }
+  .bc-send-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .bc-msg { font-size: .8125rem; padding: 10px 14px; border-radius: 8px; margin-top: 10px; display: none; }
+  .bc-msg.success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); color: var(--green); }
+  .bc-msg.error   { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);  color: #fca5a5; }
+  .bc-preview-phone { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
+  .bc-mock-backdrop { background: rgba(0,0,0,0.38); border-radius: 10px; padding: 18px; width: 100%; max-width: 300px; display: flex; align-items: center; justify-content: center; }
+  .bc-mock-card { background: #ffffff; border-radius: 20px; padding: 22px 20px 18px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+  .bc-mock-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+  .bc-mock-title { font-size: 15px; font-weight: 700; color: #111; text-align: center; margin-bottom: 8px; font-family: var(--sans); line-height: 1.3; }
+  .bc-mock-body { font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 14px; font-family: var(--sans); }
+  .bc-mock-cta { background: #007AFF; color: #fff; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 8px; font-family: var(--sans); }
+  .bc-mock-dismiss { background: rgba(0,122,255,0.08); color: #007AFF; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; text-align: center; font-family: var(--sans); border: 1px solid rgba(0,122,255,0.18); }
+  @media (max-width: 800px) { #broadcast-panel > div { grid-template-columns: 1fr !important; } }
+
 </style>
 </head>
 <body>
@@ -553,6 +583,66 @@ function render() {
         <div class="tab ${currentPlatform==='ios'?'active-ios':''}" onclick="setPlatform('ios')">iOS</div>
       </div>
       <button class="refresh-btn" onclick="location.reload()">\u21BB Refresh</button>
+      <button class="broadcast-btn" id="broadcast-toggle-btn" onclick="toggleBroadcastPanel()">&#128226; Broadcast</button>
+    </div>
+  </div>
+
+  <!-- BROADCAST PANEL -->
+  <div id="broadcast-panel">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start">
+      <div>
+        <div style="font-size:.9375rem;font-weight:700;color:var(--text);margin-bottom:18px;letter-spacing:-.01em">&#128226; Send Broadcast</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div class="bc-label">Icon (optional)</div>
+            <div class="bc-emoji-row" id="bc-emoji-row">
+              <div class="bc-emoji" data-emoji="&#128276;" onclick="selectEmoji(this)">&#128276;</div>
+              <div class="bc-emoji" data-emoji="&#128226;" onclick="selectEmoji(this)">&#128226;</div>
+              <div class="bc-emoji" data-emoji="&#9888;&#65039;" onclick="selectEmoji(this)">&#9888;&#65039;</div>
+              <div class="bc-emoji" data-emoji="&#127881;" onclick="selectEmoji(this)">&#127881;</div>
+              <div class="bc-emoji" data-emoji="&#128663;" onclick="selectEmoji(this)">&#128663;</div>
+              <div class="bc-emoji" data-emoji="&#10024;" onclick="selectEmoji(this)">&#10024;</div>
+            </div>
+          </div>
+          <div>
+            <div class="bc-label">Title *</div>
+            <input class="bc-input" id="bc-title" placeholder="Broadcast title&hellip;" oninput="updateBroadcastPreview()" />
+          </div>
+          <div>
+            <div class="bc-label">Message *</div>
+            <textarea class="bc-textarea" id="bc-body" placeholder="Write your message&hellip;" rows="5" oninput="updateBroadcastPreview()"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div class="bc-label">Button label (optional)</div>
+              <input class="bc-input" id="bc-cta-label" placeholder="e.g. Learn more" oninput="updateBroadcastPreview()" />
+            </div>
+            <div>
+              <div class="bc-label">Button URL (optional)</div>
+              <input class="bc-input" id="bc-cta-url" placeholder="https://&hellip;" oninput="updateBroadcastPreview()" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="bc-send-btn" id="bc-send-btn" onclick="sendBroadcast()">Send Broadcast &rarr;</button>
+            <button onclick="toggleBroadcastPanel()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:9px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Cancel</button>
+          </div>
+          <div class="bc-msg" id="bc-msg"></div>
+        </div>
+      </div>
+      <div>
+        <div class="bc-label" style="margin-bottom:12px">Live preview</div>
+        <div class="bc-preview-phone">
+          <div class="bc-mock-backdrop">
+            <div class="bc-mock-card">
+              <div class="bc-mock-icon" id="prev-icon" style="display:none"></div>
+              <div class="bc-mock-title" id="prev-title" style="color:#888;font-weight:400">Your title appears here</div>
+              <div class="bc-mock-body" id="prev-body" style="color:#aaa">Your message appears here&hellip;</div>
+              <div class="bc-mock-cta" id="prev-cta" style="display:none"></div>
+              <div class="bc-mock-dismiss">Got it</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1023,6 +1113,100 @@ function render() {
   </div>
   `
 }
+
+// ─── Broadcast Admin ────────────────────────────────────────────────────────
+// Service role key — required for INSERT (bypasses RLS).
+// Get from: Supabase dashboard → Project Settings → API → service_role
+const SERVICE_ROLE_KEY = 'PASTE_SERVICE_ROLE_KEY_HERE'
+
+let selectedBroadcastEmoji = null
+
+function toggleBroadcastPanel() {
+  const panel = document.getElementById('broadcast-panel')
+  const btn = document.getElementById('broadcast-toggle-btn')
+  const isOpen = panel.classList.contains('open')
+  panel.classList.toggle('open', !isOpen)
+  btn.classList.toggle('active', !isOpen)
+  if (!isOpen) { updateBroadcastPreview() }
+}
+
+function selectEmoji(el) {
+  const emoji = el.dataset.emoji
+  if (selectedBroadcastEmoji === emoji) {
+    selectedBroadcastEmoji = null
+    el.classList.remove('selected')
+  } else {
+    document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
+    selectedBroadcastEmoji = emoji
+    el.classList.add('selected')
+  }
+  updateBroadcastPreview()
+}
+
+function updateBroadcastPreview() {
+  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
+  const body     = document.getElementById('bc-body')?.value?.trim()      || ''
+  const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
+  const iconEl   = document.getElementById('prev-icon')
+  const titleEl  = document.getElementById('prev-title')
+  const bodyEl   = document.getElementById('prev-body')
+  const ctaEl    = document.getElementById('prev-cta')
+  if (!iconEl) return
+  if (selectedBroadcastEmoji) { iconEl.textContent = selectedBroadcastEmoji; iconEl.style.display = 'block' }
+  else { iconEl.style.display = 'none' }
+  if (title) { titleEl.textContent = title; titleEl.style.color = '#111'; titleEl.style.fontWeight = '700' }
+  else { titleEl.textContent = 'Your title appears here'; titleEl.style.color = '#888'; titleEl.style.fontWeight = '400' }
+  if (body) { bodyEl.textContent = body; bodyEl.style.color = '#555' }
+  else { bodyEl.textContent = 'Your message appears here…'; bodyEl.style.color = '#aaa' }
+  if (ctaLabel) { ctaEl.textContent = ctaLabel; ctaEl.style.display = 'block' }
+  else { ctaEl.style.display = 'none' }
+}
+
+async function sendBroadcast() {
+  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
+  const body     = document.getElementById('bc-body')?.value?.trim()      || ''
+  const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
+  const ctaUrl   = document.getElementById('bc-cta-url')?.value?.trim()   || ''
+  const msgEl    = document.getElementById('bc-msg')
+  const btnEl    = document.getElementById('bc-send-btn')
+  msgEl.style.display = 'none'; msgEl.className = 'bc-msg'
+  if (!title || !body) {
+    msgEl.textContent = 'Title and message are required.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
+  }
+  if (SERVICE_ROLE_KEY === 'PASTE_SERVICE_ROLE_KEY_HERE') {
+    msgEl.textContent = 'Paste your service_role key into SERVICE_ROLE_KEY in the analytics JS.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
+  }
+  btnEl.disabled = true; btnEl.textContent = 'Sending…'
+  const payload = { title, body,
+    ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
+    ...(ctaLabel ? { cta_label: ctaLabel } : {}),
+    ...(ctaUrl   ? { cta_url: ctaUrl }     : {})
+  }
+  try {
+    const res = await fetch(SURL + '/rest/v1/broadcasts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    })
+    if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)) }
+    msgEl.textContent = 'Broadcast sent ✓'; msgEl.className = 'bc-msg success'; msgEl.style.display = 'block'
+    document.getElementById('bc-title').value = ''
+    document.getElementById('bc-body').value = ''
+    document.getElementById('bc-cta-label').value = ''
+    document.getElementById('bc-cta-url').value = ''
+    selectedBroadcastEmoji = null
+    document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
+    updateBroadcastPreview()
+    setTimeout(() => {
+      document.getElementById('broadcast-panel').classList.remove('open')
+      document.getElementById('broadcast-toggle-btn').classList.remove('active')
+      msgEl.style.display = 'none'
+    }, 2200)
+  } catch (err) {
+    msgEl.textContent = 'Error: ' + err.message; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'
+  } finally { btnEl.disabled = false; btnEl.textContent = 'Send Broadcast →' }
+}
+
 
 async function doSignIn() {
   const email = document.getElementById('auth-email').value.trim()
