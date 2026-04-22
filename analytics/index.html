@@ -474,6 +474,34 @@ async function loadData() {
       if (!allUserEvents[e.user_id]) allUserEvents[e.user_id] = []
       allUserEvents[e.user_id].push(e)
     })
+
+    // Supplement summaryRows with a live today-row derived from actual events,
+    // since the nightly cron won't have today's data yet.
+    const todayKey = new Date().toISOString().split('T')[0]
+    const hasTodaySummary = summaryRows.some(r => r.day === todayKey)
+    if (!hasTodaySummary) {
+      const todayEvents = allEventsData.filter(e => (e.created_at || '').startsWith(todayKey))
+      if (todayEvents.length > 0) {
+        const dauSet = new Set(todayEvents.map(e => e.user_id).filter(Boolean))
+        const liveRow = {
+          day: todayKey,
+          total_events: todayEvents.length,
+          ios_events: todayEvents.filter(e => e.platform === 'ios').length,
+          web_events: todayEvents.filter(e => e.platform === 'web').length,
+          app_opens: todayEvents.filter(e => e.event_name === 'app_opened').length,
+          onboardings: todayEvents.filter(e => e.event_name === 'onboarding_completed').length,
+          subscriptions_started: todayEvents.filter(e => e.event_name === 'subscription_started').length,
+          paywall_views: todayEvents.filter(e => e.event_name === 'paywall_viewed').length,
+          fuel_entries: todayEvents.filter(e => e.event_name === 'fuel_entry_added').length,
+          service_entries: todayEvents.filter(e => e.event_name === 'service_entry_added').length,
+          doc_uploads: todayEvents.filter(e => e.event_name === 'document_uploaded').length,
+          trips_started: todayEvents.filter(e => e.event_name === 'trip_started').length,
+          dau: dauSet.size,
+          _live: true
+        }
+        summaryRows = [...summaryRows, liveRow]
+      }
+    }
   }
 
   render()
@@ -579,7 +607,7 @@ function render() {
   const retentionRows = allProfiles.map(p => {
     const ue = allUserEvents[p.id] || []
     const realEvents = ue.filter(e => !e.properties?.synthetic)
-    const lastSeen = realEvents.length ? realEvents[realEvents.length-1]?.created_at : null
+    const lastSeen = realEvents.length ? realEvents.reduce((a, e) => (e.created_at > a ? e.created_at : a), realEvents[0].created_at) : null
     const daysOld = daysSince(p.created_at)
     const daysAgo = lastSeen ? daysSince(lastSeen) : null
     const activeDays = new Set(realEvents.map(e => (e.created_at||'').split(' ')[0].split('T')[0])).size
@@ -594,7 +622,7 @@ function render() {
   const heatmapRows = allProfiles.map(p => {
     const ue = allUserEvents[p.id] || []
     const realEvents = ue.filter(e => !e.properties?.synthetic)
-    const lastSeen = realEvents.length ? realEvents[realEvents.length-1]?.created_at : null
+    const lastSeen = realEvents.length ? realEvents.reduce((a, e) => (e.created_at > a ? e.created_at : a), realEvents[0].created_at) : null
     const featureMap = {}
     FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e, p)) || f.match({event_name:''}, p) })
     const score = Object.values(featureMap).filter(Boolean).length
@@ -1233,3 +1261,4 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
