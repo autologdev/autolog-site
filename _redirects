@@ -1,3 +1,7 @@
 / /index.html 200
 /app /app/splash.html 200
 /app/ /app/splash.html 200
+/early-access / 301
+/early-access.html / 301
+/confirmed / 301
+/confirmed.html / 301
