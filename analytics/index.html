@@ -219,6 +219,37 @@
   .bc-mock-dismiss { background: rgba(0,122,255,0.08); color: #007AFF; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; text-align: center; font-family: var(--sans); border: 1px solid rgba(0,122,255,0.18); }
   @media (max-width: 800px) { #broadcast-panel > div { grid-template-columns: 1fr !important; } }
 
+  /* Notes panel */
+  .notes-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 28px; }
+  .notes-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; flex-wrap: wrap; }
+  .notes-title { font-size: .9375rem; font-weight: 700; letter-spacing: -.01em; }
+  .notes-sub { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
+  .notes-compose { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 14px; }
+  .notes-ta { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: var(--sans); font-size: .8125rem; resize: vertical; min-height: 60px; line-height: 1.45; }
+  .notes-ta:focus { outline: none; border-color: var(--border-strong); }
+  .notes-tag-sel { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--text); font-family: var(--mono); font-size: .75rem; min-width: 120px; }
+  .notes-save-btn { background: var(--teal, #0ea5b5); color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-family: var(--mono); font-size: .75rem; font-weight: 700; cursor: pointer; transition: opacity .14s; }
+  .notes-save-btn:hover { opacity: .88; }
+  .notes-save-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .notes-filter { display: flex; gap: 6px; margin-bottom: 10px; }
+  .notes-filter-btn { padding: 5px 10px; border-radius: 7px; font-size: .6875rem; font-family: var(--mono); background: var(--surface2); color: var(--muted); border: 1px solid var(--border); cursor: pointer; transition: all .14s; }
+  .notes-filter-btn.active { color: var(--text); border-color: var(--border-strong); }
+  .notes-list { display: flex; flex-direction: column; gap: 8px; }
+  .note-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: flex-start; }
+  .note-item.resolved { opacity: .55; }
+  .note-main { flex: 1; min-width: 0; }
+  .note-body { font-size: .8125rem; color: var(--text); line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+  .note-meta { display: flex; align-items: center; gap: 10px; margin-top: 6px; font-size: .625rem; color: var(--muted); font-family: var(--mono); flex-wrap: wrap; }
+  .note-tag { background: var(--surface3); padding: 2px 8px; border-radius: 5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .note-resolved-note { margin-top: 8px; padding: 8px 10px; background: rgba(16,185,129,.05); border-left: 2px solid rgba(16,185,129,.4); border-radius: 0 6px 6px 0; font-size: .75rem; color: var(--muted); font-style: italic; }
+  .note-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .note-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 9px; border-radius: 6px; font-size: .6875rem; font-family: var(--mono); cursor: pointer; transition: all .14s; }
+  .note-btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .note-btn.resolve:hover { color: #10b981; border-color: rgba(16,185,129,.3); }
+  .note-btn.delete:hover { color: #ef4444; border-color: rgba(239,68,68,.3); }
+  .notes-empty { font-size: .75rem; color: var(--muted); font-style: italic; padding: 8px 0; }
+  @media (max-width: 700px) { .notes-compose { flex-wrap: wrap; } .notes-ta { width: 100%; flex-basis: 100%; } .notes-tag-sel, .notes-save-btn { flex: 1; } }
+
   /* Daily activity bar chart */
   .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
   .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; justify-content: flex-end; }
@@ -257,6 +288,8 @@ const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 let summaryRows = []       // analytics_daily_summary rows for current range
 let allProfiles = []       // all profiles (small table, always full fetch)
 let allUserEvents = {}     // per-user events loaded on drill-down click
+let allNotes = []          // analytics_notes rows (newest first)
+let notesFilter = 'active' // 'active' | 'resolved' | 'all'
 let currentRange = '30d'
 let feedLimit = 40
 
@@ -296,6 +329,9 @@ function daysSince(d) {
   return Math.floor((Date.now() - new Date(String(d).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'))) / 86400000)
 }
 function sum(rows, key) { return rows.reduce((a,r) => a + (r[key]||0), 0) }
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+}
 function getPlatform(e) {
   if (e.platform && e.platform !== 'legacy') return e.platform
   const p = e.properties || {}
@@ -325,6 +361,73 @@ function rangeStartISO() {
 }
 function setRange(r) { currentRange = r; loadData() }
 
+// ── Notes ──────────────────────────────────────────────────────────────────
+function setNotesFilter(f) { notesFilter = f; render() }
+
+async function refreshNotes() {
+  const { data, error } = await sb.from('analytics_notes').select('*').order('created_at', { ascending: false })
+  if (!error) { allNotes = data || []; render() }
+}
+
+async function saveNote() {
+  const ta = document.getElementById('note-body')
+  const sel = document.getElementById('note-tag')
+  const btn = document.getElementById('note-save-btn')
+  const body = (ta?.value || '').trim()
+  if (!body) { ta?.focus(); return }
+  const section_tag = sel?.value || null
+  btn.disabled = true; btn.textContent = 'Saving\u2026'
+  try {
+    const { error } = await sb.from('analytics_notes').insert({ body, section_tag: section_tag || null })
+    if (error) throw error
+    ta.value = ''
+    if (sel) sel.value = ''
+    notesFilter = 'active'
+    await refreshNotes()
+  } catch (err) {
+    alert('Could not save note: ' + (err.message || err))
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save'
+  }
+}
+
+async function resolveNote(id) {
+  const resolution = prompt('How did you resolve this? (optional \u2014 leave blank if you just want to close it out)')
+  if (resolution === null) return // cancelled
+  try {
+    const { error } = await sb.from('analytics_notes')
+      .update({ resolved_at: new Date().toISOString(), resolved_note: resolution.trim() || null })
+      .eq('id', id)
+    if (error) throw error
+    await refreshNotes()
+  } catch (err) {
+    alert('Could not resolve note: ' + (err.message || err))
+  }
+}
+
+async function reopenNote(id) {
+  try {
+    const { error } = await sb.from('analytics_notes')
+      .update({ resolved_at: null, resolved_note: null })
+      .eq('id', id)
+    if (error) throw error
+    await refreshNotes()
+  } catch (err) {
+    alert('Could not reopen note: ' + (err.message || err))
+  }
+}
+
+async function deleteNote(id) {
+  if (!confirm('Delete this note permanently?')) return
+  try {
+    const { error } = await sb.from('analytics_notes').delete().eq('id', id)
+    if (error) throw error
+    await refreshNotes()
+  } catch (err) {
+    alert('Could not delete note: ' + (err.message || err))
+  }
+}
+
 // ── Data loading ─────────────────────────────────────────────────────────────
 async function loadData() {
   document.getElementById('loading').style.display = 'flex'
@@ -338,14 +441,15 @@ async function loadData() {
   // Profiles always fully fetched (one row per user, stays small for a long time)
   // All-time events fetched once for retention cohort, heatmap, and tour analytics
   // These sections MUST use all-time data regardless of the selected range filter
-  const [summaryRes, profilesRes, allEventsRes] = await Promise.all([
+  const [summaryRes, profilesRes, allEventsRes, notesRes] = await Promise.all([
     summaryQuery,
     sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source').order('created_at', { ascending: false }),
     sb.from('analytics_events')
       .select('event_name, properties, created_at, platform, user_id')
       .not('user_id', 'is', null)
       .order('created_at', { ascending: true })
-      .limit(10000)
+      .limit(10000),
+    sb.from('analytics_notes').select('*').order('created_at', { ascending: false })
   ])
 
   if (summaryRes.error) throw new Error(summaryRes.error.message)
@@ -353,6 +457,7 @@ async function loadData() {
 
   summaryRows = summaryRes.data || []
   allProfiles = profilesRes.data || []
+  allNotes = (notesRes && !notesRes.error) ? (notesRes.data || []) : []
 
   // Reset allUserEvents on every load so stale data from previous range
   // switches doesn't accumulate and cause duplicate/wrong retention results.
@@ -554,6 +659,13 @@ function render() {
 
   const summaryUpdated = summaryRows.length ? fmtDate(summaryRows[summaryRows.length-1].updated_at) : 'n/a'
 
+  // Notes
+  const activeNotesCount = allNotes.filter(n => !n.resolved_at).length
+  const resolvedNotesCount = allNotes.filter(n => !!n.resolved_at).length
+  const notesToShow = notesFilter === 'active'   ? allNotes.filter(n => !n.resolved_at)
+                     : notesFilter === 'resolved' ? allNotes.filter(n => !!n.resolved_at)
+                     : allNotes
+
   document.getElementById('loading').style.display = 'none'
   const mainEl = document.getElementById('main')
   mainEl.style.display = 'block'
@@ -648,6 +760,62 @@ function render() {
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- NOTES PANEL -->
+  <div class="notes-card">
+    <div class="notes-head">
+      <div>
+        <div class="notes-title">&#128221; Notes</div>
+        <div class="notes-sub">${activeNotesCount} active &middot; ${resolvedNotesCount} resolved</div>
+      </div>
+    </div>
+    <div class="notes-compose">
+      <textarea id="note-body" class="notes-ta" placeholder="What did you notice? (e.g. 'Alex signed up but only logged services, never trips \u2014 check if BT permission onboarding is clear')" maxlength="2000"></textarea>
+      <select id="note-tag" class="notes-tag-sel">
+        <option value="">No tag</option>
+        <option value="general">General</option>
+        <option value="funnel">Activation</option>
+        <option value="retention">Retention</option>
+        <option value="features">Features</option>
+        <option value="users">Users</option>
+        <option value="bugs">Bugs</option>
+        <option value="ideas">Ideas</option>
+      </select>
+      <button id="note-save-btn" class="notes-save-btn" onclick="saveNote()">Save</button>
+    </div>
+    <div class="notes-filter">
+      <div class="notes-filter-btn ${notesFilter==='active'?'active':''}"   onclick="setNotesFilter('active')">Active (${activeNotesCount})</div>
+      <div class="notes-filter-btn ${notesFilter==='resolved'?'active':''}" onclick="setNotesFilter('resolved')">Resolved (${resolvedNotesCount})</div>
+      <div class="notes-filter-btn ${notesFilter==='all'?'active':''}"      onclick="setNotesFilter('all')">All (${allNotes.length})</div>
+    </div>
+    <div class="notes-list">
+      ${notesToShow.length === 0
+        ? `<div class="notes-empty">${notesFilter==='active' ? 'No active notes. Jot something down when you spot a pattern or want to remind yourself to check on a user.' : notesFilter==='resolved' ? 'No resolved notes yet.' : 'No notes yet.'}</div>`
+        : notesToShow.map(n => {
+            const isResolved = !!n.resolved_at
+            const tagBadge = n.section_tag ? `<span class="note-tag">${escapeHtml(n.section_tag)}</span>` : ''
+            const resolvedBlock = isResolved && n.resolved_note ? `<div class="note-resolved-note">&#10003; ${escapeHtml(n.resolved_note)}</div>` : ''
+            const resolvedMeta = isResolved ? `<span>resolved ${fmtDateShort(n.resolved_at)}</span>` : ''
+            const actions = isResolved
+              ? `<button class="note-btn" onclick="reopenNote('${n.id}')" title="Mark unresolved">\u21BA reopen</button>
+                 <button class="note-btn delete" onclick="deleteNote('${n.id}')" title="Delete">&#10005;</button>`
+              : `<button class="note-btn resolve" onclick="resolveNote('${n.id}')" title="Mark resolved">&#10003; resolve</button>
+                 <button class="note-btn delete" onclick="deleteNote('${n.id}')" title="Delete">&#10005;</button>`
+            return `<div class="note-item ${isResolved?'resolved':''}">
+              <div class="note-main">
+                <div class="note-body">${escapeHtml(n.body)}</div>
+                ${resolvedBlock}
+                <div class="note-meta">
+                  ${tagBadge}
+                  <span>${fmtDateShort(n.created_at)}</span>
+                  ${resolvedMeta}
+                </div>
+              </div>
+              <div class="note-actions">${actions}</div>
+            </div>`
+          }).join('')}
     </div>
   </div>
 
