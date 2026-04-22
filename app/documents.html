@@ -32,12 +32,6 @@
 .ai-field{background:#fff;border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
 .ai-field-label{font-size:.6875rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
 .ai-field-val{font-size:.8125rem;font-weight:600;color:var(--text-primary)}
-.upload-progress{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
-.upload-progress-bar{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-mid));border-radius:2px;transition:width .3s ease;width:0%}
-.paywall-banner{background:linear-gradient(135deg,#1E7A8C,#155F6E);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.paywall-banner-text{flex:1;min-width:0;color:#fff}
-.paywall-banner-text strong{display:block;font-size:.9375rem;font-weight:700;margin-bottom:3px}
-.paywall-banner-text span{font-size:.8125rem;opacity:.85}
 </style>
 </head>
 <body>
@@ -62,7 +56,6 @@
     <div class="topbar-right">
       <a href="/app/dashboard" class="dash-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
       <div class="vsw" id="vsw"><button class="vsw-btn" id="vsw-btn" onclick="toggleVsw()"><div class="vsw-dot"></div><span class="vsw-name" id="vsw-name">…</span><span class="vsw-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></span></button></div>
-      <button class="btn btn-primary btn-sm" id="upload-btn">+ Upload</button>
       <div class="user-avatar" id="user-avatar">?</div>
     </div>
   </div>
@@ -91,36 +84,7 @@ async function logEvent(eventName,properties={}){
   if(!window.AutoLogConsent||!window.AutoLogConsent.hasAnalyticsConsent())return
   try{await sb.from('analytics_events').insert({user_id:userId,event_name:eventName,properties})}catch(e){}
 }
-async function checkFirstAction(actionType){
-  try{
-    const{data:p}=await sb.from('profiles').select('first_action_completed').eq('id',userId).single()
-    if(p&&!p.first_action_completed){
-      await logEvent('first_action_taken',{source:'web',action_type:actionType})
-      await sb.from('profiles').update({first_action_completed:true}).eq('id',userId)
-    }
-  }catch(e){}
-}
 
-// ── OCR usage tracking ─────────────────────────────────────
-async function checkOCRUsage(){
-  if(isProPlan())return true
-  try{
-    const today=new Date()
-    const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
-    const{data}=await sb.from('api_usage').select('used_count').eq('user_id',userId).eq('service','ocr').eq('period_start',periodStart).single()
-    return !data || data.used_count < 10
-  }catch(e){return true}
-}
-async function incrementOCRUsage(){
-  if(isProPlan())return
-  try{
-    const today=new Date()
-    const periodStart=new Date(today.getFullYear(),today.getMonth(),1).toISOString().split('T')[0]
-    await sb.from('api_usage').upsert({user_id:userId,service:'ocr',period_start:periodStart,used_count:1},{onConflict:'user_id,service,period_start',ignoreDuplicates:false})
-    const{data}=await sb.from('api_usage').select('id,used_count').eq('user_id',userId).eq('service','ocr').eq('period_start',periodStart).single()
-    if(data)await sb.from('api_usage').update({used_count:data.used_count+1}).eq('id',data.id)
-  }catch(e){}
-}
 
 const DTYPES={
   mot_certificate:{label:'MOT Certificate',icon:'✅'},
@@ -164,7 +128,6 @@ function switchV(id){localStorage.setItem('al_vid',id);location.reload()}
   vehicle=allVehicles.find(v=>v.id===selId)||null
   $('vsw-name').textContent=vehicle?vName(vehicle):'No vehicle'
   if(allVehicles.length<=1)$('vsw-btn').style.cursor='default'
-  $('upload-btn').onclick=showUpload
   // Analytics: documents_viewed — CONSENT GATED, session-deduplicated
   if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()&&userId){
     if(!sessionStorage.getItem('al_evt_documents_viewed')){
@@ -198,36 +161,53 @@ async function load(){
   const groups={}
   all.forEach(d=>{const t=d.document_type||'other';if(!groups[t])groups[t]=[];groups[t].push(d)})
 
-  const FREE_DOC_LIMIT=10
-  const overLimit=!isProPlan()&&all.length>=FREE_DOC_LIMIT
+  // Per-type counts for stats-strip
+  const totalDocs = all.length
+  const typeCount = Object.keys(groups).length
+  const oldest = all.length ? all[all.length-1] : null
+  const newest = all.length ? all[0] : null
+  // Total extracted amount for YTD cost visibility
+  const year = new Date().getFullYear()
+  const ytdDocs = all.filter(d => (d.document_date||d.created_at||'').slice(0,4) === String(year))
+  const ytdAmount = ytdDocs.reduce((s,d) => s + Number(d.extracted_amount||0), 0)
 
   $('content').innerHTML=`
     <div class="pg-head">
-      <div class="pg-head-text"><h1>Documents</h1><p>${vName(vehicle)} · ${all.length} document${all.length!==1?'s':''}</p></div>
+      <div class="pg-head-text"><h1>Documents</h1><p>${vName(vehicle)}${vehicle.owner_id!==userId?' <span class="chip chip-shared">Shared</span>':''}</p></div>
     </div>
-    ${overLimit?`<div class="paywall-banner" id="paywall-banner">
-      <div class="paywall-banner-text">
-        <strong>🔒 Upload limit reached</strong>
-        <span>Free plan includes ${FREE_DOC_LIMIT} documents per vehicle. Upgrade for unlimited uploads and enhanced AI scanning.</span>
+    ${totalDocs>0?`<div class="stats-strip">
+      <div class="stat-mini">
+        <div class="stat-mini-head"><span class="stat-mini-label">Documents</span></div>
+        <div class="stat-mini-value">${totalDocs}</div>
+        <div class="stat-mini-sub">${typeCount} categor${typeCount===1?'y':'ies'}</div>
       </div>
-      <a href="/app/settings#upgrade" class="btn btn-sm" style="background:#fff;color:#1E7A8C;font-weight:700;flex-shrink:0" onclick="logEvent('paywall_viewed',{source:'web',trigger:'upload_limit'})">Upgrade →</a>
+      ${ytdAmount>0?`<div class="stat-mini">
+        <div class="stat-mini-head"><span class="stat-mini-label">Value this year</span></div>
+        <div class="stat-mini-value">£${ytdAmount.toFixed(0)}</div>
+        <div class="stat-mini-sub">${ytdDocs.length} document${ytdDocs.length===1?'':'s'}</div>
+      </div>`:''}
+      ${newest?`<div class="stat-mini">
+        <div class="stat-mini-head"><span class="stat-mini-label">Latest</span></div>
+        <div class="stat-mini-value" style="font-size:1.125rem">${fmtDate(newest.document_date||newest.created_at)}</div>
+        <div class="stat-mini-sub">${(DTYPES[newest.document_type]||DTYPES.other).label}</div>
+      </div>`:''}
+      ${oldest&&oldest!==newest?`<div class="stat-mini">
+        <div class="stat-mini-head"><span class="stat-mini-label">Earliest record</span></div>
+        <div class="stat-mini-value" style="font-size:1.125rem">${fmtDate(oldest.document_date||oldest.created_at)}</div>
+        <div class="stat-mini-sub">${(DTYPES[oldest.document_type]||DTYPES.other).label}</div>
+      </div>`:''}
     </div>`:''}
-    ${!isProPlan()&&!overLimit?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span>📄 Basic Scan active — <a href="/app/settings#upgrade" style="color:var(--teal);font-weight:700" onclick="logEvent('paywall_viewed',{source:'web',trigger:'scan_upsell'})">Upgrade to Enhanced Scan ✨</a></span>
-      <span style="font-size:.75rem;opacity:.7">${all.length}/${FREE_DOC_LIMIT} documents used</span>
-    </div>`:''}
-    ${isProPlan()?`<div style="background:var(--teal-light);border-radius:9px;padding:9px 14px;font-size:.8125rem;color:var(--teal);margin-bottom:16px;display:flex;align-items:center;gap:6px"><span>✨</span><strong>Enhanced Scan active</strong></div>`:''}
     ${all.length===0?`
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px;text-align:center;gap:20px">
-      <div style="width:72px;height:72px;background:var(--teal-light);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2rem">📄</div>
-      <div>
-        <h2 style="font-size:1.375rem;font-weight:800;letter-spacing:-.02em;color:var(--text-primary);margin-bottom:8px">No documents yet</h2>
-        <p style="font-size:.9375rem;color:var(--text-muted);max-width:380px;line-height:1.6">Upload MOT certificates, invoices, insurance docs and more. AI will categorise and extract key details automatically.</p>
+    <div class="empty-rich">
+      <div class="empty-rich-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 16l4-4 4 4 4-4 4 4"/></svg>
       </div>
-      ${overLimit?'':`<button class="btn btn-primary" onclick="showUpload()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Upload First Document
-      </button>`}
+      <h2>Documents live with your iPhone</h2>
+      <p>Scan MOT certificates, service receipts, insurance docs and more in the AutoLog app — they'll sync here automatically and you can view, download or delete them from any browser.</p>
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83zM13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        Open App Store
+      </a>
     </div>`
     :Object.entries(groups).map(([type,docs])=>{
       const ti=DTYPES[type]||DTYPES.other
@@ -287,406 +267,8 @@ async function delDoc(id,path){
   toast('Deleted ✓');await load()
 }
 
-// ── AI Classification ──────────────────────────────────────
-async function classifyWithAI(file){
-  const allowed=await checkOCRUsage()
-  if(!allowed){
-    await logEvent('paywall_viewed',{source:'web',trigger:'ocr_limit'})
-    return null
-  }
-  return new Promise((resolve)=>{
-    const reader=new FileReader()
-    reader.onload=async(e)=>{
-      try{
-        const base64=e.target.result.split(',')[1]
-        const mediaType=file.type||'image/jpeg'
-        const isPDF=file.type==='application/pdf'
 
-        const systemPrompt=`You are an automotive document classifier for a UK vehicle management app. 
-Analyse the document image and return ONLY valid JSON (no markdown, no explanation) with this exact structure:
-{
-  "document_type": one of: "mot_certificate","service_invoice","fuel_receipt","insurance","v5c","warranty","purchase_receipt","recall_notice","repair_invoice","tyre_receipt","other",
-  "confidence": number 0-1,
-  "document_date": "YYYY-MM-DD" or null,
-  "extracted_amount": number or null (total cost/amount in GBP, no currency symbol),
-  "extracted_mileage": number or null,
-  "garage_name": string or null,
-  "description": string or null (brief summary, max 80 chars),
-  "mot_expiry": "YYYY-MM-DD" or null (only for MOT certificates)
-}`
 
-        const payload={
-          model:'gpt-4o-mini',
-          max_tokens:300,
-          messages:[{
-            role:'user',
-            content: isPDF ? [
-              {type:'text',text:systemPrompt+'\n\nThis is a PDF document. Classify based on filename: '+file.name}
-            ] : [
-              {type:'image_url',image_url:{url:`data:${mediaType};base64,${base64}`,detail:'low'}},
-              {type:'text',text:systemPrompt}
-            ]
-          }]
-        }
-
-        const endpoint=isProPlan()
-          ?'https://mechanic.autologapp.co.uk/ai-classify-enhanced'
-          :'https://mechanic.autologapp.co.uk/ai-classify'
-
-        const res=await fetch(endpoint,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify(payload)
-        })
-        if(!res.ok){resolve(null);return}
-        const data=await res.json()
-        const text=data.choices?.[0]?.message?.content||''
-        const clean=text.replace(/```json|```/g,'').trim()
-        await incrementOCRUsage()
-        resolve(JSON.parse(clean))
-      }catch(err){
-        console.warn('AI classification failed:',err)
-        resolve(null)
-      }
-    }
-    reader.onerror=()=>resolve(null)
-    if(file.type==='application/pdf'){
-      resolve(null)
-    } else {
-      reader.readAsDataURL(file)
-    }
-  })
-}
-
-// ── Upload Modal ───────────────────────────────────────────
-function showUpload(){
-  if(!isProPlan()){
-    sb.from('documents').select('id',{count:'exact',head:true}).eq('vehicle_id',vehicle.id).then(({count})=>{
-      if(count>=10){
-        logEvent('paywall_viewed',{source:'web',trigger:'upload_limit'})
-        const btn=$('upload-btn')
-        if(btn){
-          btn.innerHTML='🔒 Upgrade to upload more'
-          btn.disabled=true
-          btn.style.opacity='0.7'
-        }
-        let existing=document.getElementById('paywall-banner')
-        if(!existing){
-          const banner=document.createElement('div')
-          banner.id='paywall-banner'
-          banner.className='paywall-banner'
-          banner.innerHTML=`<div class="paywall-banner-text"><strong>🔒 Upload limit reached</strong><span>Free plan includes 10 documents per vehicle. Upgrade for unlimited uploads and enhanced AI scanning. £2.99/mo</span></div><a href="/app/settings#upgrade" class="btn btn-sm" style="background:#fff;color:#1E7A8C;font-weight:700;flex-shrink:0">Upgrade →</a>`
-          $('content').prepend(banner)
-        }
-        return
-      }
-      _showUploadModal()
-    })
-  } else {
-    _showUploadModal()
-  }
-}
-
-function _showUploadModal(){
-  const bg=document.createElement('div');bg.className='mbg'
-  bg.innerHTML=`<div class="mo" style="max-width:560px"><div class="mh"><h2>Upload Document${isProPlan()?' <span style="font-size:.75rem;font-weight:600;color:#7c3aed;background:rgba(139,92,246,.1);padding:2px 8px;border-radius:100px;margin-left:6px">Enhanced Scan ✨</span>':' <span style="font-size:.75rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:2px 8px;border-radius:100px;margin-left:6px">Basic Scan</span>'}</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
-    <div class="merr" id="merr"></div>
-    <div id="ai-suggestion-zone"></div>
-    <div class="fg"><label class="fl">Document Type</label><select class="fi" id="u-t">${Object.entries(DTYPES).map(([v,{label}])=>`<option value="${v}">${label}</option>`).join('')}</select></div>
-    <div class="fr">
-      <div class="fg"><label class="fl">Date (optional)</label><input class="fi" type="date" id="u-d"></div>
-      <div class="fg"><label class="fl">Amount £ (optional)</label><input class="fi" type="number" step="0.01" id="u-amount" placeholder="e.g. 125.00"></div>
-    </div>
-    <div class="fg"><label class="fl">Files</label>
-      <div class="drop-zone" id="dz" onclick="document.getElementById('u-f').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="handleDrop(event)">
-        <div style="font-size:2rem;margin-bottom:8px">📎</div>
-        <div style="font-size:.875rem;font-weight:600;color:var(--text-secondary)">Click to choose or drag & drop</div>
-        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">Images (JPG, PNG) or PDF · Multiple files supported</div>
-      </div>
-      <input type="file" id="u-f" accept="image/*,application/pdf" multiple style="display:none">
-      <div id="u-file-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
-      <div class="upload-progress" id="u-progress"><div class="upload-progress-bar" id="u-progress-bar"></div></div>
-    </div>
-    <div class="mfooter"><button class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()">Cancel</button><button class="btn btn-primary btn-sm" id="u-sv" disabled>Upload</button></div>
-  </div></div>`
-  document.body.appendChild(bg)
-  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
-
-  let files=[]
-  let aiResult=null
-  let scanInProgress=false
-
-  const setScanState=(scanning)=>{
-    scanInProgress=scanning
-    const btn=bg.querySelector('#u-sv')
-    if(!btn)return
-    if(scanning){
-      btn.disabled=true
-      btn.textContent='Scanning…'
-    } else {
-      btn.disabled=files.length===0
-      btn.textContent='Upload'
-    }
-  }
-
-  const updateFileList=()=>{
-    const el=bg.querySelector('#u-file-list')
-    el.innerHTML=files.map((f,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:8px;font-size:.8125rem">
-      <span>${f.type.includes('pdf')?'📋':'🖼️'}</span>
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span>
-      <span style="color:var(--text-muted)">${(f.size/1024).toFixed(0)}KB</span>
-      <button onclick="removeFile(${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;padding:0;line-height:1">×</button>
-    </div>`).join('')
-    bg.querySelector('#u-sv').disabled=files.length===0||scanInProgress
-    if(files.length===1&&files[0].type.startsWith('image/')){
-      // reset previous result, lock upload button while scan runs
-      aiResult=null
-      setScanState(true)
-      runAIClassification(files[0]).then(()=>setScanState(false))
-    }
-  }
-
-  window.removeFile=i=>{files.splice(i,1);updateFileList()}
-
-  const setFiles=newFiles=>{
-    files=[...files,...Array.from(newFiles)]
-    updateFileList()
-  }
-
-  bg.querySelector('#u-f').onchange=e=>{if(e.target.files.length)setFiles(e.target.files)}
-  window.handleDrop=e=>{e.preventDefault();bg.querySelector('#dz').classList.remove('over');if(e.dataTransfer.files.length)setFiles(e.dataTransfer.files)}
-
-  const runAIClassification=async(file)=>{
-    const zone=bg.querySelector('#ai-suggestion-zone')
-    const scanLabel=isProPlan()?'Enhanced Scan ✨':'Basic Scan'
-    zone.innerHTML=`<div class="ai-suggestion"><h4>✨ AI Analysis <span class="ai-badge"><span class="ai-spinner"></span> Analysing…</span></h4></div>`
-    const result=await classifyWithAI(file)
-    aiResult=result
-    if(!result){zone.innerHTML='';return}
-
-    if(result.document_type)bg.querySelector('#u-t').value=result.document_type
-    if(result.document_date)bg.querySelector('#u-d').value=result.document_date
-    if(result.extracted_amount)bg.querySelector('#u-amount').value=result.extracted_amount
-
-    const conf=Math.round((result.confidence||0)*100)
-    zone.innerHTML=`<div class="ai-suggestion">
-      <h4>✨ AI Classification <span class="ai-badge">${conf}% confident · ${scanLabel}</span></h4>
-      <div style="font-size:.8125rem;color:var(--text-secondary);margin-bottom:10px">Detected: <strong>${DTYPES[result.document_type]?.label||result.document_type}</strong>${result.description?` — ${result.description}`:''}</div>
-      ${result.garage_name||result.extracted_amount||result.extracted_mileage?`
-      <div class="ai-fields">
-        ${result.garage_name?`<div class="ai-field"><div class="ai-field-label">Garage</div><div class="ai-field-val">${result.garage_name}</div></div>`:''}
-        ${result.extracted_amount?`<div class="ai-field"><div class="ai-field-label">Amount</div><div class="ai-field-val">£${Number(result.extracted_amount).toFixed(2)}</div></div>`:''}
-        ${result.extracted_mileage?`<div class="ai-field"><div class="ai-field-label">Mileage</div><div class="ai-field-val">${Number(result.extracted_mileage).toLocaleString('en-GB')} mi</div></div>`:''}
-        ${result.mot_expiry?`<div class="ai-field"><div class="ai-field-label">MOT Expiry</div><div class="ai-field-val">${fmtDate(result.mot_expiry)}</div></div>`:''}
-      </div>`:''}
-      <p style="font-size:.75rem;color:var(--text-muted);margin-top:8px">AI suggestions applied above — edit if incorrect.</p>
-    </div>`
-  }
-
-  bg.querySelector('#u-sv').onclick=async()=>{
-    if(!files.length)return
-    const btn=bg.querySelector('#u-sv');btn.disabled=true;btn.textContent='Uploading…'
-    const prog=bg.querySelector('#u-progress');prog.style.display='block'
-    const bar=bg.querySelector('#u-progress-bar')
-    const docType=bg.querySelector('#u-t').value
-    const docDate=bg.querySelector('#u-d').value||null
-    const docAmount=parseFloat(bg.querySelector('#u-amount').value)||null
-
-    let uploaded=0
-    for(const file of files){
-      const ext=file.name.split('.').pop().toLowerCase()
-      const path=`${userId}/${vehicle.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-      const{error:ue}=await sb.storage.from('vehicle-documents').upload(path,file,{contentType:file.type})
-      if(ue){const e=bg.querySelector('#merr');e.textContent=ue.message;e.classList.add('on');btn.disabled=false;btn.textContent='Upload';return}
-
-      const docRecord={
-        vehicle_id:vehicle.id,
-        user_id:userId,
-        storage_path:path,
-        file_name:file.name,
-        file_type:file.type,
-        file_size_bytes:file.size,
-        document_type:docType,
-        document_date:docDate,
-        ocr_status:'complete',
-        extracted_amount:docAmount||(aiResult?.extracted_amount||null),
-        extracted_mileage:aiResult?.extracted_mileage||null
-      }
-
-      // Task 6 Part A: capture inserted doc id for follow-up updates
-      const{data:newDoc,error:insertError}=await sb.from('documents').insert(docRecord).select().single()
-      if(insertError){const e=bg.querySelector('#merr');e.textContent=insertError.message;e.classList.add('on');btn.disabled=false;btn.textContent='Upload';return}
-
-      const insertedDocId=newDoc.id
-
-      // Task 6 Part A: write ocr_raw_text from AI description
-      if(aiResult?.description){
-        await sb.from('documents').update({
-          ocr_raw_text:aiResult.description,
-          ocr_status:'complete'
-        }).eq('id',insertedDocId)
-      }
-
-      await logEvent('document_uploaded',{source:'web',document_type:docType,vehicle_id:vehicle.id})
-      await checkFirstAction('document')
-
-      if(aiResult&&(docType==='service_invoice'||docType==='mot_certificate'||docType==='repair_invoice'||docType==='fuel_receipt')){
-        await createLinkedRecord(docType, aiResult, insertedDocId)
-      }
-
-      uploaded++
-      bar.style.width=`${(uploaded/files.length)*100}%`
-    }
-    bg.remove();toast(`${uploaded} document${uploaded>1?'s':''} uploaded ✓`);await load()
-  }
-}
-
-// Task 6 Part B: pass insertedDocId, set ocr_attributed after linked record created
-// ── Attribution engine (mirrors iOS DocumentAttributionEngine) ──────────────
-// Builds ocr_extracted_data JSONB and writes full attribution to service/fuel/cost tables.
-
-function buildExtractedData(ai){
-  const d={}
-  if(ai.document_date)    d.date            = ai.document_date
-  if(ai.extracted_amount) d.total_cost      = ai.extracted_amount
-  if(ai.extracted_mileage)d.mileage         = ai.extracted_mileage
-  if(ai.garage_name)      d.garage_name     = ai.garage_name
-  if(ai.invoice_number)   d.invoice_number  = ai.invoice_number
-  if(ai.mot_expiry)       d.mot_expiry_date = ai.mot_expiry
-  if(ai.description)      d.notes           = ai.description
-  return Object.keys(d).length ? d : null
-}
-
-async function deduplicateServiceEntry(date, mileage, toleranceDays=3, toleranceMiles=200){
-  const from=new Date(date); from.setDate(from.getDate()-toleranceDays)
-  const to  =new Date(date); to.setDate(to.getDate()+toleranceDays)
-  const{data}=await sb.from('service_entries').select('*')
-    .eq('vehicle_id',vehicle.id)
-    .gte('date',from.toISOString().split('T')[0])
-    .lte('date',to.toISOString().split('T')[0])
-  if(!data||!data.length) return null
-  if(mileage==null) return data[0]
-  return data.find(e=>e.mileage_at_service==null||Math.abs((e.mileage_at_service||0)-mileage)<=toleranceMiles)||null
-}
-
-async function deduplicateFuelEntry(date, totalCost, toleranceDays=1, tolerancePounds=1.0){
-  const from=new Date(date); from.setDate(from.getDate()-toleranceDays)
-  const to  =new Date(date); to.setDate(to.getDate()+toleranceDays)
-  const{data}=await sb.from('fuel_entries').select('*')
-    .eq('vehicle_id',vehicle.id)
-    .gte('date',from.toISOString().split('T')[0])
-    .lte('date',to.toISOString().split('T')[0])
-  if(!data||!data.length) return null
-  if(totalCost==null) return data[0]
-  return data.find(e=>e.total_cost==null||Math.abs((e.total_cost||0)-totalCost)<=tolerancePounds)||null
-}
-
-async function createLinkedRecord(docType,ai,insertedDocId){
-  try{
-    const date=ai.document_date||new Date().toISOString().split('T')[0]
-    const mileage=ai.extracted_mileage||null
-    const cost=ai.extracted_amount||null
-
-    // Always write ocr_extracted_data so iOS app can display document details and search it
-    const extractedData=buildExtractedData(ai)
-    const docUpdate={ocr_attributed:true}
-    if(extractedData) docUpdate.ocr_extracted_data=extractedData
-    await sb.from('documents').update(docUpdate).eq('id',insertedDocId)
-
-    if(docType==='service_invoice'||docType==='repair_invoice'){
-      if(!cost&&!ai.garage_name) return
-
-      // Dedup — mirrors iOS findExistingServiceEntry
-      const existing=await deduplicateServiceEntry(date,mileage)
-      if(existing){
-        const merge={}
-        if(!existing.total_cost&&cost)                  merge.total_cost=cost
-        if(!existing.garage_name&&ai.garage_name)       merge.garage_name=ai.garage_name
-        if(!existing.invoice_number&&ai.invoice_number) merge.invoice_number=ai.invoice_number
-        if(!existing.mileage_at_service&&mileage)       merge.mileage_at_service=mileage
-        if(!existing.document_id)                       merge.document_id=insertedDocId
-        if(Object.keys(merge).length) await sb.from('service_entries').update(merge).eq('id',existing.id)
-        // Add cost_entry if the existing entry didn't have one
-        if(!existing.total_cost&&cost){
-          await sb.from('cost_entries').insert({
-            vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
-            currency:'GBP',category:'service',source_table:'service_entries',source_id:existing.id
-          })
-        }
-        toast('Matched & merged with existing service record')
-        return
-      }
-
-      // Create new — source:'ocr' and document_id to match iOS
-      const{data:newSvc,error:svcErr}=await sb.from('service_entries').insert({
-        vehicle_id:vehicle.id,user_id:userId,date,
-        mileage_at_service:mileage,
-        garage_name:ai.garage_name||null,
-        garage_type:'specialist',
-        description:ai.description||null,
-        total_cost:cost,
-        invoice_number:ai.invoice_number||null,
-        source:'ocr',
-        document_id:insertedDocId
-      }).select().single()
-      if(svcErr){console.warn('service_entries insert failed:',svcErr);return}
-      // cost_entry — iOS always creates this; feeds cost analytics
-      if(cost){
-        await sb.from('cost_entries').insert({
-          vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
-          currency:'GBP',category:'service',source_table:'service_entries',source_id:newSvc.id
-        })
-      }
-      toast('Service record created from document')
-
-    }else if(docType==='mot_certificate'){
-      // Update vehicle mot_expiry
-      if(ai.mot_expiry) await sb.from('vehicles').update({mot_expiry:ai.mot_expiry}).eq('id',vehicle.id)
-      // Create/merge service entry for the MOT test
-      const existing=await deduplicateServiceEntry(date,mileage,3,500)
-      if(existing){
-        const merge={}
-        if(!existing.document_id)                 merge.document_id=insertedDocId
-        if(!existing.garage_name&&ai.garage_name) merge.garage_name=ai.garage_name
-        if(!existing.description)                 merge.description='MOT Test'
-        if(Object.keys(merge).length) await sb.from('service_entries').update(merge).eq('id',existing.id)
-      }else{
-        await sb.from('service_entries').insert({
-          vehicle_id:vehicle.id,user_id:userId,date,
-          mileage_at_service:mileage,
-          garage_name:ai.garage_name||null,
-          description:'MOT Test',source:'ocr',document_id:insertedDocId
-        })
-      }
-      toast(ai.mot_expiry?'MOT expiry updated':'MOT document saved')
-
-    }else if(docType==='fuel_receipt'){
-      if(!cost) return
-      const existing=await deduplicateFuelEntry(date,cost)
-      if(existing){
-        const merge={}
-        if(!existing.total_cost&&cost)             merge.total_cost=cost
-        if(!existing.station_name&&ai.garage_name) merge.station_name=ai.garage_name
-        if(!existing.document_id)                  merge.document_id=insertedDocId
-        if(Object.keys(merge).length) await sb.from('fuel_entries').update(merge).eq('id',existing.id)
-        toast('Matched & merged with existing fuel entry')
-        return
-      }
-      const{data:newFuel,error:fuelErr}=await sb.from('fuel_entries').insert({
-        vehicle_id:vehicle.id,user_id:userId,date,
-        mileage_at_fill:mileage,total_cost:cost,
-        station_name:ai.garage_name||null,
-        source:'ocr',document_id:insertedDocId
-      }).select().single()
-      if(fuelErr){console.warn('fuel_entries insert failed:',fuelErr);return}
-      await sb.from('cost_entries').insert({
-        vehicle_id:vehicle.id,user_id:userId,date,amount:cost,
-        currency:'GBP',category:'fuel',source_table:'fuel_entries',source_id:newFuel.id
-      })
-      toast('Fuel entry created from receipt')
-    }
-  }catch(e){console.warn('Attribution failed:',e)}
-}
 
 </script>
 </body>
