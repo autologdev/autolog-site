@@ -475,9 +475,9 @@ function render() {
     const daysAgo = lastSeen ? daysSince(lastSeen) : null
     const activeDays = new Set(ue.map(e => e.created_at?.split('T')[0])).size
     const firstDate = new Date(p.created_at)
-    const d1  = ue.some(e => new Date(e.created_at) - firstDate <= 864e5)
-    const d7  = ue.some(e => new Date(e.created_at) - firstDate <= 7*864e5)
-    const d30 = ue.some(e => new Date(e.created_at) - firstDate <= 30*864e5)
+    const d1  = ue.some(e => { const diff = new Date(e.created_at) - firstDate; return diff >= 0 && diff <= 864e5 })
+    const d7  = ue.some(e => { const diff = new Date(e.created_at) - firstDate; return diff >= 0 && diff <= 7*864e5 })
+    const d30 = ue.some(e => { const diff = new Date(e.created_at) - firstDate; return diff >= 0 && diff <= 30*864e5 })
     return { profile: p, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
   }).sort((a,b) => new Date(b.profile.created_at) - new Date(a.profile.created_at))
 
