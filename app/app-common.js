@@ -186,3 +186,228 @@ function showVehiclePicker(vehicles, currentId, onSelect) {
   const bg = openModal(html)
   bg._select = id => { bg.remove(); onSelect(id) }
 }
+
+// ═══════════════════════════════════════════════════════════
+// ═══ LAUNCH v2 ADDITIONS — premium gating, usage, UI utils ═══
+// ═══════════════════════════════════════════════════════════
+
+// ── Upload / usage counter (shared with iOS via api_usage table) ──
+// Mirrors APIUsageTracker semantics on iOS. Service is always 'ocr' —
+// that single counter is the shared ceiling across iOS scans and web manual entries.
+// On web, EVERY manual add (fuel/service/doc) that counts toward the limit calls this.
+async function checkWebUsage(userId, plan) {
+  const year = new Date().getFullYear()
+  const limit = isPro(plan) ? 120 : 80
+  try {
+    const { data } = await sb
+      .from('api_usage')
+      .select('call_count')
+      .eq('user_id', userId)
+      .eq('service', 'ocr')
+      .eq('year', year)
+      .is('month', null)
+    const total = (data || []).reduce((s, r) => s + (r.call_count || 0), 0)
+    return {
+      allowed: total < limit,
+      used: total,
+      limit,
+      remaining: Math.max(0, limit - total),
+      plan: isPro(plan) ? 'pro' : 'free',
+    }
+  } catch (e) {
+    // On error, fail open (don't block legit users)
+    return { allowed: true, used: 0, limit, remaining: limit, plan: isPro(plan) ? 'pro' : 'free' }
+  }
+}
+
+async function recordWebUsage(userId) {
+  const year = new Date().getFullYear()
+  try {
+    const { data: existing } = await sb
+      .from('api_usage')
+      .select('id,call_count')
+      .eq('user_id', userId)
+      .eq('service', 'ocr')
+      .eq('year', year)
+      .is('month', null)
+      .maybeSingle()
+    if (existing) {
+      await sb.from('api_usage').update({
+        call_count: (existing.call_count || 0) + 1,
+        updated_at: new Date().toISOString(),
+      }).eq('id', existing.id)
+    } else {
+      await sb.from('api_usage').insert({
+        user_id: userId,
+        service: 'ocr',
+        year,
+        month: null,
+        call_count: 1,
+      })
+    }
+  } catch (e) { /* silent */ }
+}
+
+// ── Vehicle lock logic (mirrors iOS DowngradeManager) ────────
+// Rule: if user is free AND owns >= 2 vehicles, keep the most recently UPDATED
+// owned vehicle unlocked; lock all other OWNED vehicles.
+// Shared vehicles are never "locked" in the lockedVehicleIDs set — their write-
+// access is controlled separately via isSharedReadOnly() below.
+function computeLockedVehicles(allVehicles, userId, plan) {
+  if (isPro(plan)) return new Set()
+  const owned = allVehicles.filter(v => v.owner_id === userId)
+  if (owned.length <= 1) return new Set()
+  // Most-recently-updated owned vehicle stays unlocked
+  const sorted = [...owned].sort((a, b) => {
+    const au = new Date(a.updated_at || a.created_at || 0).getTime()
+    const bu = new Date(b.updated_at || b.created_at || 0).getTime()
+    return bu - au
+  })
+  return new Set(sorted.slice(1).map(v => v.id))
+}
+
+// A shared vehicle is view-only for a free user IF they already have >= 1 own vehicle.
+// Returns the *write-blocked* state, not the whole-lock state — shared vehicles
+// should remain viewable; only writes are blocked.
+function isSharedVehicleReadOnly(vehicle, ownVehicleCount, plan, userId) {
+  if (isPro(plan)) return false
+  if (vehicle.owner_id === userId) return false // not a shared vehicle
+  return ownVehicleCount >= 1
+}
+
+// Convenience: returns the overall access state for a vehicle+user pair.
+// { canView, canWrite, reason }
+function vehicleAccess(vehicle, allVehicles, userId, plan) {
+  if (isPro(plan)) {
+    return { canView: true, canWrite: vehicle.owner_id === userId || true, reason: null }
+  }
+  const locked = computeLockedVehicles(allVehicles, userId, plan)
+  const ownedCount = allVehicles.filter(v => v.owner_id === userId).length
+  if (locked.has(vehicle.id)) {
+    return { canView: true, canWrite: false, reason: 'locked_owned' }
+  }
+  if (vehicle.owner_id !== userId && isSharedVehicleReadOnly(vehicle, ownedCount, plan, userId)) {
+    return { canView: true, canWrite: false, reason: 'locked_shared' }
+  }
+  return { canView: true, canWrite: true, reason: null }
+}
+
+// ── Sparkline SVG generator ───────────────────────────────
+function sparkline(values, opts = {}) {
+  if (!values || values.length < 2) return ''
+  const width = opts.width || 80
+  const height = opts.height || 14
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = max - min || 1
+  const pad = 1.5
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * width
+    const y = height - pad - ((v - min) / range) * (height - pad * 2)
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  return `<svg class="stat-mini-sparkline" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none"><polyline points="${pts}"/></svg>`
+}
+
+// ── Paywall / upgrade modals ──────────────────────────────
+function showUpgradeInAppModal(source) {
+  const html = `
+    <div class="mh">
+      <h2>AutoLog+ is managed in the iOS app</h2>
+      <button class="mc" onclick="this.closest('.mbg').remove()">✕</button>
+    </div>
+    <div class="mb">
+      <div style="text-align:center;padding:6px 0 18px;">
+        <div style="width:56px;height:56px;background:var(--teal-light);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--teal);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p style="font-size:.9375rem;color:var(--text-secondary);line-height:1.65;max-width:360px;margin:0 auto 6px;">AutoLog+ is sold through the App Store and managed by Apple. To subscribe, open AutoLog on your iPhone and tap <strong>Settings → Upgrade to AutoLog+</strong>.</p>
+        <p style="font-size:.8125rem;color:var(--text-muted);max-width:360px;margin:0 auto 20px;">Once subscribed, everything unlocks here too — instantly.</p>
+      </div>
+      <div class="mfooter" style="justify-content:center;gap:10px;">
+        <a href="https://apps.apple.com/gb/app/autolog/id6746798513" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Open App Store</a>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()">Close</button>
+      </div>
+    </div>`
+  const bg = openModal(html)
+  // consent-gated analytics (track where the paywall was triggered)
+  try {
+    const userId = window.__al_userId
+    if (userId && source) logEvent(userId, 'paywall_viewed', { source: 'web', trigger: source })
+  } catch (e) {}
+  return bg
+}
+
+function showUsageLimitModal(usage, source) {
+  const over = usage.used >= usage.limit
+  const html = `
+    <div class="mh">
+      <h2>${over ? 'Upload limit reached' : 'Approaching upload limit'}</h2>
+      <button class="mc" onclick="this.closest('.mbg').remove()">✕</button>
+    </div>
+    <div class="mb">
+      <p style="font-size:.875rem;color:var(--text-secondary);line-height:1.65;margin-bottom:14px;">
+        ${over
+          ? `You've used all ${usage.limit} of your uploads for this year.`
+          : `You have ${usage.remaining} upload${usage.remaining === 1 ? '' : 's'} left this year.`}
+        ${usage.plan === 'free'
+          ? 'Upgrading to AutoLog+ gives you 120 uploads per vehicle per year.'
+          : 'Your quota resets on 1 January.'}
+      </p>
+      <div style="background:var(--surface-2);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+          <span style="font-size:.8125rem;color:var(--text-secondary);font-weight:600;">This year</span>
+          <span style="font-size:.875rem;color:var(--text-primary);font-weight:700;font-family:var(--font-mono);">${usage.used} / ${usage.limit}</span>
+        </div>
+        <div class="usage-bar"><div class="usage-bar-fill ${over ? 'danger' : usage.used / usage.limit > 0.8 ? 'warn' : ''}" style="width:${Math.min(100, (usage.used / usage.limit) * 100)}%"></div></div>
+      </div>
+      <div class="mfooter" style="justify-content:center;gap:10px;">
+        ${usage.plan === 'free'
+          ? `<button class="btn btn-primary btn-sm" onclick="this.closest('.mbg').remove();showUpgradeInAppModal('${source || 'upload_limit'}')">Upgrade in iOS app →</button>`
+          : ''}
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()">Close</button>
+      </div>
+    </div>`
+  const bg = openModal(html)
+  try {
+    const userId = window.__al_userId
+    if (userId) logEvent(userId, 'upload_limit_shown', { source: 'web', trigger: source, plan: usage.plan, used: usage.used, limit: usage.limit })
+  } catch (e) {}
+  return bg
+}
+
+// ── Locked-vehicle banner (inline, shown when viewing a locked vehicle) ──
+function lockedBannerHTML(reason) {
+  const msg = reason === 'locked_shared'
+    ? 'This vehicle is shared with you. While on the free plan with your own vehicle, shared vehicles are view-only.'
+    : "You've been using AutoLog+ with more than one vehicle. Upgrade to unlock write access to all your vehicles again."
+  return `
+    <div class="locked-banner">
+      <div class="locked-banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h3>AutoLog+ required</h3>
+      <p>${msg}</p>
+      <button class="btn btn-primary btn-sm" onclick="showUpgradeInAppModal('locked_vehicle')">Upgrade in iOS app →</button>
+    </div>`
+}
+
+// ── Vehicle pill renderer (respects lock + shared annotations) ──
+function renderVehicleTag(vehicle, userId, locked) {
+  if (locked) return `<span class="vsw-tag locked">Locked</span>`
+  if (vehicle.owner_id !== userId) return `<span class="vsw-tag shared">Shared</span>`
+  return ''
+}
+
+// Expose utilities on window so page scripts can call them after loading
+window.checkWebUsage = checkWebUsage
+window.recordWebUsage = recordWebUsage
+window.computeLockedVehicles = computeLockedVehicles
+window.isSharedVehicleReadOnly = isSharedVehicleReadOnly
+window.vehicleAccess = vehicleAccess
+window.sparkline = sparkline
+window.showUpgradeInAppModal = showUpgradeInAppModal
+window.showUsageLimitModal = showUsageLimitModal
+window.lockedBannerHTML = lockedBannerHTML
+window.renderVehicleTag = renderVehicleTag
+window.isPro = isPro
