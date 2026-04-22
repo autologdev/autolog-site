@@ -1273,17 +1273,7 @@ async function doSignIn() {
 }
 
 async function main() {
-  const { data: { session } } = await sb.auth.getSession()
-  if (!session || session.user.id !== OWNER_ID) {
-    document.getElementById('loading').style.display = 'none'
-    const gate = document.getElementById('auth-gate')
-    gate.style.display = 'flex'
-    gate.style.flexDirection = 'column'
-    gate.style.alignItems = 'center'
-    gate.style.justifyContent = 'center'
-    gate.style.minHeight = '100vh'
-    return
-  }
+  // Auth gate removed — Cloudflare Access handles protection, anon key reads all data
 
   const [eventsRes, profilesRes, waitlistRes] = await Promise.all([
     sb.from('analytics_events').select('event_name, properties, created_at, user_id, anonymous_id, session_id, platform, url_path, country').order('created_at', { ascending: false }).limit(2000),
