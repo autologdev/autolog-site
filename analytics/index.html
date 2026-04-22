@@ -740,25 +740,6 @@ function render() {
     </div>`).join('')}
   </div>
 
-  <!-- RETENTION DEBUG -->
-  <div id="ret-debug" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:12px 16px;font-family:var(--mono);font-size:.75rem;color:#fca5a5;margin-bottom:16px">
-    ${(() => {
-      const myId = '5501db10-cfff-4b9e-959c-54eb023ddd36'
-      const ue = allUserEvents[myId] || []
-      const p = allProfiles.find(x => x.id === myId)
-      const firstDate = p ? new Date(p.created_at) : null
-      const d1events = ue.filter(e => {
-        const diff = new Date(e.created_at) - firstDate
-        return diff >= 0 && diff <= 864e5
-      })
-      const d7events = ue.filter(e => {
-        const diff = new Date(e.created_at) - firstDate
-        return diff >= 0 && diff <= 7*864e5
-      })
-      return \`DEBUG — Marius: total events loaded: \${ue.length} | profile joined: \${p?.created_at} | D1 events (0-24h): \${d1events.length} | D7 events (0-7d): \${d7events.length} | earliest event: \${ue[ue.length-1]?.created_at || 'none'}\`
-    })()}
-  </div>
-
   <!-- RETENTION COHORT -->
   <div class="section-label">User retention \u2014 who comes back <span style="font-size:.6rem;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(expand a user below to load their events)</span></div>
   <div class="card">
