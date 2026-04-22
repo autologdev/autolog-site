@@ -194,9 +194,9 @@
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              In the iOS app, open the Garage tab and tap the <strong>+</strong> button. Enter your UK registration plate and AutoLog will look up your vehicle's details from the DVLA automatically — including MOT status, tax expiry, make, colour and fuel type. You can also add a vehicle manually if the lookup doesn't find it.
+              In the iOS app, open the Garage tab and tap the <strong>+</strong> button. Enter your UK registration and AutoLog will look up your vehicle's details from the DVLA automatically — MOT status, tax expiry, make, colour and fuel type. You can also add a vehicle manually if the lookup doesn't find it.
               <br><br>
-              On the web dashboard, click <strong>+ Add Vehicle</strong> in the top bar and follow the same process.
+              On the web dashboard, click <strong>+ Add Vehicle</strong> in the top bar. The same DVLA lookup runs. If you're on the free plan you can add one vehicle; AutoLog+ subscribers can add as many as they like.
             </div>
           </div>
 
@@ -206,7 +206,57 @@
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              The DVLA Vehicle Enquiry Service doesn't cover every UK vehicle. Common reasons a plate isn't found include: the vehicle is registered as SORN, it's a very recently registered vehicle not yet in the database, or it's an older or imported vehicle. If your plate isn't found, you can still add the vehicle manually by entering the make, model and year yourself — all other AutoLog features will work normally.
+              The DVLA Vehicle Enquiry Service doesn't cover every UK vehicle. Common reasons include: the vehicle is registered as SORN, it was very recently registered and hasn't made it to the database yet, or it's an older or imported vehicle. If DVLA can't find the plate, you can still add the vehicle manually by entering the make, model and year yourself — every other AutoLog feature will work normally.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-q" onclick="toggleFaq(this)">
+              What can I do on the web dashboard vs the iOS app?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              The iOS app is where AutoLog does its heaviest lifting — document scanning, automatic trip detection via Bluetooth, CarPlay handoff, and AutoLog+ subscription management all live there.
+              <br><br>
+              The web dashboard at <a href="/app/dashboard">autologapp.co.uk/app/dashboard</a> is built for viewing and managing records from any browser. You can add vehicles, log fuel fill-ups and services manually, edit trip details (purpose, notes), view all your documents, and see cost analytics. Document scanning, trip auto-detection, and subscribing to AutoLog+ happen in the iOS app only.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-q" onclick="toggleFaq(this)">
+              How do documents get into my account?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Documents are scanned using the iOS app. Point your camera at an MOT certificate, service invoice, insurance renewal or V5C logbook, and AutoLog reads it automatically and files it against the right vehicle.
+              <br><br>
+              Scanned documents sync instantly to the web dashboard, where you can view, download or delete them from any browser. Scanning itself is iOS-only — the web dashboard is a viewer for your document library, not a scanner.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-q" onclick="toggleFaq(this)">
+              How do upload limits work?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Free plan: 80 uploads per year, across all your vehicles combined. Uploads include document scans, fuel scans, and service scans in the iOS app, plus manual fuel and service entries added on the web dashboard.
+              <br><br>
+              AutoLog+: 120 uploads per year per vehicle, covering the same actions.
+              <br><br>
+              You can always see your current usage under <strong>Settings → Plan &amp; Usage</strong> in the iOS app or on the web dashboard. The counter resets on 1 January every year. On the free plan, once you hit the limit you can still manually log fuel and services in the iOS app without restriction — the limit only applies to scanning and to web entries.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-q" onclick="toggleFaq(this)">
+              How do I subscribe to AutoLog+?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              AutoLog+ is sold through the App Store. Open the AutoLog app on your iPhone, go to <strong>Settings → Upgrade to AutoLog+</strong>, and choose monthly (£2.99/mo) or annual (£24.99/year, saving 30%). Payment is handled by Apple using your existing Apple ID.
+              <br><br>
+              AutoLog+ is linked to your Apple ID, not your device — if you sign in to AutoLog on another iPhone with the same Apple ID, your subscription comes with you. We don't sell AutoLog+ on the web or by any other method.
             </div>
           </div>
 
@@ -216,19 +266,33 @@
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              AutoLog+ subscriptions are managed through Apple. To cancel, open <strong>Settings</strong> on your iPhone → tap your name → <strong>Subscriptions</strong> → find AutoLog and tap <strong>Cancel Subscription</strong>. Your subscription will remain active until the end of the current billing period. We don't handle subscription billing directly so we're unable to process refunds — these must be requested from Apple.
+              Because AutoLog+ is billed by Apple, it's cancelled through Apple. Open <strong>Settings</strong> on your iPhone → tap your name at the top → <strong>Subscriptions</strong> → find AutoLog and tap <strong>Cancel Subscription</strong>. Your subscription stays active until the end of the current billing period. Refunds are handled by Apple — we can't issue them directly.
             </div>
           </div>
 
           <div class="faq-item">
             <button type="button" class="faq-q" onclick="toggleFaq(this)">
-              How do I delete my account?
+              What happens if my AutoLog+ lapses?
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              You can delete your account from within the app: go to <strong>Settings → Account → Delete Account</strong>. This will permanently remove all your vehicles, records, documents and account data within 30 days. This action cannot be undone. If you have an active AutoLog+ subscription, please cancel it via Apple before deleting your account.
+              Your data is safe. Nothing is deleted — all your vehicles, services, documents, trips and history stay exactly where they are.
               <br><br>
-              Alternatively, email us at <strong>hello&#64;autologapp.co.uk</strong> and we'll delete your account manually.
+              If you had more than one vehicle on AutoLog+, the most recently used vehicle stays active and the others get locked. Locked vehicles are still visible — you can see all their existing records — but new writes (adding services, fuel, editing trips) are blocked. Automatic trip detection and CarPlay handoff also pause.
+              <br><br>
+              Resubscribe to AutoLog+ and everything unlocks instantly, exactly as it was.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button" class="faq-q" onclick="toggleFaq(this)">
+              Can I share a vehicle with my partner or mechanic?
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="faq-a">
+              Yes. In the iOS app, open a vehicle's settings and tap <strong>Share</strong>. You can invite a family member by email or invite code and choose whether they get full edit access or view-only access.
+              <br><br>
+              For mechanics, use the <strong>Mechanic Share Link</strong> feature — it creates a secure, time-limited, read-only page showing your vehicle's service history. No account needed on their end; it opens in any browser.
             </div>
           </div>
 
@@ -238,31 +302,21 @@
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              AutoLog+ subscribers can export a full PDF vehicle history report from the vehicle dashboard. Tap the share icon on your vehicle and select <strong>Export PDF History</strong>. The report includes all service records, MOT history, fuel logs and documents.
+              AutoLog+ subscribers can export a full PDF vehicle history report from the iOS app. Open the vehicle, tap the share icon and select <strong>Export PDF History</strong>. The report includes all service records, MOT history, fuel logs and documents.
               <br><br>
-              You can also share a live read-only history link with any mechanic directly from the app — no AutoLog account needed on their end.
+              Anyone — free or AutoLog+ — can share a live read-only history link with a mechanic directly from the app, no account needed on their end.
             </div>
           </div>
 
           <div class="faq-item">
             <button type="button" class="faq-q" onclick="toggleFaq(this)">
-              What data does AutoLog store?
+              How do I delete my account?
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              AutoLog stores your account details (email, name), vehicle records (registration, make, MOT/tax dates, mileage), fuel and service logs, uploaded documents and trip distances. All data is stored in the EU (London region) and is accessible only to you. We do not sell your data or share it with advertisers.
+              In the iOS app: <strong>Settings → Danger Zone → Delete Account</strong>. On the web dashboard: <strong>Settings → Delete Account</strong>. This permanently removes all your vehicles, records, documents and account data within 30 days. It cannot be undone.
               <br><br>
-              For full details, see our <a href="privacy.html">Privacy Policy</a>.
-            </div>
-          </div>
-
-          <div class="faq-item">
-            <button type="button" class="faq-q" onclick="toggleFaq(this)">
-              The web dashboard isn't loading my data — what should I do?
-              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="faq-a">
-              Try a hard refresh first (<strong>Ctrl+Shift+R</strong> on Windows, <strong>Cmd+Shift+R</strong> on Mac). If that doesn't help, sign out and back in — your session may have expired. If the issue persists, please email us with a description of what you're seeing and we'll investigate.
+              If you have an active AutoLog+ subscription, please cancel it via Apple before deleting your account (Apple doesn't cancel subscriptions automatically when an account is deleted). You can also email <strong>hello&#64;autologapp.co.uk</strong> and we'll process the deletion manually.
             </div>
           </div>
 
@@ -272,7 +326,7 @@
               <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="faq-a">
-              The AutoLog app is currently iPhone only (iOS 16+). An Android version is on the roadmap but no release date is confirmed yet. In the meantime, the web dashboard at <a href="/app/dashboard">autologapp.co.uk/app/dashboard</a> works on any browser including Android devices.
+              The AutoLog app is currently iPhone only (iOS 16+). An Android version is on the roadmap but doesn't have a release date yet. In the meantime, the web dashboard at <a href="/app/dashboard">autologapp.co.uk/app/dashboard</a> works on any browser — desktop, iPad, or Android phone — and covers most day-to-day tasks short of scanning documents.
             </div>
           </div>
 
