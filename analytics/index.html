@@ -475,33 +475,29 @@ async function loadData() {
       allUserEvents[e.user_id].push(e)
     })
 
-    // Supplement summaryRows with a live today-row derived from actual events,
-    // since the nightly cron won't have today's data yet.
+    // Always replace today's summary row with a live count derived from actual events.
+    // The 30-min cron keeps it fresh, but this ensures every page load shows real-time data.
     const todayKey = new Date().toISOString().split('T')[0]
-    const hasTodaySummary = summaryRows.some(r => r.day === todayKey)
-    if (!hasTodaySummary) {
-      const todayEvents = allEventsData.filter(e => (e.created_at || '').startsWith(todayKey))
-      if (todayEvents.length > 0) {
-        const dauSet = new Set(todayEvents.map(e => e.user_id).filter(Boolean))
-        const liveRow = {
-          day: todayKey,
-          total_events: todayEvents.length,
-          ios_events: todayEvents.filter(e => e.platform === 'ios').length,
-          web_events: todayEvents.filter(e => e.platform === 'web').length,
-          app_opens: todayEvents.filter(e => e.event_name === 'app_opened').length,
-          onboardings: todayEvents.filter(e => e.event_name === 'onboarding_completed').length,
-          subscriptions_started: todayEvents.filter(e => e.event_name === 'subscription_started').length,
-          paywall_views: todayEvents.filter(e => e.event_name === 'paywall_viewed').length,
-          fuel_entries: todayEvents.filter(e => e.event_name === 'fuel_entry_added').length,
-          service_entries: todayEvents.filter(e => e.event_name === 'service_entry_added').length,
-          doc_uploads: todayEvents.filter(e => e.event_name === 'document_uploaded').length,
-          trips_started: todayEvents.filter(e => e.event_name === 'trip_started').length,
-          dau: dauSet.size,
-          _live: true
-        }
-        summaryRows = [...summaryRows, liveRow]
-      }
+    const todayEvents = allEventsData.filter(e => (e.created_at || '').startsWith(todayKey))
+    const dauSet = new Set(todayEvents.map(e => e.user_id).filter(Boolean))
+    const liveRow = {
+      day: todayKey,
+      total_events: todayEvents.length,
+      ios_events: todayEvents.filter(e => e.platform === 'ios').length,
+      web_events: todayEvents.filter(e => e.platform === 'web').length,
+      app_opens: todayEvents.filter(e => e.event_name === 'app_opened').length,
+      onboardings: todayEvents.filter(e => e.event_name === 'onboarding_completed').length,
+      subscriptions_started: todayEvents.filter(e => e.event_name === 'subscription_started').length,
+      paywall_views: todayEvents.filter(e => e.event_name === 'paywall_viewed').length,
+      fuel_entries: todayEvents.filter(e => e.event_name === 'fuel_entry_added').length,
+      service_entries: todayEvents.filter(e => e.event_name === 'service_entry_added').length,
+      doc_uploads: todayEvents.filter(e => e.event_name === 'document_uploaded').length,
+      trips_started: todayEvents.filter(e => e.event_name === 'trip_started').length,
+      dau: dauSet.size,
+      _live: true
     }
+    // Remove any existing today row from the summary (stale cron data) and inject live one
+    summaryRows = [...summaryRows.filter(r => r.day !== todayKey), liveRow]
   }
 
   render()
