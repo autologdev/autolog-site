@@ -351,14 +351,22 @@ async function loadData() {
   summaryRows = summaryRes.data || []
   allProfiles = profilesRes.data || []
 
+  // Reset allUserEvents on every load so stale data from previous range
+  // switches doesn't accumulate and cause duplicate/wrong retention results.
+  allUserEvents = {}
+
   // Pre-populate allUserEvents with all-time data so retention/heatmap/tour
   // work correctly without requiring the user to click-expand every row first.
-  // The lazy loadUserEvents() will return cached data immediately after this.
-  const allEventsData = allEventsRes.data || []
-  allEventsData.forEach(e => {
-    if (!allUserEvents[e.user_id]) allUserEvents[e.user_id] = []
-    allUserEvents[e.user_id].push(e)
-  })
+  if (allEventsRes.error) {
+    console.warn('[Analytics] bulk events fetch failed:', allEventsRes.error.message)
+  } else {
+    const allEventsData = allEventsRes.data || []
+    allEventsData.forEach(e => {
+      if (!e.user_id) return
+      if (!allUserEvents[e.user_id]) allUserEvents[e.user_id] = []
+      allUserEvents[e.user_id].push(e)
+    })
+  }
 
   render()
 }
