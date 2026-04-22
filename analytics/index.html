@@ -344,7 +344,7 @@ async function loadData() {
     sb.from('analytics_events')
       .select('event_name, properties, created_at, platform, user_id')
       .not('user_id', 'is', null)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(10000)
   ])
 
@@ -482,7 +482,7 @@ function render() {
   }
   const retentionRows = allProfiles.map(p => {
     const ue = allUserEvents[p.id] || []
-    const lastSeen = ue.length ? ue[ue.length-1]?.created_at : null
+    const lastSeen = ue.length ? ue[0]?.created_at : null
     const daysOld = daysSince(p.created_at)
     const daysAgo = lastSeen ? daysSince(lastSeen) : null
     const activeDays = new Set(ue.map(e => e.created_at?.split(' ')[0])).size
@@ -496,7 +496,7 @@ function render() {
   // Heatmap — requires per-user events; show skeleton if not loaded
   const heatmapRows = allProfiles.map(p => {
     const ue = allUserEvents[p.id] || []
-    const lastSeen = ue.length ? ue[ue.length-1]?.created_at : null
+    const lastSeen = ue.length ? ue[0]?.created_at : null
     const featureMap = {}
     FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e, p)) || f.match({event_name:''}, p) })
     const score = Object.values(featureMap).filter(Boolean).length
