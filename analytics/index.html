@@ -280,7 +280,7 @@ const FEATURES = [
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 // Safari requires strict ISO 8601 with T separator — Supabase returns space-separated
-function safeParse(d) { return new Date(String(d).replace(' ', 'T')) }
+function safeParse(d) { return new Date(String(d).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00')) }
 function fmtDate(d) {
   if (!d) return '\u2014'
   const dt = safeParse(d)
@@ -293,7 +293,7 @@ function fmtDateShort(d) {
 function daysSince(d) {
   if (!d) return Infinity
   // Safari strict ISO 8601: replace space separator with T
-  return Math.floor((Date.now() - new Date(String(d).replace(' ', 'T'))) / 86400000)
+  return Math.floor((Date.now() - new Date(String(d).replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00'))) / 86400000)
 }
 function sum(rows, key) { return rows.reduce((a,r) => a + (r[key]||0), 0) }
 function getPlatform(e) {
@@ -477,7 +477,7 @@ function render() {
     const daysOld = daysSince(p.created_at)
     const daysAgo = lastSeen ? daysSince(lastSeen) : null
     const activeDays = new Set(ue.map(e => e.created_at?.split('T')[0])).size
-    const firstDate = new Date(p.created_at.replace(' ', 'T'))
+    const firstDate = safeParse(p.created_at)
     const d1  = ue.some(e => { const diff = safeParse(e.created_at) - firstDate; return diff >= 0 && diff <= 864e5 })
     const d7  = ue.some(e => { const diff = safeParse(e.created_at) - firstDate; return diff >= 0 && diff <= 7*864e5 })
     const d30 = ue.some(e => { const diff = safeParse(e.created_at) - firstDate; return diff >= 0 && diff <= 30*864e5 })
