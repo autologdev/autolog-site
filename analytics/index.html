@@ -402,7 +402,7 @@ async function toggleUserDetail(uid) {
         feed.innerHTML = '<div style="color:var(--muted);font-size:.8125rem;padding:8px 0">No events.</div>'
         return
       }
-      feed.innerHTML = events.map(e => {
+      feed.innerHTML = events.slice().sort((a,b) => safeParse(b.created_at) - safeParse(a.created_at)).map(e => {
         const pl = getPlatform(e)
         const props = e.properties || {}
         const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,40)}`).join(' \u00B7 ')
