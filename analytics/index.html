@@ -333,9 +333,16 @@ async function loadData() {
   if (start) summaryQuery = summaryQuery.gte('day', start)
 
   // Profiles always fully fetched (one row per user, stays small for a long time)
-  const [summaryRes, profilesRes] = await Promise.all([
+  // All-time events fetched once for retention cohort, heatmap, and tour analytics
+  // These sections MUST use all-time data regardless of the selected range filter
+  const [summaryRes, profilesRes, allEventsRes] = await Promise.all([
     summaryQuery,
-    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source').order('created_at', { ascending: false })
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source').order('created_at', { ascending: false }),
+    sb.from('analytics_events')
+      .select('event_name, properties, created_at, platform, user_id')
+      .not('user_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(10000)
   ])
 
   if (summaryRes.error) throw new Error(summaryRes.error.message)
@@ -343,6 +350,15 @@ async function loadData() {
 
   summaryRows = summaryRes.data || []
   allProfiles = profilesRes.data || []
+
+  // Pre-populate allUserEvents with all-time data so retention/heatmap/tour
+  // work correctly without requiring the user to click-expand every row first.
+  // The lazy loadUserEvents() will return cached data immediately after this.
+  const allEventsData = allEventsRes.data || []
+  allEventsData.forEach(e => {
+    if (!allUserEvents[e.user_id]) allUserEvents[e.user_id] = []
+    allUserEvents[e.user_id].push(e)
+  })
 
   render()
 }
