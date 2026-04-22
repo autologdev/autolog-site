@@ -471,15 +471,6 @@ function render() {
 
   // Retention cohort — needs per-user event data from the heatmap
   // We use profiles only for the cohort table (last seen from allUserEvents if loaded, else show join date)
-  // DEBUG — remove after fix
-  const _me = allProfiles.find(p => p.id === '5501db10-cfff-4b9e-959c-54eb023ddd36')
-  const _meEvents = allUserEvents['5501db10-cfff-4b9e-959c-54eb023ddd36'] || []
-  console.log('DEBUG retention — my profile:', _me?.created_at, '| events loaded:', _meEvents.length, '| first event:', _meEvents[_meEvents.length-1]?.created_at, '| safeParse joined:', safeParse(_me?.created_at||'').toString(), '| safeParse first event:', safeParse(_meEvents[_meEvents.length-1]?.created_at||'').toString())
-  if (_meEvents.length) {
-    const _fd = safeParse(_me.created_at)
-    const _diff = safeParse(_meEvents[_meEvents.length-1].created_at) - _fd
-    console.log('DEBUG D1 check — diff ms:', _diff, '| pass:', _diff >= 0 && _diff <= 864e5)
-  }
   const retentionRows = allProfiles.map(p => {
     const ue = allUserEvents[p.id] || []
     const lastSeen = ue.length ? ue[0]?.created_at : null
