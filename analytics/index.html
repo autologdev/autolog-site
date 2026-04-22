@@ -7,41 +7,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700;800&display=swap');
-
   :root {
-    --bg: #080d14;
-    --surface: #0f172a;
-    --surface2: #111827;
-    --surface3: #1a2236;
-    --border: rgba(255,255,255,0.07);
-    --border-strong: rgba(255,255,255,0.12);
-    --teal: #1E7A8C;
-    --teal-bright: #2dd4ef;
-    --teal-glow: rgba(30,122,140,0.2);
-    --ios-color: #a78bfa;
-    --ios-bg: rgba(139,92,246,0.12);
-    --web-color: #2dd4ef;
-    --web-bg: rgba(45,212,239,0.1);
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --faint: #1e293b;
-    --green: #22c55e;
-    --amber: #f59e0b;
-    --red: #ef4444;
-    --mono: 'DM Mono', monospace;
-    --sans: 'Sora', sans-serif;
+    --bg: #080d14; --surface: #0f172a; --surface2: #111827; --surface3: #1a2236;
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.12);
+    --teal: #1E7A8C; --teal-bright: #2dd4ef; --teal-glow: rgba(30,122,140,0.2);
+    --ios-color: #a78bfa; --ios-bg: rgba(139,92,246,0.12);
+    --web-color: #2dd4ef; --web-bg: rgba(45,212,239,0.1);
+    --text: #e2e8f0; --muted: #64748b; --faint: #1e293b;
+    --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
+    --mono: 'DM Mono', monospace; --sans: 'Sora', sans-serif;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
-  body::before {
-    content: ''; position: fixed; inset: 0; z-index: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-    background-size: 48px 48px; pointer-events: none;
-  }
+  body::before { content: ''; position: fixed; inset: 0; z-index: 0; background-image: linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px); background-size: 48px 48px; pointer-events: none; }
   .wrapper { position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 28px 24px 80px; }
-
-  /* Header */
   .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-bright); box-shadow: 0 0 14px var(--teal-bright); animation: pulse 2s ease-in-out infinite; }
@@ -50,8 +29,6 @@
   .logo-name span { color: var(--teal-bright); }
   .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .header-meta { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
-
-  /* Tabs */
   .tabs { display: flex; gap: 4px; }
   .tab { padding: 6px 12px; border-radius: 7px; font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: var(--mono); transition: all .14s; }
   .tab.active-all { border-color: var(--teal); color: var(--teal-bright); background: rgba(45,212,239,0.08); }
@@ -60,18 +37,12 @@
   .tab:hover:not([class*="active"]) { border-color: rgba(255,255,255,.15); color: var(--text); }
   .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; }
   .refresh-btn:hover { border-color: var(--teal); color: var(--teal-bright); }
-
-  /* Badges */
   .plat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
   .plat-ios { background: var(--ios-bg); color: var(--ios-color); }
   .plat-web { background: var(--web-bg); color: var(--web-color); }
   .plat-legacy { background: rgba(245,158,11,.1); color: var(--amber); }
-
-  /* Section label */
   .section-label { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
   .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
-
-  /* KPIs */
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px; position: relative; overflow: hidden; transition: border-color .2s; }
   .kpi:hover { border-color: rgba(45,212,239,0.2); }
@@ -79,21 +50,13 @@
   .kpi-label { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
   .kpi-value { font-size: 2.25rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
   .kpi-sub { font-size: .6875rem; color: var(--muted); margin-top: 6px; }
-  .kpi-delta { font-size: .6875rem; font-weight: 600; margin-top: 5px; }
-  .good { color: var(--green); } .warn { color: var(--amber); } .bad { color: var(--red); } .neutral { color: var(--muted); }
-
-  /* Grid layouts */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
   @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
-
-  /* Card */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
   .card-title { font-size: .8125rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
   .card-sub { font-size: .6875rem; color: var(--muted); font-weight: 400; margin-bottom: 16px; }
-
-  /* Master funnel */
   .mfunnel { display: flex; flex-direction: column; gap: 0; }
   .mfunnel-row { display: grid; grid-template-columns: 200px 1fr 80px 70px; align-items: center; gap: 14px; padding: 10px 0; }
   .mfunnel-label { font-size: .8125rem; color: var(--text); font-weight: 500; }
@@ -104,8 +67,6 @@
   .mfunnel-pct { font-family: var(--mono); font-size: .75rem; color: var(--muted); text-align: right; }
   .mfunnel-drop { grid-column: 1/-1; text-align: right; padding: 0 80px 4px 0; font-size: .625rem; color: var(--red); font-family: var(--mono); opacity: .65; }
   @media (max-width: 700px) { .mfunnel-row { grid-template-columns: 1fr 60px 50px; } .mfunnel-bar-wrap { display: none; } }
-
-  /* Source / campaign table */
   .src-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   .src-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
   .src-table th.num { text-align: right; }
@@ -116,8 +77,6 @@
   .src-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
   .src-bar { height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; margin-top: 4px; max-width: 240px; }
   .src-bar-fill { height: 100%; background: var(--teal); border-radius: 100px; }
-
-  /* Event rows */
   .event-list { display: flex; flex-direction: column; gap: 5px; }
   .event-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface2); border-radius: 7px; border: 1px solid transparent; transition: border-color .14s; }
   .event-row:hover { border-color: var(--border); }
@@ -126,8 +85,6 @@
   .event-bar-wrap { width: 80px; height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; }
   .event-bar { height: 100%; border-radius: 100px; background: var(--teal); }
   .event-count { font-family: var(--mono); font-size: .8125rem; font-weight: 500; min-width: 30px; text-align: right; }
-
-  /* Timeline */
   .timeline { display: flex; flex-direction: column; }
   .tl-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .tl-row:last-child { border-bottom: none; }
@@ -142,8 +99,6 @@
   .ev-page { background: rgba(255,255,255,.04); color: var(--muted); }
   .ev-other { background: rgba(255,255,255,.05); color: var(--muted); }
   .ev-tour { background: rgba(45,212,239,.12); color: var(--teal-bright); }
-
-  /* Feature tour funnel — narrower than master funnel because step names are long */
   .tfunnel-row { display: grid; grid-template-columns: 230px 1fr 60px 60px; align-items: center; gap: 12px; padding: 8px 0; }
   .tfunnel-label { font-size: .75rem; color: var(--text); font-weight: 500; }
   .tfunnel-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
@@ -152,8 +107,6 @@
   .tfunnel-n { font-family: var(--mono); font-size: .875rem; font-weight: 700; text-align: right; }
   .tfunnel-pct { font-family: var(--mono); font-size: .6875rem; color: var(--muted); text-align: right; }
   @media (max-width: 700px) { .tfunnel-row { grid-template-columns: 1fr 50px 50px; } .tfunnel-bar-wrap { display: none; } }
-
-  /* Feature tour per-step table */
   .tstep-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   .tstep-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
   .tstep-table th.num { text-align: right; }
@@ -161,31 +114,26 @@
   .tstep-table td.num { text-align: right; font-family: var(--mono); }
   .tstep-table tr:last-child td { border-bottom: none; }
   .tl-props { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
-
-  /* Retention cohort + heatmap */
   .cohort-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   .cohort-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .cohort-table td { padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
   .cohort-table tr:last-child td { border-bottom: none; }
   .ret-cell { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 26px; border-radius: 5px; font-family: var(--mono); font-size: .75rem; font-weight: 600; }
   .ret-active { background: rgba(34,197,94,.15); color: var(--green); }
-  .ret-cold   { background: rgba(239,68,68,.1);   color: var(--red); }
-  .ret-none   { background: rgba(255,255,255,.03); color: var(--muted); }
-
+  .ret-cold { background: rgba(239,68,68,.1); color: var(--red); }
+  .ret-none { background: rgba(255,255,255,.03); color: var(--muted); }
   .heatmap-wrap { overflow-x: auto; }
   .heatmap-table { border-collapse: collapse; font-size: .75rem; min-width: 100%; }
   .heatmap-table th { padding: 6px 8px; font-size: .5625rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--border); }
   .heatmap-table th.user-col { text-align: left; min-width: 120px; }
   .heatmap-table td { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.025); text-align: center; }
   .hm-cell { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; border-radius: 4px; font-size: .625rem; font-family: var(--mono); font-weight: 600; }
-  .hm-done  { background: rgba(34,197,94,.18); color: var(--green); }
+  .hm-done { background: rgba(34,197,94,.18); color: var(--green); }
   .hm-never { background: rgba(255,255,255,.03); color: rgba(255,255,255,.12); }
-  .hm-user  { font-size: .8125rem; color: var(--text); text-align: left; font-weight: 500; }
-  .hm-last  { font-size: .625rem; color: var(--muted); font-family: var(--mono); text-align: left; }
+  .hm-user { font-size: .8125rem; color: var(--text); text-align: left; font-weight: 500; }
+  .hm-last { font-size: .625rem; color: var(--muted); font-family: var(--mono); text-align: left; }
   .hm-total-row td { background: rgba(45,212,239,.04); border-top: 1px solid var(--border); border-bottom: none; }
   .hm-total-row .hm-user { color: var(--muted); font-size: .6875rem; }
-
-  /* User detail drill-down */
   .user-row-clickable { cursor: pointer; transition: background .12s; }
   .user-row-clickable:hover td { background: rgba(255,255,255,.025); }
   .user-detail-row { display: none; }
@@ -193,28 +141,28 @@
   .user-event-feed { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
   .user-event-feed::-webkit-scrollbar { width: 4px; }
   .user-event-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* Insight banner */
   .insight { background: rgba(30,122,140,0.07); border: 1px solid rgba(45,212,239,0.13); border-radius: 10px; padding: 14px 18px; margin-top: 10px; font-size: .75rem; color: var(--muted); line-height: 1.6; }
   .insight strong { color: var(--text); }
   .warn-insight { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); color: rgba(255,255,255,0.7); }
-
-  /* Misc */
   #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; }
   .spinner { width: 26px; height: 26px; border: 2.5px solid rgba(45,212,239,.15); border-top-color: var(--teal-bright); border-radius: 50%; animation: spin .65s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
   .empty-msg { font-size: .8125rem; color: var(--muted); padding: 12px 0; text-align: center; }
-
-  /* Sparkline */
   .spark-wrap { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 4px; }
   .spark-bar { flex: 1; background: var(--teal); border-radius: 2px 2px 0 0; min-height: 2px; opacity: .85; transition: opacity .14s; }
   .spark-bar:hover { opacity: 1; }
   .spark-bar.empty { background: var(--faint); opacity: .4; }
-
-  /* Sparkline details */
   .spark-labels { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: .5625rem; color: var(--muted); }
-  /* Broadcast admin panel */
+  /* Trend bar for daily chart */
+  .trend-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .trend-chart { display: flex; align-items: flex-end; gap: 2px; height: 80px; min-width: 100%; }
+  .trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 18px; gap: 2px; }
+  .trend-bar { width: 100%; border-radius: 2px 2px 0 0; min-height: 2px; transition: opacity .14s; }
+  .trend-bar-ios { background: var(--ios-color); opacity: .8; }
+  .trend-bar-web { background: var(--web-color); opacity: .8; }
+  .trend-label { font-family: var(--mono); font-size: .5rem; color: var(--muted); white-space: nowrap; margin-top: 4px; }
+  /* Broadcast */
   .broadcast-btn { background: rgba(168,85,247,0.10); border: 1px solid rgba(168,85,247,0.3); color: #c084fc; padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; font-weight: 600; }
   .broadcast-btn:hover, .broadcast-btn.active { background: rgba(168,85,247,0.18); border-color: #c084fc; }
   #broadcast-panel { display: none; background: var(--surface); border: 1px solid rgba(168,85,247,0.2); border-radius: 14px; padding: 22px 24px; margin-bottom: 28px; }
@@ -222,8 +170,6 @@
   .bc-label { font-size: .6875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
   .bc-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; transition: border-color .14s; }
   .bc-input:focus { border-color: rgba(168,85,247,0.5); }
-  .bc-textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; resize: vertical; min-height: 96px; transition: border-color .14s; }
-  .bc-textarea:focus { border-color: rgba(168,85,247,0.5); }
   .bc-toolbar { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-bottom: none; border-radius: 9px 9px 0 0; padding: 6px 8px; }
   .bc-toolbar button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 3px 10px; font-size: .8rem; cursor: pointer; font-family: var(--sans); transition: background .15s; }
   .bc-toolbar button:hover { background: rgba(168,85,247,0.18); border-color: #c084fc; }
@@ -246,7 +192,7 @@
   .bc-send-btn:disabled { opacity: .5; cursor: not-allowed; }
   .bc-msg { font-size: .8125rem; padding: 10px 14px; border-radius: 8px; margin-top: 10px; display: none; }
   .bc-msg.success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); color: var(--green); }
-  .bc-msg.error   { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);  color: #fca5a5; }
+  .bc-msg.error { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2); color: #fca5a5; }
   .bc-preview-phone { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
   .bc-mock-backdrop { background: rgba(0,0,0,0.38); border-radius: 10px; padding: 18px; width: 100%; max-width: 300px; display: flex; align-items: center; justify-content: center; }
   .bc-mock-card { background: #ffffff; border-radius: 20px; padding: 22px 20px 18px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
@@ -256,14 +202,12 @@
   .bc-mock-cta { background: #007AFF; color: #fff; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 8px; font-family: var(--sans); }
   .bc-mock-dismiss { background: rgba(0,122,255,0.08); color: #007AFF; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; text-align: center; font-family: var(--sans); border: 1px solid rgba(0,122,255,0.18); }
   @media (max-width: 800px) { #broadcast-panel > div { grid-template-columns: 1fr !important; } }
-
 </style>
 </head>
 <body>
 <div class="wrapper">
 <div id="loading"><div class="spinner"></div><div class="loading-text">Loading analytics\u2026</div></div>
-
-<div id="auth-gate" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+<div id="auth-gate" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:400px;width:100%;text-align:center">
     <div style="font-size:1.5rem;margin-bottom:12px">&#128274;</div>
     <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Sign in to view analytics</div>
@@ -274,7 +218,6 @@
     <button onclick="doSignIn()" id="auth-btn" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-family:var(--sans);font-size:.9375rem;font-weight:700;cursor:pointer">Sign In</button>
   </div>
 </div>
-
 <div id="main" style="display:none"></div>
 </div>
 
@@ -284,12 +227,16 @@ const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const sb = supabase.createClient(SURL, SKEY, { auth: { persistSession: true } })
 const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 
-let allEvents = [], allProfiles = [], allWaitlist = []
+// Data stores
+let summaryRows = []      // analytics_daily_summary — all rows, tiny
+let eventCounts = []      // analytics_event_counts — all rows, small
+let allProfiles = []      // profiles — small (one row per user)
+let allEvents = []        // analytics_events — fetched only for cohort/heatmap/tour (recent window)
+let feedEvents = []       // recent activity feed (last 200 rows)
 let currentPlatform = 'all'
 let currentRange = '30d'
 let feedLimit = 40
 
-// Feature heatmap definitions — collapse v2 screen_viewed and pre-v2 legacy names
 const FEATURES = [
   { key: 'onboarding',  label: 'Onboarded',     match: (e, p) => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' || p?.onboarding_completed === true },
   { key: 'vehicle',     label: 'Added vehicle', match: e => e.event_name === 'vehicle_added' },
@@ -307,7 +254,7 @@ const FEATURES = [
   { key: 'tour_done',   label: 'Done tour',     match: e => e.event_name === 'feature_tour_completed' },
 ]
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return '\u2014'
   const dt = new Date(d)
@@ -323,23 +270,11 @@ function daysSince(d) {
 }
 function getPlatform(e) {
   if (e.platform && e.platform !== 'legacy') return e.platform
-  // Legacy inference for old rows
   const p = e.properties || {}
   if (p.platform === 'ios') return 'ios'
   if (p.platform === 'web' || p.source === 'web') return 'web'
   if (['onboarding_completed','onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
-  if (e.event_name === 'screen_viewed' && p.source === 'web') return 'web'
   return 'unknown'
-}
-function filterEventsByPlatform(events) {
-  if (currentPlatform === 'all') return events
-  return events.filter(e => getPlatform(e) === currentPlatform)
-}
-function filterEventsByRange(events) {
-  if (currentRange === 'all') return events
-  const ms = currentRange === '7d' ? 7*864e5 : currentRange === '30d' ? 30*864e5 : 90*864e5
-  const start = Date.now() - ms
-  return events.filter(e => new Date(e.created_at).getTime() > start)
 }
 function evBadgeClass(name) {
   if (name.includes('signup') || name.includes('onboarding')) return 'ev-signup'
@@ -358,7 +293,6 @@ function platBadge(platform) {
 }
 function setPlatform(p) { currentPlatform = p; render(); window.scrollTo(0,0) }
 function setRange(r)    { currentRange = r;    render() }
-
 function toggleUserDetail(uid) {
   const row = document.getElementById('detail-' + uid)
   if (!row) return
@@ -367,126 +301,83 @@ function toggleUserDetail(uid) {
   if (!isOpen) row.classList.add('open')
 }
 
-// Normalise UTM source (coalesce referrers into sources)
-function normalizeSource(e) {
-  const p = e.properties || {}
-  if (p.utm_source) return p.utm_source.toLowerCase()
-  if (p.referrer) {
-    try {
-      const host = new URL(p.referrer).hostname.replace(/^www\./, '')
-      if (host.includes('google')) return 'google (organic)'
-      if (host.includes('reddit')) return 'reddit (organic)'
-      if (host.includes('bing')) return 'bing (organic)'
-      if (host.includes('duckduckgo')) return 'duckduckgo (organic)'
-      if (host.includes('facebook') || host.includes('fb.com')) return 'facebook (organic)'
-      if (host.includes('twitter') || host.includes('x.com') || host.includes('t.co')) return 'twitter (organic)'
-      if (host.includes('linkedin')) return 'linkedin (organic)'
-      if (host.includes('pistonheads')) return 'pistonheads (organic)'
-      return host
-    } catch { return 'unknown' }
-  }
-  return '(direct)'
+// ── Range helpers for summary data ──────────────────────────────────────────
+function rangeStartDate() {
+  if (currentRange === 'all') return null
+  const d = new Date()
+  const days = currentRange === '7d' ? 7 : currentRange === '30d' ? 30 : 90
+  d.setDate(d.getDate() - days)
+  return d.toISOString().split('T')[0]
+}
+function summaryInRange() {
+  const start = rangeStartDate()
+  if (!start) return summaryRows
+  return summaryRows.filter(r => r.day >= start)
+}
+function sumField(rows, field) {
+  return rows.reduce((acc, r) => acc + (r[field] || 0), 0)
 }
 
-// ─── Main render ────────────────────────────────────────────────────────────
+// ── Main render ─────────────────────────────────────────────────────────────
 function render() {
   const rangeLabel = currentRange === 'all' ? 'all time' : currentRange
   const platformLabel = currentPlatform === 'all' ? 'all platforms' : currentPlatform
+  const rangedSummary = summaryInRange()
 
-  const rangedEvents = filterEventsByRange(allEvents)
-  const events = filterEventsByPlatform(rangedEvents)
-  const webEvents = rangedEvents.filter(e => getPlatform(e) === 'web')
-  const iosEvents = rangedEvents.filter(e => getPlatform(e) === 'ios')
+  // KPI totals from summary rows
+  const totalEvents     = currentPlatform === 'ios' ? sumField(rangedSummary,'ios_events')
+                        : currentPlatform === 'web' ? sumField(rangedSummary,'web_events')
+                        : sumField(rangedSummary,'total_events')
+  const iosEvents       = sumField(rangedSummary,'ios_events')
+  const webEvents       = sumField(rangedSummary,'web_events')
+  const appOpens        = sumField(rangedSummary,'app_opens')
+  const appOpenUsers    = sumField(rangedSummary,'unique_users')  // approx; distinct across days
+  const dau             = rangedSummary.length > 0 ? (rangedSummary[0]?.dau || 0) : 0  // today
+  const newAccounts     = sumField(rangedSummary,'new_accounts')
+  const fuelEntries     = sumField(rangedSummary,'fuel_entries')
+  const serviceEntries  = sumField(rangedSummary,'service_entries')
+  const docUploads      = sumField(rangedSummary,'doc_uploads')
+  const tripsStarted    = sumField(rangedSummary,'trips_started')
+  const paywallViews    = sumField(rangedSummary,'paywall_views')
+  const subsStarted     = sumField(rangedSummary,'subscriptions_started')
+  const pageViews       = sumField(rangedSummary,'page_views')
+  const uniqueVisitors  = sumField(rangedSummary,'unique_visitors')
+  const regAttempts     = sumField(rangedSummary,'reg_lookup_attempts')
+  const regSuccesses    = sumField(rangedSummary,'reg_lookup_successes')
 
-  const totalUsers = allProfiles.length
+  // Profile totals (always all-time)
+  const totalUsers          = allProfiles.length
   const completedOnboarding = allProfiles.filter(p => p.onboarding_completed).length
-  const tookFirstAction = allProfiles.filter(p => p.first_action_completed).length
-  const paidUsers = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
-  const isSmallBase = totalUsers < 20
+  const tookFirstAction     = allProfiles.filter(p => p.first_action_completed).length
+  const paidUsers           = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  const isSmallBase         = totalUsers < 20
 
-  // ── App session stats (iOS) ──
-  const appOpenEvents = iosEvents.filter(e => e.event_name === 'app_opened')
-  const appOpenUsers = new Set(appOpenEvents.filter(e => e.user_id).map(e => e.user_id)).size
-  const todayKey = new Date().toISOString().split('T')[0]
-  const dau = new Set(appOpenEvents.filter(e => e.created_at?.startsWith(todayKey) && e.user_id).map(e => e.user_id)).size
-
-  // ── Waitlist funnel (new attribution) ──
-  const waitlistInRange = (() => {
-    if (currentRange === 'all') return allWaitlist
-    const ms = currentRange === '7d' ? 7*864e5 : currentRange === '30d' ? 30*864e5 : 90*864e5
-    const start = Date.now() - ms
-    return allWaitlist.filter(w => new Date(w.created_at).getTime() > start)
-  })()
-
-  // ── Web visitor funnel ──
-  const uniqueAnonymous = new Set(webEvents.filter(e => e.anonymous_id).map(e => e.anonymous_id)).size
-  const uniqueSessions = new Set(webEvents.filter(e => e.session_id).map(e => e.session_id)).size
-  const pageViews = webEvents.filter(e => e.event_name === 'page_viewed').length
-  const regLookupAttempts = webEvents.filter(e => e.event_name === 'reg_lookup_attempted').length
-  const regLookupSuccesses = webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').length
-  const regCtaClicks = webEvents.filter(e => e.event_name === 'reg_lookup_cta_clicked').length
-  const waitlistAttempts = webEvents.filter(e => e.event_name === 'waitlist_signup_attempted').length
-  const waitlistSuccess = webEvents.filter(e => e.event_name === 'waitlist_signup_succeeded').length
-
-  // ── Event counts (filtered) ──
-  const counts = {}
-  events.forEach(e => { counts[e.event_name] = (counts[e.event_name]||0) + 1 })
-  const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1])
-  const maxCount = sortedCounts[0]?.[1] || 1
-
-  // ── Reg lookup breakdown: makes / failures ──
-  const regMakes = {}
-  const regFailReasons = {}
-  webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').forEach(e => {
-    const mk = (e.properties?.make || 'unknown').toLowerCase()
-    regMakes[mk] = (regMakes[mk]||0) + 1
-  })
-  webEvents.filter(e => e.event_name === 'reg_lookup_failed').forEach(e => {
-    const r = e.properties?.reason || 'unknown'
-    regFailReasons[r] = (regFailReasons[r]||0) + 1
-  })
-
-  // ── Traffic sources ──
-  const sourceCounts = {}
-  webEvents.filter(e => e.event_name === 'page_viewed').forEach(e => {
-    const src = normalizeSource(e)
-    if (!sourceCounts[src]) sourceCounts[src] = { pageviews: 0, anonymous: new Set(), waitlist_signups: 0 }
-    sourceCounts[src].pageviews++
-    if (e.anonymous_id) sourceCounts[src].anonymous.add(e.anonymous_id)
-  })
-  // Attribute waitlist signups to source
-  webEvents.filter(e => e.event_name === 'waitlist_signup_succeeded').forEach(e => {
-    const src = normalizeSource(e)
-    if (!sourceCounts[src]) sourceCounts[src] = { pageviews: 0, anonymous: new Set(), waitlist_signups: 0 }
-    sourceCounts[src].waitlist_signups++
-  })
-  const sortedSources = Object.entries(sourceCounts)
-    .map(([src, d]) => ({ src, pageviews: d.pageviews, visitors: d.anonymous.size, waitlist_signups: d.waitlist_signups, conv_rate: d.anonymous.size ? (d.waitlist_signups / d.anonymous.size * 100) : 0 }))
-    .sort((a,b) => b.pageviews - a.pageviews)
-  const maxSourcePV = sortedSources[0]?.pageviews || 1
-
-  // ── Section visibility ──
-  const sectionCounts = {}
-  webEvents.filter(e => e.event_name === 'section_viewed').forEach(e => {
-    const s = e.properties?.section || 'unknown'
-    sectionCounts[s] = (sectionCounts[s]||0) + 1
-  })
-  const sortedSections = Object.entries(sectionCounts).sort((a,b) => b[1]-a[1])
-  const maxSectionCount = sortedSections[0]?.[1] || 1
-
-  // ── Sparkline (14 day) ──
+  // Sparkline — last 14 days from summary
   const sparkBuckets = []
   for (let i = 13; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i)
     const key = d.toISOString().split('T')[0]
-    sparkBuckets.push({ key, count: allEvents.filter(e => e.created_at?.startsWith(key)).length, label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
+    const row = summaryRows.find(r => r.day === key)
+    sparkBuckets.push({ key, ios: row?.ios_events||0, web: row?.web_events||0, label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
   }
-  const sparkMax = Math.max(...sparkBuckets.map(b => b.count), 1)
+  const sparkMax = Math.max(...sparkBuckets.map(b => b.ios + b.web), 1)
 
-  // ── Retention cohort ──
+  // Event breakdown from event_counts table
+  const ecFiltered = eventCounts.filter(r => {
+    const start = rangeStartDate()
+    if (start && r.day < start) return false
+    if (currentPlatform !== 'all' && r.platform !== currentPlatform) return false
+    return true
+  })
+  const ecAgg = {}
+  ecFiltered.forEach(r => { ecAgg[r.event_name] = (ecAgg[r.event_name]||0) + r.count })
+  const sortedCounts = Object.entries(ecAgg).sort((a,b) => b[1]-a[1])
+  const maxCount = sortedCounts[0]?.[1] || 1
+
+  // Retention cohort (uses allEvents — fetched once at load)
   const retentionRows = allProfiles.map(p => {
     const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
-    const signupDate = p.created_at  // canonical account creation date
+    const signupDate = p.created_at
     const lastSeen = ue[ue.length-1]?.created_at || null
     const daysOld = daysSince(signupDate)
     const daysAgo = daysSince(lastSeen)
@@ -498,7 +389,7 @@ function render() {
     return { profile: p, firstSeen: signupDate, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
   }).sort((a,b) => new Date(b.firstSeen) - new Date(a.firstSeen))
 
-  // ── Heatmap ──
+  // Feature heatmap (uses allEvents)
   const heatmapRows = allProfiles.map(p => {
     const ue = allEvents.filter(e => e.user_id === p.id)
     const lastSeen = ue.sort((a,b) => new Date(b.created_at)-new Date(a.created_at))[0]?.created_at
@@ -510,25 +401,22 @@ function render() {
   const featureAdoption = {}
   FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
 
-  // ── Feature tour analytics ──
-  // All tour events across all time (tour lifecycle is cross-range by nature).
-  // The tour has 11 sub-steps under 7 stops — this order matches FeatureTour.steps in iOS.
+  // Feature tour (uses allEvents, range-filtered)
+  const rangeStart = rangeStartDate()
+  const rangedEvents = rangeStart ? allEvents.filter(e => e.created_at >= rangeStart) : allEvents
   const TOUR_STEPS = [
-    { id: 'garage',                     stop: 1, label: 'Stop 1 · Garage' },
-    { id: 'dashboard_top',              stop: 2, label: 'Stop 2a · Dashboard top' },
-    { id: 'dashboard_costs',            stop: 2, label: 'Stop 2b · Dashboard costs' },
-    { id: 'dashboard_quick_actions',    stop: 2, label: 'Stop 2c · Quick actions' },
-    { id: 'fuel',                       stop: 3, label: 'Stop 3 · Fuel log' },
-    { id: 'documents',                  stop: 4, label: 'Stop 4 · Documents' },
-    { id: 'trips_auto_detect',          stop: 5, label: 'Stop 5a · Auto-detect' },
-    { id: 'trips_list',                 stop: 5, label: 'Stop 5b · Trips list' },
-    { id: 'service_add',                stop: 6, label: 'Stop 6a · Service add' },
-    { id: 'service_history',            stop: 6, label: 'Stop 6b · Service history' },
-    { id: 'costs',                      stop: 7, label: 'Stop 7 · Costs detail' },
+    { id: 'garage',                     stop: 1, label: 'Stop 1 \u00B7 Garage' },
+    { id: 'dashboard_top',              stop: 2, label: 'Stop 2a \u00B7 Dashboard top' },
+    { id: 'dashboard_costs',            stop: 2, label: 'Stop 2b \u00B7 Dashboard costs' },
+    { id: 'dashboard_quick_actions',    stop: 2, label: 'Stop 2c \u00B7 Quick actions' },
+    { id: 'fuel',                       stop: 3, label: 'Stop 3 \u00B7 Fuel log' },
+    { id: 'documents',                  stop: 4, label: 'Stop 4 \u00B7 Documents' },
+    { id: 'trips_auto_detect',          stop: 5, label: 'Stop 5a \u00B7 Auto-detect' },
+    { id: 'trips_list',                 stop: 5, label: 'Stop 5b \u00B7 Trips list' },
+    { id: 'service_add',                stop: 6, label: 'Stop 6a \u00B7 Service add' },
+    { id: 'service_history',            stop: 6, label: 'Stop 6b \u00B7 Service history' },
+    { id: 'costs',                      stop: 7, label: 'Stop 7 \u00B7 Costs detail' },
   ]
-
-  // Use rangedEvents so the section respects the range filter — lets Marius
-  // compare tour v1 vs v2 performance over time by switching ranges.
   const tourEvents = rangedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
   const tourStarted = tourEvents.filter(e => e.event_name === 'feature_tour_started')
   const tourCompleted = tourEvents.filter(e => e.event_name === 'feature_tour_completed')
@@ -536,20 +424,14 @@ function render() {
   const tourSkippedImmediate = tourSkipped.filter(e => e.properties?.skip_type === 'immediate')
   const tourSkippedMidway = tourSkipped.filter(e => e.properties?.skip_type === 'midway')
   const tourReplayed = tourEvents.filter(e => e.event_name === 'feature_tour_replayed')
-
   const startedCount = new Set(tourStarted.map(e => e.user_id).filter(Boolean)).size
   const completedCount = new Set(tourCompleted.map(e => e.user_id).filter(Boolean)).size
-  // A user who both completed AND skipped (e.g. re-ran the tour) counts as completed, not skipped
   const completedUserIds = new Set(tourCompleted.map(e => e.user_id).filter(Boolean))
   const skippedCount = new Set(tourSkipped.map(e => e.user_id).filter(id => id && !completedUserIds.has(id))).size
   const completionRate = startedCount > 0 ? Math.round(completedCount / startedCount * 100) : 0
   const skipRate = startedCount > 0 ? Math.round(skippedCount / startedCount * 100) : 0
-
-  // Median total duration of completed tours (ms)
   const durations = tourCompleted.map(e => e.properties?.total_duration_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
   const medianDurationMs = durations.length ? durations[Math.floor(durations.length/2)] : 0
-
-  // Per-step stats: viewed count, completed count, median time on step (ms)
   const stepStats = TOUR_STEPS.map(s => {
     const viewed = tourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id).length
     const completedEvs = tourEvents.filter(e => e.event_name === 'feature_tour_step_completed' && e.properties?.step_name === s.id)
@@ -560,32 +442,32 @@ function render() {
     return { ...s, viewed, completed, medianTimeMs, stepCompletionPct }
   })
   const tourMaxStepViews = Math.max(startedCount, ...stepStats.map(s => s.viewed), 1)
-
   function fmtMs(ms) {
-    if (!ms) return '—'
+    if (!ms) return '\u2014'
     if (ms < 1000) return ms + 'ms'
     if (ms < 60000) return (ms/1000).toFixed(1) + 's'
     return Math.floor(ms/60000) + 'm ' + Math.round((ms%60000)/1000) + 's'
   }
   function stepTimeColor(ms) {
     if (!ms) return 'var(--muted)'
-    if (ms < 800) return 'var(--red)'      // skimmed — maybe copy unclear
-    if (ms > 8000) return 'var(--amber)'   // stuck — maybe copy too long
+    if (ms < 800) return 'var(--red)'
+    if (ms > 8000) return 'var(--amber)'
     return 'var(--text)'
   }
 
-  // ─── Render DOM ───────────────────────────────────────────────────────────
+  // ─── Render DOM ────────────────────────────────────────────────────────────
   document.getElementById('loading').style.display = 'none'
   const mainEl = document.getElementById('main')
   mainEl.style.display = 'block'
-  const lastEvent = allEvents[0]?.created_at ? fmtDate(allEvents[0].created_at) : 'None yet'
+  const lastRow = summaryRows[0]
+  const lastEventDate = lastRow ? fmtDateShort(lastRow.day) : 'None yet'
 
   mainEl.innerHTML = `
   <!-- HEADER -->
   <div class="header">
-    <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics v2</div></div>
+    <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics v3</div></div>
     <div class="header-right">
-      <div class="header-meta">Last event: ${lastEvent}</div>
+      <div class="header-meta">Last data: ${lastEventDate} \u00B7 ${totalUsers} accounts</div>
       <div class="tabs">
         <div class="tab ${currentRange==='7d'?'active-all':''}"  onclick="setRange('7d')">7d</div>
         <div class="tab ${currentRange==='30d'?'active-all':''}" onclick="setRange('30d')">30d</div>
@@ -634,9 +516,9 @@ function render() {
               <button type="button" onclick="bcFormat('insertOrderedList')" title="Numbered list">1. List</button>
               <span class="bc-toolbar-sep"></span>
               <button type="button" onclick="bcFormatBlock('h3')" title="Heading">H</button>
-              <button type="button" onclick="bcFormatBlock('p')" title="Normal">¶</button>
+              <button type="button" onclick="bcFormatBlock('p')" title="Normal">&para;</button>
             </div>
-            <div class="bc-richbody" id="bc-body" contenteditable="true" data-placeholder="Write your message…" oninput="updateBroadcastPreview()"></div>
+            <div class="bc-richbody" id="bc-body" contenteditable="true" data-placeholder="Write your message\u2026" oninput="updateBroadcastPreview()"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div>
@@ -645,13 +527,13 @@ function render() {
             </div>
             <div>
               <div class="bc-label">Button URL (optional)</div>
-              <input class="bc-input" id="bc-cta-url" placeholder="https://&hellip;" oninput="updateBroadcastPreview()" />
+              <input class="bc-input" id="bc-cta-url" placeholder="https://\u2026" oninput="updateBroadcastPreview()" />
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.75rem;color:var(--muted);cursor:pointer;user-select:none">
               <input type="checkbox" id="bc-test-mode" style="accent-color:#7c3aed;width:14px;height:14px;" />
-              Test mode — send to me only
+              Test mode \u2014 send to me only
             </label>
           </div>
           <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -682,65 +564,104 @@ function render() {
   <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Unique visitors</div>
-      <div class="kpi-value">${uniqueAnonymous}</div>
-      <div class="kpi-sub">${uniqueSessions} sessions \u00B7 ${pageViews} pageviews</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Reg lookups</div>
-      <div class="kpi-value">${regLookupAttempts}</div>
-      <div class="kpi-sub">${regLookupSuccesses} succeeded \u00B7 ${regCtaClicks} clicked CTA</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Waitlist signups</div>
-      <div class="kpi-value">${waitlistSuccess}</div>
-      <div class="kpi-sub">${waitlistAttempts} tried \u00B7 ${waitlistAttempts-waitlistSuccess} failed</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
       <div class="kpi-value">${totalUsers}</div>
       <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Events total</div>
-      <div class="kpi-value">${rangedEvents.length}</div>
-      <div class="kpi-sub">Web ${webEvents.length} &middot; iOS ${iosEvents.length}</div>
+      <div class="kpi-label">New accounts</div>
+      <div class="kpi-value">${newAccounts}</div>
+      <div class="kpi-sub">in ${rangeLabel}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">App opens</div>
-      <div class="kpi-value">${appOpenEvents.length}</div>
-      <div class="kpi-sub">${appOpenUsers} users &middot; ${dau} DAU today</div>
+      <div class="kpi-value">${appOpens}</div>
+      <div class="kpi-sub">${dau} DAU today</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Events total</div>
+      <div class="kpi-value">${totalEvents}</div>
+      <div class="kpi-sub">iOS ${iosEvents} \u00B7 Web ${webEvents}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Web visitors</div>
+      <div class="kpi-value">${uniqueVisitors}</div>
+      <div class="kpi-sub">${pageViews} pageviews</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Reg lookups</div>
+      <div class="kpi-value">${regAttempts}</div>
+      <div class="kpi-sub">${regSuccesses} succeeded</div>
     </div>
   </div>
 
-  <!-- DAILY SPARKLINE -->
-  <div class="section-label">Daily activity \u2014 last 14 days (all events)</div>
+  <!-- iOS ACTIVITY KPIs -->
+  <div class="section-label">iOS activity \u00B7 ${rangeLabel}</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Fuel entries</div>
+      <div class="kpi-value">${fuelEntries}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Service entries</div>
+      <div class="kpi-value">${serviceEntries}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Doc uploads</div>
+      <div class="kpi-value">${docUploads}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Trips started</div>
+      <div class="kpi-value">${tripsStarted}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Paywall views</div>
+      <div class="kpi-value">${paywallViews}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Subscriptions</div>
+      <div class="kpi-value">${subsStarted}</div>
+    </div>
+  </div>
+
+  <!-- DAILY CHART — last 14 days stacked iOS/Web -->
+  <div class="section-label">Daily activity \u2014 last 14 days</div>
   <div class="card">
-    <div class="spark-wrap">
-      ${sparkBuckets.map(b => `<div class="spark-bar ${b.count===0?'empty':''}" title="${b.label}: ${b.count} events" style="height:${Math.max(b.count/sparkMax*44,b.count>0?4:2)}px"></div>`).join('')}
+    <div style="display:flex;gap:14px;margin-bottom:12px;font-family:var(--mono);font-size:.6875rem">
+      <span style="color:var(--ios-color)">\u25A0 iOS</span>
+      <span style="color:var(--web-color)">\u25A0 Web</span>
     </div>
-    <div class="spark-labels">
-      <span>${sparkBuckets[0].label}</span>
-      <span>today</span>
+    <div class="trend-wrap">
+      <div class="trend-chart">
+        ${sparkBuckets.map(b => {
+          const total = b.ios + b.web
+          const iosPx = total > 0 ? Math.max(Math.round(b.ios / sparkMax * 76), b.ios > 0 ? 2 : 0) : 0
+          const webPx = total > 0 ? Math.max(Math.round(b.web / sparkMax * 76), b.web > 0 ? 2 : 0) : 0
+          return `<div class="trend-col" title="${b.label}: ${b.ios} iOS, ${b.web} web">
+            ${webPx > 0 ? `<div class="trend-bar trend-bar-web" style="height:${webPx}px"></div>` : ''}
+            ${iosPx > 0 ? `<div class="trend-bar trend-bar-ios" style="height:${iosPx}px"></div>` : ''}
+            ${total === 0 ? `<div style="height:2px;width:100%;background:var(--faint);border-radius:2px"></div>` : ''}
+            <div class="trend-label">${b.label.split(' ')[0]}</div>
+          </div>`
+        }).join('')}
+      </div>
     </div>
   </div>
 
-  <!-- MASTER FUNNEL: visitor \u2192 activation -->
+  <!-- MASTER FUNNEL -->
   <div class="section-label">Master funnel \u2014 ${rangeLabel}</div>
   <div class="card">
-    <div class="card-sub">End-to-end: anonymous visitor \u2192 reg lookup \u2192 CTA \u2192 waitlist \u2192 account \u2192 activated. Drop-off between steps is where your conversion bleeds.</div>
+    <div class="card-sub">Web visitor \u2192 reg lookup \u2192 account \u2192 activated \u2192 paid. Drop-off shows where conversion bleeds.</div>
     <div class="mfunnel">
     ${(() => {
       const steps = [
-        ['Unique web visitors',   uniqueAnonymous,   'anonymous_id tracked'],
-        ['Reg lookup attempted',  regLookupAttempts, 'typed a plate'],
-        ['Reg lookup succeeded',  regLookupSuccesses,'DVLA returned data'],
-        ['Clicked CTA after lookup', regCtaClicks,   'high-intent signal'],
-        ['Waitlist signup',       waitlistSuccess,   'gave us their email'],
-        ['Created account',       totalUsers,        'signed up in app'],
-        ['Completed onboarding',  completedOnboarding, 'added vehicle'],
-        ['Took first action',     tookFirstAction,   'logged real data'],
-        ['Converted to paid',     paidUsers,         'AutoLog+ subscriber']
+        ['Unique web visitors',    uniqueVisitors,        'anonymous_id tracked'],
+        ['Reg lookup attempted',   regAttempts,           'typed a plate'],
+        ['Reg lookup succeeded',   regSuccesses,          'DVLA returned data'],
+        ['Created account',        totalUsers,            'signed up in app'],
+        ['Completed onboarding',   completedOnboarding,   'added vehicle'],
+        ['Took first action',      tookFirstAction,       'logged real data'],
+        ['Converted to paid',      paidUsers,             'AutoLog+ subscriber']
       ]
       const topN = Math.max(...steps.map(s => s[1]), 1)
       return steps.map(([label, n, sub], i) => {
@@ -758,105 +679,24 @@ function render() {
       }).join('')
     })()}
     </div>
-    ${isSmallBase ? `<div class="insight">
-      <strong>Early stage</strong> \u2014 ${totalUsers} accounts total. Drop-off percentages are informational until you cross ~20 users. Data is being collected correctly.
-    </div>` : ''}
+    ${isSmallBase ? `<div class="insight"><strong>Early stage</strong> \u2014 ${totalUsers} accounts. Percentages informational until ~20 users.</div>` : ''}
   </div>
 
-  <!-- TRAFFIC SOURCES -->
-  <div class="section-label">Traffic sources \u2014 where visitors come from</div>
+  <!-- EVENT BREAKDOWN -->
+  <div class="section-label">Event breakdown \u2014 ${rangeLabel} \u00B7 ${platformLabel}</div>
   <div class="card">
-    <div class="card-sub">Each row shows one source (UTM or referrer). "(direct)" means no referrer and no UTM. Organic sources inferred from referrer domain. Conversion = waitlist signups / unique visitors from that source.</div>
-    ${sortedSources.length === 0 ? `<div class="empty-msg">No traffic data yet \u2014 start sharing links with UTM parameters to see source attribution.</div>` : `
-    <table class="src-table">
-      <thead><tr>
-        <th>Source</th>
-        <th class="num">Visitors</th>
-        <th class="num">Pageviews</th>
-        <th class="num">Waitlist</th>
-        <th class="num">Conv %</th>
-      </tr></thead>
-      <tbody>
-        ${sortedSources.map(s => `<tr>
-          <td>
-            <div class="src-name">${s.src}</div>
-            <div class="src-bar"><div class="src-bar-fill" style="width:${s.pageviews/maxSourcePV*100}%"></div></div>
-          </td>
-          <td class="num">${s.visitors}</td>
-          <td class="num">${s.pageviews}</td>
-          <td class="num" style="color:${s.waitlist_signups>0?'var(--green)':'var(--muted)'}">${s.waitlist_signups}</td>
-          <td class="num" style="color:${s.conv_rate>=3?'var(--green)':s.conv_rate>0?'var(--amber)':'var(--muted)'}">${s.conv_rate.toFixed(1)}%</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`}
-  </div>
-
-  <!-- REG LOOKUP INTELLIGENCE -->
-  <div class="two-col" style="margin-top:18px">
-    <div class="card">
-      <div class="card-title">Reg lookup \u2014 vehicle makes</div>
-      <div class="card-sub">What cars do your visitors drive? Useful for ASO keywords, forum targeting, and Reddit subreddit selection.</div>
-      ${Object.keys(regMakes).length === 0 ? `<div class="empty-msg">No successful reg lookups yet.</div>` : `
-      <div class="event-list">
-        ${Object.entries(regMakes).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([mk,n]) => `
-          <div class="event-row">
-            <div class="event-name">${mk}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regMakes))*100}%"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-    <div class="card">
-      <div class="card-title">Reg lookup \u2014 failure reasons</div>
-      <div class="card-sub">Where the hero widget fails. High "not_found" \u2192 visitors trying non-UK plates. High "api_error" \u2192 worker reliability issue.</div>
-      ${Object.keys(regFailReasons).length === 0 ? `<div class="empty-msg">No failures recorded.</div>` : `
-      <div class="event-list">
-        ${Object.entries(regFailReasons).sort((a,b) => b[1]-a[1]).map(([r,n]) => `
-          <div class="event-row">
-            <div class="event-name">${r}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regFailReasons))*100}%;background:var(--red)"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-  </div>
-
-  <!-- SECTION VISIBILITY + EVENT BREAKDOWN -->
-  <div class="two-col" style="margin-top:18px">
-    <div class="card">
-      <div class="card-title">Section visibility \u2014 how far down the page people get</div>
-      <div class="card-sub">Each section fires once when it enters the viewport. Shows engagement depth on the homepage.</div>
-      ${sortedSections.length === 0 ? `<div class="empty-msg">No section views yet.</div>` : `
-      <div class="event-list">
-        ${sortedSections.map(([s,n]) => `
-          <div class="event-row">
-            <div class="event-name">${s}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/maxSectionCount*100}%"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-    <div class="card">
-      <div class="card-title">All events \u2014 ${rangeLabel} \u00B7 ${platformLabel}</div>
-      <div class="card-sub">Every event name in the selected range. Click refresh to reload data.</div>
-      ${sortedCounts.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : `
-      <div class="event-list">
-        ${sortedCounts.map(([name, count]) => `
-          <div class="event-row">
-            <div class="event-name">${name}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${count/maxCount*100}%"></div></div>
-              <div class="event-count">${count}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
+    <div class="card-sub">All event names aggregated from summary table. No raw row scan.</div>
+    ${sortedCounts.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : `
+    <div class="event-list">
+      ${sortedCounts.map(([name, count]) => `
+        <div class="event-row">
+          <div class="event-name">${name}</div>
+          <div class="event-right">
+            <div class="event-bar-wrap"><div class="event-bar" style="width:${count/maxCount*100}%"></div></div>
+            <div class="event-count">${count}</div>
+          </div>
+        </div>`).join('')}
+    </div>`}
   </div>
 
   <!-- RETENTION COHORT -->
@@ -864,11 +704,7 @@ function render() {
   <div class="card">
     <table class="cohort-table">
       <thead><tr>
-        <th>User</th>
-        <th>Joined</th>
-        <th>Last seen</th>
-        <th>Active days</th>
-        <th>Events</th>
+        <th>User</th><th>Joined</th><th>Last seen</th><th>Active days</th><th>Events</th>
         <th title="Active within 24h of signup">D1</th>
         <th title="Active within 7d of signup">D7</th>
         <th title="Active within 30d of signup">D30</th>
@@ -876,9 +712,9 @@ function render() {
       </tr></thead>
       <tbody>
       ${retentionRows.map(r => {
-        const { profile:p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents } = r
+        const { profile:p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: te } = r
         let statusLabel, statusStyle
-        if (!lastSeen || totalEvents === 0) { statusLabel = 'No events'; statusStyle = 'color:var(--muted)' }
+        if (!lastSeen || te === 0) { statusLabel = 'No events'; statusStyle = 'color:var(--muted)' }
         else if (daysAgo <= 3) { statusLabel = '\u25CF Active'; statusStyle = 'color:var(--green);font-weight:700' }
         else if (daysAgo <= 14) { statusLabel = '\u25CF Recent'; statusStyle = 'color:var(--amber);font-weight:700' }
         else { statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-weight:700' }
@@ -888,7 +724,7 @@ function render() {
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${fmtDateShort(firstSeen)}</td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${lastSeen?fmtDateShort(lastSeen):'\u2014'}</td>
           <td style="text-align:center;font-family:var(--mono);font-weight:700">${activeDays}</td>
-          <td style="text-align:center;font-family:var(--mono);color:${totalEvents>0?'var(--text)':'var(--muted)'}">${totalEvents}</td>
+          <td style="text-align:center;font-family:var(--mono);color:${te>0?'var(--text)':'var(--muted)'}">${te}</td>
           <td style="text-align:center">${retCell(d1, daysOld >= 1)}</td>
           <td style="text-align:center">${retCell(d7, daysOld >= 7)}</td>
           <td style="text-align:center">${retCell(d30, daysOld >= 30)}</td>
@@ -913,10 +749,7 @@ function render() {
         ${heatmapRows.map(r => {
           const scoreColor = r.score >= 7 ? 'var(--green)' : r.score >= 4 ? 'var(--amber)' : r.score >= 1 ? 'var(--text)' : 'var(--muted)'
           return `<tr>
-            <td>
-              <div class="hm-user">${r.profile.display_name||'(no name)'}</div>
-              <div class="hm-last">last: ${r.lastSeen?fmtDateShort(r.lastSeen):'\u2014'}</div>
-            </td>
+            <td><div class="hm-user">${r.profile.display_name||'(no name)'}</div><div class="hm-last">last: ${r.lastSeen?fmtDateShort(r.lastSeen):'\u2014'}</div></td>
             <td style="text-align:center;font-family:var(--mono);font-weight:700;color:${scoreColor}">${r.score}/${FEATURES.length}</td>
             ${FEATURES.map(f => `<td><span class="hm-cell ${r.featureMap[f.key]?'hm-done':'hm-never'}">${r.featureMap[f.key]?'\u2713':'\u00B7'}</span></td>`).join('')}
           </tr>`
@@ -935,8 +768,8 @@ function render() {
     </div>
   </div>
 
-  <!-- FEATURE TOUR ANALYTICS -->
-  <div class="section-label">Feature tour — first-open guided walkthrough</div>
+  <!-- FEATURE TOUR -->
+  <div class="section-label">Feature tour \u2014 first-open guided walkthrough</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Tour started</div>
@@ -946,25 +779,23 @@ function render() {
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Completion rate</div>
       <div class="kpi-value" style="color:${completionRate >= 70 ? 'var(--green)' : completionRate >= 40 ? 'var(--amber)' : 'var(--red)'}">${completionRate}%</div>
-      <div class="kpi-sub">${completedCount} of ${startedCount} finished the tour</div>
+      <div class="kpi-sub">${completedCount} of ${startedCount} finished</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Skip rate</div>
       <div class="kpi-value" style="color:${skipRate <= 20 ? 'var(--green)' : skipRate <= 40 ? 'var(--amber)' : 'var(--red)'}">${skipRate}%</div>
-      <div class="kpi-sub">${tourSkippedImmediate.length} bailed immediately · ${tourSkippedMidway.length} mid-tour</div>
+      <div class="kpi-sub">${tourSkippedImmediate.length} bailed immediately \u00B7 ${tourSkippedMidway.length} mid-tour</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Median duration</div>
       <div class="kpi-value">${fmtMs(medianDurationMs)}</div>
-      <div class="kpi-sub">end-to-end, completed tours only</div>
+      <div class="kpi-sub">completed tours only</div>
     </div>
   </div>
-
-  <!-- TOUR FUNNEL -->
   <div class="card" style="margin-top:18px">
     <div class="card-title">Step-by-step funnel</div>
-    <div class="card-sub">Views per sub-step. Drop-offs reveal where the tour loses attention — a sharp cliff means that step's copy or target is confusing.</div>
-    ${startedCount === 0 ? `<div class="empty-msg">No tour starts in this range yet. Tour events begin firing once the iOS build with this feature ships.</div>` : `
+    <div class="card-sub">Views per sub-step. Drop-offs reveal where the tour loses attention.</div>
+    ${startedCount === 0 ? `<div class="empty-msg">No tour starts in this range yet.</div>` : `
     <div>
       <div class="tfunnel-row" style="border-bottom:1px dashed var(--border)">
         <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div><div class="tfunnel-sub">feature_tour_started</div></div>
@@ -978,8 +809,7 @@ function render() {
         const prevCount = i === 0 ? startedCount : stepStats[i-1].viewed
         const drop = Math.max(0, prevCount - s.viewed)
         const dpct = prevCount > 0 ? Math.round(drop / prevCount * 100) : 0
-        return `
-          ${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">▼ dropped ${drop} (${dpct}%)</div>` : ''}
+        return `${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">\u25BC dropped ${drop} (${dpct}%)</div>` : ''}
           <div class="tfunnel-row">
             <div><div class="tfunnel-label">${s.label}</div><div class="tfunnel-sub">${s.id}</div></div>
             <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${pct}%"></div></div>
@@ -994,33 +824,22 @@ function render() {
         <div class="tfunnel-pct">${startedCount > 0 ? Math.round(completedCount/startedCount*100) : 0}%</div>
       </div>
     </div>
-    ${startedCount < 10 ? `<div class="insight">
-      <strong>Early data</strong> — ${startedCount} tour starts so far. Drop-off percentages become meaningful above ~20 starts.
-    </div>` : ''}`}
+    ${startedCount < 10 ? `<div class="insight"><strong>Early data</strong> \u2014 ${startedCount} tour starts. Percentages meaningful above ~20 starts.</div>` : ''}`}
   </div>
-
-  <!-- PER-STEP TIMING TABLE -->
   <div class="card" style="margin-top:18px">
     <div class="card-title">Per-step timing</div>
-    <div class="card-sub">Median time on each step. <span style="color:var(--red)">&lt;0.8s</span> = skimmed (copy may be unclear or too short). <span style="color:var(--amber)">&gt;8s</span> = stuck (copy may be too long or confusing).</div>
+    <div class="card-sub">Median time on each step. <span style="color:var(--red)">&lt;0.8s</span> = skimmed. <span style="color:var(--amber)">&gt;8s</span> = stuck.</div>
     ${startedCount === 0 ? `<div class="empty-msg">No step timing data yet.</div>` : `
     <table class="tstep-table">
       <thead><tr>
-        <th>Step</th>
-        <th class="num">Viewed</th>
-        <th class="num">Completed</th>
-        <th class="num">Step completion</th>
-        <th class="num">Median time</th>
+        <th>Step</th><th class="num">Viewed</th><th class="num">Completed</th><th class="num">Step completion</th><th class="num">Median time</th>
       </tr></thead>
       <tbody>
         ${stepStats.map(s => `<tr>
-          <td>
-            <div>${s.label}</div>
-            <div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div>
-          </td>
+          <td><div>${s.label}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div></td>
           <td class="num">${s.viewed}</td>
           <td class="num">${s.completed}</td>
-          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '—'}</td>
+          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '\u2014'}</td>
           <td class="num" style="color:${stepTimeColor(s.medianTimeMs)}">${fmtMs(s.medianTimeMs)}</td>
         </tr>`).join('')}
       </tbody>
@@ -1084,39 +903,11 @@ function render() {
     </table>
   </div>
 
-  <!-- WAITLIST ENTRIES -->
-  <div class="section-label">Waitlist entries \u2014 ${rangeLabel}</div>
-  <div class="card" style="padding:0;overflow:hidden">
-    ${waitlistInRange.length === 0 ? `<div class="empty-msg" style="padding:20px 0">No waitlist signups in this range.</div>` : `
-    <table style="width:100%;border-collapse:collapse;font-size:.8125rem">
-      <thead><tr style="border-bottom:1px solid var(--border)">
-        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Email</th>
-        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Source</th>
-        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Campaign</th>
-        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Referrer</th>
-        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Country</th>
-        <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Joined</th>
-      </tr></thead>
-      <tbody>
-      ${waitlistInRange.slice(0, 50).map(w => `
-        <tr style="border-bottom:1px solid rgba(255,255,255,.03)">
-          <td style="padding:10px 16px;font-family:var(--mono);font-size:.75rem">${w.email || '\u2014'}</td>
-          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:${w.utm_source?'var(--teal-bright)':'var(--muted)'}">${w.utm_source || '(direct)'}</td>
-          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.utm_campaign || '\u2014'}</td>
-          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.referrer ? (w.referrer.slice(0,40)+(w.referrer.length>40?'\u2026':'')) : '\u2014'}</td>
-          <td style="padding:10px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${w.country || '\u2014'}</td>
-          <td style="padding:10px 16px;text-align:right;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${fmtDateShort(w.created_at)}</td>
-        </tr>
-      `).join('')}
-      </tbody>
-    </table>`}
-  </div>
-
-  <!-- ACTIVITY FEED -->
+  <!-- RECENT ACTIVITY FEED -->
   <div class="section-label">Recent activity \u2014 ${platformLabel}</div>
   <div class="card">
     <div class="timeline">
-      ${events.slice(0, feedLimit).map(e => {
+      ${feedEvents.filter(e => currentPlatform === 'all' || getPlatform(e) === currentPlatform).slice(0, feedLimit).map(e => {
         const plat = getPlatform(e)
         const props = e.properties || {}
         const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,50)}`).join(' \u00B7 ')
@@ -1131,15 +922,13 @@ function render() {
           </div>
         </div>`
       }).join('')}
-      ${events.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : ''}
+      ${feedEvents.length === 0 ? `<div class="empty-msg">No recent events.</div>` : ''}
     </div>
-    ${events.length > feedLimit ? `<div style="text-align:center;padding:12px 0"><button onclick="feedLimit+=40;render()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:8px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Load more (${events.length-feedLimit} remaining)</button></div>` : ''}
+    ${feedEvents.length > feedLimit ? `<div style="text-align:center;padding:12px 0"><button onclick="feedLimit+=40;render()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:8px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Load more</button></div>` : ''}
   </div>
 
   <div style="margin-top:28px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:.75rem;color:var(--muted);line-height:1.8">
-    <strong style="color:var(--text)">v2 dashboard</strong> \u00B7 Events collected via consent-gated AutoLogTrack module.
-    Direct Supabase inserts from the public site (anon role, <code style="color:var(--teal-bright)">user_id IS NULL</code>, <code style="color:var(--teal-bright)">anonymous_id</code> required).
-    Legacy events preserved with <code style="color:var(--teal-bright)">properties.migrated_from</code>.
+    <strong style="color:var(--text)">v3 dashboard</strong> \u00B7 KPIs served from pre-aggregated <code style="color:var(--teal-bright)">analytics_daily_summary</code> table (nightly pg_cron). Raw events fetched only for cohort/heatmap/tour/feed (capped at 5,000 rows per user).
     &nbsp;\u00B7&nbsp;
     <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright)" target="_blank">Open SQL Editor \u2192</a>
   </div>
@@ -1147,11 +936,7 @@ function render() {
 }
 
 // ─── Broadcast Admin ────────────────────────────────────────────────────────
-// Broadcasts are sent via a Supabase Edge Function (send-broadcast).
-// The edge function holds the service role key server-side — nothing secret in git.
-
 let selectedBroadcastEmoji = null
-
 function toggleBroadcastPanel() {
   const panel = document.getElementById('broadcast-panel')
   const btn = document.getElementById('broadcast-toggle-btn')
@@ -1160,63 +945,39 @@ function toggleBroadcastPanel() {
   btn.classList.toggle('active', !isOpen)
   if (!isOpen) { updateBroadcastPreview() }
 }
-
 function selectEmoji(el) {
   const emoji = el.dataset.emoji
-  if (selectedBroadcastEmoji === emoji) {
-    selectedBroadcastEmoji = null
-    el.classList.remove('selected')
-  } else {
-    document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
-    selectedBroadcastEmoji = emoji
-    el.classList.add('selected')
-  }
+  if (selectedBroadcastEmoji === emoji) { selectedBroadcastEmoji = null; el.classList.remove('selected') }
+  else { document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected')); selectedBroadcastEmoji = emoji; el.classList.add('selected') }
   updateBroadcastPreview()
 }
-
 function updateBroadcastPreview() {
-  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
-  const body     = document.getElementById('bc-body')?.innerHTML?.trim()   || ''
+  const title = document.getElementById('bc-title')?.value?.trim() || ''
+  const body = document.getElementById('bc-body')?.innerHTML?.trim() || ''
   const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
-  const iconEl   = document.getElementById('prev-icon')
-  const titleEl  = document.getElementById('prev-title')
-  const bodyEl   = document.getElementById('prev-body')
-  const ctaEl    = document.getElementById('prev-cta')
+  const iconEl = document.getElementById('prev-icon')
+  const titleEl = document.getElementById('prev-title')
+  const bodyEl = document.getElementById('prev-body')
+  const ctaEl = document.getElementById('prev-cta')
   if (!iconEl) return
-  if (selectedBroadcastEmoji) { iconEl.textContent = selectedBroadcastEmoji; iconEl.style.display = 'block' }
-  else { iconEl.style.display = 'none' }
-  if (title) { titleEl.textContent = title; titleEl.style.color = '#111'; titleEl.style.fontWeight = '700' }
-  else { titleEl.textContent = 'Your title appears here'; titleEl.style.color = '#888'; titleEl.style.fontWeight = '400' }
-  if (body) { bodyEl.innerHTML = body; bodyEl.style.color = '#555' }
-  else { bodyEl.innerHTML = 'Your message appears here…'; bodyEl.style.color = '#aaa' }
-  if (ctaLabel) { ctaEl.textContent = ctaLabel; ctaEl.style.display = 'block' }
-  else { ctaEl.style.display = 'none' }
+  if (selectedBroadcastEmoji) { iconEl.textContent = selectedBroadcastEmoji; iconEl.style.display = 'block' } else { iconEl.style.display = 'none' }
+  if (title) { titleEl.textContent = title; titleEl.style.color = '#111'; titleEl.style.fontWeight = '700' } else { titleEl.textContent = 'Your title appears here'; titleEl.style.color = '#888'; titleEl.style.fontWeight = '400' }
+  if (body) { bodyEl.innerHTML = body; bodyEl.style.color = '#555' } else { bodyEl.innerHTML = 'Your message appears here\u2026'; bodyEl.style.color = '#aaa' }
+  if (ctaLabel) { ctaEl.textContent = ctaLabel; ctaEl.style.display = 'block' } else { ctaEl.style.display = 'none' }
 }
-
-function bcFormat(cmd) {
-  document.getElementById('bc-body').focus()
-  document.execCommand(cmd, false, null)
-  updateBroadcastPreview()
-}
-function bcFormatBlock(tag) {
-  document.getElementById('bc-body').focus()
-  document.execCommand('formatBlock', false, tag)
-  updateBroadcastPreview()
-}
+function bcFormat(cmd) { document.getElementById('bc-body').focus(); document.execCommand(cmd, false, null); updateBroadcastPreview() }
+function bcFormatBlock(tag) { document.getElementById('bc-body').focus(); document.execCommand('formatBlock', false, tag); updateBroadcastPreview() }
 
 async function sendBroadcast() {
-  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
-  const body     = document.getElementById('bc-body')?.innerHTML?.trim()  || ''
+  const title    = document.getElementById('bc-title')?.value?.trim()    || ''
+  const body     = document.getElementById('bc-body')?.innerHTML?.trim() || ''
   const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
   const ctaUrl   = document.getElementById('bc-cta-url')?.value?.trim()   || ''
   const msgEl    = document.getElementById('bc-msg')
   const btnEl    = document.getElementById('bc-send-btn')
   msgEl.style.display = 'none'; msgEl.className = 'bc-msg'
-  if (!title || !body) {
-    msgEl.textContent = 'Title and message are required.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
-  }
-
-  btnEl.disabled = true; btnEl.textContent = 'Sending…'
+  if (!title || !body) { msgEl.textContent = 'Title and message are required.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return }
+  btnEl.disabled = true; btnEl.textContent = 'Sending\u2026'
   const testMode = document.getElementById('bc-test-mode')?.checked
   const payload = { title, body,
     ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
@@ -1226,14 +987,14 @@ async function sendBroadcast() {
   }
   try {
     const { data: { session } } = await sb.auth.getSession()
-    if (!session) throw new Error('Not authenticated — please refresh and log in again')
+    if (!session) throw new Error('Not authenticated \u2014 please refresh and log in again')
     const res = await fetch(SURL + '/functions/v1/send-broadcast', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
       body: JSON.stringify(payload)
     })
     if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)) }
-    msgEl.textContent = 'Broadcast sent ✓'; msgEl.className = 'bc-msg success'; msgEl.style.display = 'block'
+    msgEl.textContent = 'Broadcast sent \u2713'; msgEl.className = 'bc-msg success'; msgEl.style.display = 'block'
     document.getElementById('bc-title').value = ''
     document.getElementById('bc-body').innerHTML = ''
     document.getElementById('bc-cta-label').value = ''
@@ -1241,16 +1002,11 @@ async function sendBroadcast() {
     selectedBroadcastEmoji = null
     document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
     updateBroadcastPreview()
-    setTimeout(() => {
-      document.getElementById('broadcast-panel').classList.remove('open')
-      document.getElementById('broadcast-toggle-btn').classList.remove('active')
-      msgEl.style.display = 'none'
-    }, 2200)
+    setTimeout(() => { document.getElementById('broadcast-panel').classList.remove('open'); document.getElementById('broadcast-toggle-btn').classList.remove('active'); msgEl.style.display = 'none' }, 2200)
   } catch (err) {
     msgEl.textContent = 'Error: ' + err.message; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'
-  } finally { btnEl.disabled = false; btnEl.textContent = 'Send Broadcast →' }
+  } finally { btnEl.disabled = false; btnEl.textContent = 'Send Broadcast \u2192' }
 }
-
 
 async function doSignIn() {
   const email = document.getElementById('auth-email').value.trim()
@@ -1261,30 +1017,53 @@ async function doSignIn() {
   btn.textContent = 'Signing in\u2026'
   btn.disabled = true
   const { error } = await sb.auth.signInWithPassword({ email, password: pass })
-  if (error) {
-    err.textContent = error.message
-    err.style.display = 'block'
-    btn.textContent = 'Sign In'
-    btn.disabled = false
-    return
-  }
+  if (error) { err.textContent = error.message; err.style.display = 'block'; btn.textContent = 'Sign In'; btn.disabled = false; return }
   document.getElementById('auth-gate').style.display = 'none'
   document.getElementById('loading').style.display = 'flex'
   main()
 }
 
 async function main() {
-  // Auth gate removed — Cloudflare Access handles protection, anon key reads all data
-
-  const [eventsRes, profilesRes, waitlistRes] = await Promise.all([
-    sb.from('analytics_events').select('event_name, properties, created_at, user_id, anonymous_id, session_id, platform, url_path, country').order('created_at', { ascending: false }).limit(2000),
+  // Fetch summary tables (tiny — scales to millions of events)
+  const [summaryRes, ecRes, profilesRes, eventsRes, feedRes] = await Promise.all([
+    sb.from('analytics_daily_summary').select('*').order('day', { ascending: false }),
+    sb.from('analytics_event_counts').select('*').order('day', { ascending: false }),
     sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, utm_medium, utm_campaign').order('created_at', { ascending: false }),
-    sb.from('waitlist').select('email, utm_source, utm_medium, utm_campaign, utm_content, referrer, landing_path, country, created_at').order('created_at', { ascending: false }).limit(500)
+    // Per-user events: fetch last 90 days only (for cohort/heatmap/tour) — capped at 5000 rows
+    sb.from('analytics_events')
+      .select('event_name, properties, created_at, user_id, platform')
+      .not('user_id', 'is', null)
+      .gte('created_at', new Date(Date.now() - 90*864e5).toISOString())
+      .order('created_at', { ascending: false })
+      .limit(5000),
+    // Recent feed: last 200 events across all types
+    sb.from('analytics_events')
+      .select('event_name, properties, created_at, user_id, anonymous_id, platform')
+      .order('created_at', { ascending: false })
+      .limit(200)
   ])
-  if (eventsRes.error) throw new Error(eventsRes.error.message)
-  allEvents   = eventsRes.data   || []
+
+  if (summaryRes.error) throw new Error(summaryRes.error.message)
+  if (profilesRes.error) throw new Error(profilesRes.error.message)
+
+  summaryRows = summaryRes.data || []
+  eventCounts = ecRes.data || []
   allProfiles = profilesRes.data || []
-  allWaitlist = waitlistRes.data || []
+  allEvents   = eventsRes.data || []
+  feedEvents  = feedRes.data || []
+
+  // Trigger today's aggregation so intraday data is fresh
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    if (session) {
+      fetch(SURL + '/rest/v1/rpc/aggregate_analytics_for_day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw' },
+        body: JSON.stringify({ target_day: new Date().toISOString().split('T')[0] })
+      }).catch(() => {}) // fire-and-forget, non-blocking
+    }
+  } catch(e) {}
+
   render()
 }
 
@@ -1294,4 +1073,3 @@ main().catch(err => {
 </script>
 </body>
 </html>
-
