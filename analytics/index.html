@@ -851,8 +851,8 @@ function render() {
     </div>
   </div>
 
-  <!-- KPIs -->
-  <div class="section-label">Snapshot \u00B7 ${rangeLabel} <span style="font-size:.6rem;color:var(--teal-bright);margin-left:6px;font-family:var(--mono);font-weight:600;">\u25CF LIVE TODAY</span></div>
+  <!-- KPIs — range totals -->
+  <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
@@ -860,29 +860,64 @@ function render() {
       <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Events today <span style="color:var(--teal-bright)">\u25CF</span></div>
-      <div class="kpi-value">${liveTotal.toLocaleString()}</div>
-      <div class="kpi-sub">iOS ${liveIos.toLocaleString()} \u00B7 Web ${liveWeb.toLocaleString()}</div>
+      <div class="kpi-label">Events (${rangeLabel})</div>
+      <div class="kpi-value">${totalEvents.toLocaleString()}</div>
+      <div class="kpi-sub">iOS ${iosEvents.toLocaleString()} \u00B7 Web ${webEvents.toLocaleString()}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">App opens today <span style="color:var(--teal-bright)">\u25CF</span></div>
-      <div class="kpi-value">${liveAppOpens}</div>
-      <div class="kpi-sub">${liveDau} DAU today</div>
+      <div class="kpi-label">App opens</div>
+      <div class="kpi-value">${totalAppOpens}</div>
+      <div class="kpi-sub">${dau} DAU today</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Onboardings today <span style="color:var(--teal-bright)">\u25CF</span></div>
-      <div class="kpi-value">${liveOnboard}</div>
+      <div class="kpi-label">Onboardings</div>
+      <div class="kpi-value">${totalOnboard}</div>
       <div class="kpi-sub">${completedOnboarding} total all-time</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Paid users</div>
       <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'}">${paidUsers}</div>
-      <div class="kpi-sub">${liveSubs} new subs today</div>
+      <div class="kpi-sub">${totalSubs} new subs ${rangeLabel}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">First actions taken</div>
       <div class="kpi-value">${tookFirstAction}</div>
       <div class="kpi-sub">${totalUsers > 0 ? Math.round(tookFirstAction/totalUsers*100) : 0}% of accounts</div>
+    </div>
+  </div>
+
+  <!-- KPIs — live today snapshot (resets at midnight, updates every page refresh) -->
+  <div class="section-label" style="margin-top:24px">Today \u00B7 live <span style="font-size:.6rem;color:var(--teal-bright);margin-left:4px;font-family:var(--mono);font-weight:700;">\u25CF</span></div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Events today</div>
+      <div class="kpi-value">${liveTotal.toLocaleString()}</div>
+      <div class="kpi-sub">iOS ${liveIos.toLocaleString()} \u00B7 Web ${liveWeb.toLocaleString()}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">App opens today</div>
+      <div class="kpi-value">${liveAppOpens}</div>
+      <div class="kpi-sub">${liveDau} active users</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Onboardings today</div>
+      <div class="kpi-value">${liveOnboard}</div>
+      <div class="kpi-sub">all-time: ${completedOnboarding}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">New subs today</div>
+      <div class="kpi-value" style="color:${liveSubs>0?'var(--amber)':'inherit'}">${liveSubs}</div>
+      <div class="kpi-sub">all-time paid: ${paidUsers}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Fuel entries today</div>
+      <div class="kpi-value">${live.fuel_entries ?? 0}</div>
+      <div class="kpi-sub">service: ${live.service_entries ?? 0} \u00B7 docs: ${live.doc_uploads ?? 0}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Trips today</div>
+      <div class="kpi-value">${live.trips_started ?? 0}</div>
+      <div class="kpi-sub">paywall views: ${live.paywall_views ?? 0}</div>
     </div>
   </div>
 
