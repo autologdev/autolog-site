@@ -93,6 +93,34 @@ function taxStatus(v){
   if(d<=30)return{label:d+'d left',cls:'badge-amber',color:'#b45309'}
   return{label:fmtDate(v.tax_expiry),cls:'badge-green',color:'#15803d'}
 }
+function lockedBannerHTMLInline(reason){
+  const msg=reason==='locked_shared'
+    ?'This vehicle is shared with you. While on the free plan with your own vehicle, shared vehicles are view-only.'
+    :"You\u2019ve been using AutoLog+ with more than one vehicle. Upgrade to unlock write access to all your vehicles again."
+  return `<div class="locked-banner">
+    <div class="locked-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h3>AutoLog+ required</h3>
+    <p>${msg}</p>
+    <button class="btn btn-primary btn-sm" onclick="_openUpgradeModal()">Upgrade in iOS app \u2192</button>
+  </div>`
+}
+function _openUpgradeModal(){
+  const bg=document.createElement('div');bg.className='mbg'
+  bg.innerHTML=`<div class="mo"><div class="mh"><h2>AutoLog+ is managed in the iOS app</h2><button class="mc" onclick="this.closest('.mbg').remove()">\u2715</button></div><div class="mb">
+    <div style="text-align:center;padding:6px 0 18px">
+      <div style="width:56px;height:56px;background:var(--teal-light);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--teal)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+      <p style="font-size:.9375rem;color:var(--text-secondary);line-height:1.65;max-width:360px;margin:0 auto 6px">AutoLog+ is sold through the App Store and managed by Apple. To subscribe, open AutoLog on your iPhone and tap <strong>Settings \u2192 Upgrade to AutoLog+</strong>.</p>
+      <p style="font-size:.8125rem;color:var(--text-muted);max-width:360px;margin:0 auto 20px">Once subscribed, everything unlocks here too \u2014 instantly.</p>
+    </div>
+    <div class="mfooter" style="justify-content:center;gap:10px">
+      <a href="https://apps.apple.com/gb/app/autolog/id6746798513" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Open App Store</a>
+      <button class="btn btn-ghost btn-sm" onclick="this.closest('.mbg').remove()">Close</button>
+    </div>
+  </div></div>`
+  document.body.appendChild(bg)
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.remove()})
+}
+
 function toast(msg,ok=true){const el=$('toast');el.textContent=msg;el.style.borderLeft='3px solid '+(ok?'#22c55e':'#ef4444');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3500)}
 function doSignOut(){sb.auth.signOut().then(()=>location.href='/app/login')}
 
@@ -111,9 +139,14 @@ function toggleVsw(){
   drop.id='vsw-drop';drop.className='vsw-drop'
   drop.innerHTML=allVehicles.map(v=>{
     const isCurrent=v.id===currentVehicle?.id
-    return`<div class="vsw-item${isCurrent?' cur':''}" onclick="switchVehicle('${v.id}')">
-      <div style="width:7px;height:7px;border-radius:50%;background:${isCurrent?'#1A7A8C':'#94a3b8'};flex-shrink:0"></div>
-      <div><div>${vName(v)}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div>
+    const isLocked=(window.__al_lockedSet&&window.__al_lockedSet.has(v.id))
+    const isShared=v.owner_id!==(window.__al_userId||userId)
+    let tag=''
+    if(isLocked)tag='<span class="vsw-tag locked">Locked</span>'
+    else if(isShared)tag='<span class="vsw-tag shared">Shared</span>'
+    return`<div class="vsw-item${isCurrent?' cur':''}${isLocked?' locked':''}" onclick="switchVehicle('${v.id}')">
+      <div style="width:7px;height:7px;border-radius:50%;background:${isCurrent?'#1A7A8C':isLocked?'#B8C9D6':'#94a3b8'};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0"><div>${vName(v)}${tag}</div>${v.registration?`<div class="vsw-item-reg">${v.registration.toUpperCase()}</div>`:''}</div>
     </div>`
   }).join('')
   $('vsw').appendChild(drop)
@@ -123,6 +156,13 @@ function switchVehicle(id){localStorage.setItem('al_vid',id);location.reload()}
 
 // ── Add Vehicle Modal ──────────────────────────────────────
 function showAddVehicle(prefillReg){
+  // Paywall: free users capped at 1 vehicle
+  const plan = window.__al_plan || 'free'
+  const isProUser = plan === 'paid' || plan === 'business'
+  if(!isProUser && (allVehicles||[]).filter(vv=>vv.owner_id===userId).length >= 1){
+    _openUpgradeModal()
+    return
+  }
   const bg=document.createElement('div');bg.className='mbg'
   bg.innerHTML=`<div class="mo"><div class="mh"><h2>Add Vehicle</h2><button class="mc" onclick="this.closest('.mbg').remove()">✕</button></div><div class="mb">
     <div class="merr" id="av-err"></div>
@@ -291,86 +331,282 @@ async function saveVehicle(){
     const sMon=new Date(now.getFullYear(),now.getMonth(),1).toISOString().split('T')[0]
     const vid=currentVehicle.id
 
-    const[costsRes,fuelRes,maintRes,svcsRes]=await Promise.all([
+    // 6-month cost breakdown window start
+    const sSixMo = new Date(now.getFullYear(), now.getMonth()-5, 1).toISOString().split('T')[0]
+    // Previous-month window for MPG delta
+    const sLastMon = new Date(now.getFullYear(), now.getMonth()-1, 1).toISOString().split('T')[0]
+    const eLastMon = sMon
+
+    const[costsRes,sixMoRes,fuelRes,fuelAllRes,maintRes,maintNextRes,svcsRes,profRes]=await Promise.all([
       sb.from('cost_entries').select('amount,date,category').eq('vehicle_id',vid).gte('date',sYear),
+      sb.from('cost_entries').select('amount,date,category').eq('vehicle_id',vid).gte('date',sSixMo),
       sb.from('fuel_entries').select('mpg,total_cost,date').eq('vehicle_id',vid).order('date',{ascending:false}).limit(20),
+      sb.from('fuel_entries').select('mpg,date').eq('vehicle_id',vid).gte('date',sLastMon).order('date',{ascending:true}),
       sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage').eq('vehicle_id',vid),
-      sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4)
+      sb.from('maintenance_items').select('name,status,next_due_date,next_due_mileage,dealer_cost_max,specialist_cost_max').eq('vehicle_id',vid).in('status',['overdue','due_soon','upcoming']).order('next_due_date',{ascending:true,nullsFirst:false}).limit(3),
+      sb.from('service_entries').select('date,mileage_at_service,garage_name,garage_type,total_cost,description,invoice_number').eq('vehicle_id',vid).neq('source','dvsa').order('date',{ascending:false}).limit(4),
+      sb.from('profiles').select('plan').eq('id',userId).single()
     ])
+    const userPlan = profRes?.data?.plan || 'free'
+    const _isPro = userPlan === 'paid' || userPlan === 'business'
+
+    // --- Compute locked-vehicle set (iOS DowngradeManager parity) ---
+    let lockedSet = new Set()
+    if(!_isPro){
+      const owned = allVehicles.filter(vv => vv.owner_id === userId)
+      if(owned.length > 1){
+        const sorted = [...owned].sort((a,b)=>{
+          const au=new Date(a.updated_at||a.created_at||0).getTime()
+          const bu=new Date(b.updated_at||b.created_at||0).getTime()
+          return bu-au
+        })
+        lockedSet = new Set(sorted.slice(1).map(vv=>vv.id))
+      }
+    }
+    const ownedCount = allVehicles.filter(vv=>vv.owner_id===userId).length
+    const currentIsLocked = lockedSet.has(currentVehicle.id)
+    const currentIsSharedReadOnly = !_isPro && currentVehicle.owner_id !== userId && ownedCount >= 1
+    window.__al_lockedSet = lockedSet
+    window.__al_userId = userId
+    window.__al_plan = userPlan
 
     const allCosts=costsRes.data||[]
+    const sixMoCosts=sixMoRes.data||[]
     const totalYear=allCosts.reduce((s,c)=>s+Number(c.amount||0),0)
     const totalMon=allCosts.filter(c=>c.date>=sMon).reduce((s,c)=>s+Number(c.amount||0),0)
+    const totalLastMon=allCosts.filter(c=>c.date>=sLastMon&&c.date<eLastMon).reduce((s,c)=>s+Number(c.amount||0),0)
+    const mthCostCount=allCosts.filter(c=>c.date>=sMon).length
     const mpgs=(fuelRes.data||[]).filter(f=>f.mpg).map(f=>Number(f.mpg))
     const avgMpg=mpgs.length?mpgs.reduce((a,b)=>a+b)/mpgs.length:null
+    const recentMpgs=(fuelAllRes.data||[]).filter(f=>f.mpg).slice(-8).map(f=>Number(f.mpg))
     const overdue=(maintRes.data||[]).filter(i=>i.status==='overdue')
     const soon=(maintRes.data||[]).filter(i=>i.status==='due_soon')
+    const nextUp=(maintNextRes.data||[])
     const mot=motStatus(currentVehicle)
     const tax=taxStatus(currentVehicle)
     const services=svcsRes.data||[]
     const v=currentVehicle
-    const reg=v.registration?`<span style="font-family:var(--font-mono);font-size:.875rem;color:var(--text-muted);letter-spacing:.05em;margin-left:10px">${v.registration.toUpperCase()}</span>`:''
+
+    // Insurance status derived from vehicle.insurance_expiry (if present)
+    const insuranceStatus=(()=>{
+      if(!v.insurance_expiry)return{label:'Not set',cls:'neutral'}
+      const d=Math.ceil((new Date(v.insurance_expiry)-new Date())/86400000)
+      if(d<0)return{label:'Expired',cls:'danger'}
+      if(d<=30)return{label:d+' days left',cls:'warn'}
+      return{label:'Valid · '+fmtDate(v.insurance_expiry),cls:'ok'}
+    })()
+    // Map iOS colour palette → new chip classes
+    const motChip=mot.color==='#dc2626'?'danger':mot.color==='#b45309'?'warn':mot.color==='#15803d'?'ok':'neutral'
+    const taxChip=tax.color==='#dc2626'?'danger':tax.color==='#b45309'?'warn':tax.color==='#15803d'?'ok':'neutral'
+
+    // YTD miles + cost-per-mile
+    const ytdMiles=(fuelAllRes.data||[]).reduce((s,f)=>s+0,0) // fuel doesn't have miles_since_last_fill here; fall back on mileage delta
+    // Better: use difference between current and start-of-year mileage if available; for now show YTD cost only
+    const costPerMile=v.current_mileage && v.current_mileage > 0 && ytdMiles ? (totalYear/ytdMiles) : null
+
+    // Monthly delta badge logic
+    const monthDeltaPct = totalLastMon > 0 ? ((totalMon - totalLastMon) / totalLastMon) * 100 : null
+    const mpgDelta = (fuelAllRes.data||[]).length>=2 ?
+      (recentMpgs.slice(-1)[0] - recentMpgs[0]).toFixed(1) : null
+
+    // Sparkline helper (local, idempotent)
+    function _spark(values){
+      if(!values||values.length<2)return ''
+      const W=80,H=18,P=1.5
+      const mn=Math.min(...values),mx=Math.max(...values),r=mx-mn||1
+      const pts=values.map((vv,i)=>{
+        const x=(i/(values.length-1))*W
+        const y=H-P-((vv-mn)/r)*(H-P*2)
+        return x.toFixed(1)+','+y.toFixed(1)
+      }).join(' ')
+      return `<svg class="stat-mini-sparkline" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}"/></svg>`
+    }
+
+    // 6-month stacked cost chart builder
+    function _costChart(){
+      const months=[]
+      for(let i=5;i>=0;i--){
+        const d=new Date(now.getFullYear(),now.getMonth()-i,1)
+        months.push({key:d.toISOString().split('T')[0].slice(0,7),label:d.toLocaleDateString('en-GB',{month:'short'})})
+      }
+      const catMap={fuel:'fuel',service:'service',insurance:'insurance',tax:'tax'}
+      const buckets=months.map(m=>({label:m.label,fuel:0,service:0,insurance:0,tax:0,other:0,total:0}))
+      sixMoCosts.forEach(c=>{
+        const mk=(c.date||'').slice(0,7)
+        const idx=months.findIndex(m=>m.key===mk)
+        if(idx<0)return
+        const cat=catMap[(c.category||'').toLowerCase()]||'other'
+        buckets[idx][cat]+=Number(c.amount||0)
+        buckets[idx].total+=Number(c.amount||0)
+      })
+      const maxT=Math.max(1,...buckets.map(b=>b.total))
+      const cols=buckets.map(b=>{
+        const scale=v=>Math.max(0,Math.round((v/maxT)*60))
+        return `<div class="cost-chart-col">
+          <div class="cost-chart-stack">
+            <span class="fuel" style="height:${scale(b.fuel)}px"></span>
+            <span class="service" style="height:${scale(b.service)}px"></span>
+            <span class="insurance" style="height:${scale(b.insurance)}px"></span>
+            <span class="tax" style="height:${scale(b.tax)}px"></span>
+            <span class="other" style="height:${scale(b.other)}px"></span>
+          </div>
+          <div class="cost-chart-label">${b.label}</div>
+        </div>`
+      }).join('')
+      return `
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">Cost breakdown · last 6 months</span>
+            <div class="cost-chart-legend">
+              <span><span class="cost-chart-legend-swatch" style="background:var(--teal)"></span>Fuel</span>
+              <span><span class="cost-chart-legend-swatch" style="background:var(--teal-mid)"></span>Service</span>
+              <span><span class="cost-chart-legend-swatch" style="background:#F5C842"></span>Insurance</span>
+              <span><span class="cost-chart-legend-swatch" style="background:#a78bfa"></span>Tax</span>
+              <span><span class="cost-chart-legend-swatch" style="background:var(--text-faint)"></span>Other</span>
+            </div>
+          </div>
+          <div class="cost-chart">${cols}</div>
+        </div>`
+    }
+
+    // Next Up builder (top 3 upcoming maintenance items)
+    function _nextUp(){
+      if(!nextUp.length)return `<div class="empty" style="padding:12px 0"><div style="font-size:.8125rem;color:var(--text-muted)">No maintenance items coming up. Add manufacturer schedules from the iOS app.</div></div>`
+      return nextUp.map(i=>{
+        const cls=i.status==='overdue'?'overdue':i.status==='due_soon'?'soon':'ok'
+        let subText='—'
+        if(i.next_due_date){
+          const d=Math.ceil((new Date(i.next_due_date)-new Date())/86400000)
+          subText=d<0?'Overdue by '+Math.abs(d)+' days':'Due in '+d+' days'
+        }else if(i.next_due_mileage && v.current_mileage){
+          const miles=Math.max(0,i.next_due_mileage-v.current_mileage)
+          subText='Due in '+miles.toLocaleString('en-GB')+' mi'
+        }
+        const estCost=i.dealer_cost_max||i.specialist_cost_max
+        if(estCost) subText += ' · typically £'+Math.round(estCost)
+        return `<div class="next-up-item ${cls}">
+          <div class="next-up-title">${i.name}</div>
+          <div class="next-up-sub">${subText}</div>
+        </div>`
+      }).join('')
+    }
+
+    // Service row icon + category inference
+    function _svcIcon(s){
+      const desc=((s.description||'')+' '+(s.garage_name||'')).toLowerCase()
+      if(desc.includes('mot'))return{icon:'✓',cls:'ok'}
+      if(desc.includes('tyre')||desc.includes('tire'))return{icon:'◎',cls:''}
+      if(desc.includes('brake'))return{icon:'◉',cls:''}
+      if(desc.includes('oil')||desc.includes('service'))return{icon:'🛢',cls:''}
+      return{icon:'🔧',cls:''}
+    }
+
+    // Vehicle identifier: hero icon
+    const heroIcon=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0-4 0"/><path d="M5 17H3V9a1 1 0 0 1 1-1h13l4 4v5h-2"/><path d="M9 17h6"/></svg>`
+    const vehicleSubtitle=[v.year,v.colour,v.fuel_type&&cap(v.fuel_type),v.engine_size_cc?v.engine_size_cc+'cc':null,v.power_bhp?v.power_bhp+' bhp':null].filter(Boolean).join(' · ')||'Vehicle details'
+    const sharedBadge=v.owner_id!==userId?'<span class="chip chip-shared" style="margin-left:8px">Shared</span>':''
 
     $('content').innerHTML=`
-      <div class="pg-head">
-        <div class="pg-head-text">
-          <h1>${vName(v)}${reg}</h1>
-          <p>${[v.year,v.colour,v.fuel_type].filter(Boolean).map(s=>s&&s.length?cap(String(s)):'').filter(Boolean).join(' · ')||'Vehicle details'}</p>
+      ${currentIsLocked?lockedBannerHTMLInline('locked_owned'):''}
+      ${currentIsSharedReadOnly?lockedBannerHTMLInline('locked_shared'):''}
+
+      <div class="vehicle-hero">
+        <div class="vh-head">
+          <div class="vh-identity">
+            <div class="vh-icon">${heroIcon}</div>
+            <div style="min-width:0">
+              <div class="vh-name">${vName(v)}${sharedBadge}</div>
+              <div class="vh-sub">${vehicleSubtitle}</div>
+            </div>
+          </div>
+          ${v.registration?`<div class="vh-plate">${v.registration.toUpperCase()}</div>`:''}
+        </div>
+        <div class="vh-status-strip">
+          <div class="vh-status ${motChip}">
+            <div class="vh-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div><div class="vh-status-label">MOT</div><div class="vh-status-val">${mot.label}</div></div>
+          </div>
+          <div class="vh-status ${taxChip}">
+            <div class="vh-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div><div class="vh-status-label">Road Tax</div><div class="vh-status-val">${tax.label}</div></div>
+          </div>
+          <div class="vh-status ${insuranceStatus.cls}">
+            <div class="vh-status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div><div class="vh-status-label">Insurance</div><div class="vh-status-val">${insuranceStatus.label}</div></div>
+          </div>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
-        <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
-          <div style="width:40px;height:40px;border-radius:10px;background:${mot.color}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">✅</div>
-          <div><div style="font-size:.6875rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">MOT</div><div style="font-size:.9375rem;font-weight:700;color:${mot.color}">${mot.label}</div></div>
+      <div class="stats-strip">
+        <div class="stat-mini">
+          <div class="stat-mini-head"><span class="stat-mini-label">Mileage</span></div>
+          <div class="stat-mini-value">${Number(v.current_mileage||0).toLocaleString('en-GB')}</div>
+          <div class="stat-mini-sub">miles</div>
+          ${recentMpgs.length>1?_spark(recentMpgs.map((_,i)=>Number(v.current_mileage||0)-(recentMpgs.length-1-i)*300)):''}
         </div>
-        <div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:14px;margin-bottom:0">
-          <div style="width:40px;height:40px;border-radius:10px;background:${tax.color}18;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.25rem">🏷️</div>
-          <div><div style="font-size:.6875rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Road Tax</div><div style="font-size:.9375rem;font-weight:700;color:${tax.color}">${tax.label}</div></div>
+        ${avgMpg?`<div class="stat-mini">
+          <div class="stat-mini-head">
+            <span class="stat-mini-label">Avg MPG</span>
+            ${mpgDelta&&Number(mpgDelta)!==0?`<span class="stat-mini-delta ${Number(mpgDelta)>0?'up':'down'}">${Number(mpgDelta)>0?'+':''}${mpgDelta}</span>`:''}
+          </div>
+          <div class="stat-mini-value">${avgMpg.toFixed(1)}</div>
+          <div class="stat-mini-sub">${recentMpgs.length} recent fills</div>
+          ${_spark(recentMpgs)}
+        </div>`:''}
+        <div class="stat-mini">
+          <div class="stat-mini-head">
+            <span class="stat-mini-label">This Month</span>
+            ${monthDeltaPct!==null?`<span class="stat-mini-delta ${monthDeltaPct>0?'up':'down'}">${monthDeltaPct>0?'+':''}${Math.round(monthDeltaPct)}%</span>`:''}
+          </div>
+          <div class="stat-mini-value">£${totalMon.toFixed(0)}</div>
+          <div class="stat-mini-sub">${mthCostCount} item${mthCostCount===1?'':'s'}</div>
         </div>
-      </div>
-
-      <div class="stats" style="margin-bottom:20px">
-        <div class="stat"><div class="stat-label">Mileage</div><div class="stat-value">${Number(v.current_mileage||0).toLocaleString('en-GB')}</div><div class="stat-sub">miles</div></div>
-        ${avgMpg?`<div class="stat"><div class="stat-label">Avg MPG</div><div class="stat-value">${avgMpg.toFixed(1)}</div><div class="stat-sub">fuel economy</div></div>`:''}
-        <div class="stat"><div class="stat-label">This Month</div><div class="stat-value">£${totalMon.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
-        <div class="stat"><div class="stat-label">This Year</div><div class="stat-value">£${totalYear.toFixed(0)}</div><div class="stat-sub">total costs</div></div>
+        <div class="stat-mini">
+          <div class="stat-mini-head"><span class="stat-mini-label">This Year</span></div>
+          <div class="stat-mini-value">£${totalYear.toFixed(0)}</div>
+          <div class="stat-mini-sub">total costs</div>
+        </div>
       </div>
 
       ${overdue.length+soon.length>0?`
-      <div class="alert-banner ${overdue.length?'danger':'warn'}" style="margin-bottom:20px">
+      <div class="alert-banner ${overdue.length?'danger':'warn'}" style="margin-bottom:14px">
         <div class="alert-banner-icon">${overdue.length?'⚠️':'🔔'}</div>
         <div class="alert-banner-body" style="flex:1">
           <div class="title">${overdue.length?overdue.length+' item'+(overdue.length>1?'s':'')+' overdue':soon.length+' item'+(soon.length>1?'s':'')+' due soon'}</div>
-          <div class="desc">${[...overdue,...soon].slice(0,3).map(i=>i.name).join(', ')}${overdue.length+soon.length>3?` and ${overdue.length+soon.length-3} more`:''}</div>
+          <div class="desc">${[...overdue,...soon].slice(0,3).map(i=>i.name).join(', ')}${overdue.length+soon.length>3?' and '+(overdue.length+soon.length-3)+' more':''}</div>
         </div>
         <a href="/app/maintenance" class="btn btn-ghost btn-sm" style="flex-shrink:0">View →</a>
       </div>`:''}
 
       <div class="grid2">
         <div class="card">
-          <div class="card-head"><span class="card-title">Recent Services</span><a href="/app/service" class="card-link">View all</a></div>
+          <div class="card-head"><span class="card-title">Recent services</span><a href="/app/service" class="card-link">View all →</a></div>
           ${services.length===0?'<div class="empty" style="padding:20px 0"><div class="empty-icon">🔧</div><p>No service records yet.</p></div>'
-          :services.map(s=>`<div class="row-item">
-            <div><div class="row-item-label">${s.garage_name||(s.garage_type||'Service').replace(/_/g,' ')}</div><div class="row-item-sub">${fmtDate(s.date)}${s.mileage_at_service?' · '+fmtMi(s.mileage_at_service):''}</div></div>
-            ${s.total_cost?`<div class="row-item-val">${fmtGBP(s.total_cost)}</div>`:''}
-          </div>`).join('')}
+          :services.map(s=>{const i=_svcIcon(s);return `<div class="svc-row">
+            <div class="svc-row-icon ${i.cls}">${i.icon}</div>
+            <div class="svc-row-body">
+              <div class="svc-row-title">${s.garage_name||(s.garage_type||'Service').replace(/_/g,' ')}</div>
+              <div class="svc-row-meta">${fmtDate(s.date)}${s.mileage_at_service?' · '+fmtMi(s.mileage_at_service):''}${s.invoice_number?' · '+s.invoice_number:''}</div>
+            </div>
+            ${s.total_cost?`<div class="svc-row-val">${fmtGBP(s.total_cost)}</div>`:''}
+          </div>`}).join('')}
         </div>
         <div class="card">
-          <div class="card-head"><span class="card-title">Quick Access</span></div>
-          <div class="grid-auto" style="grid-template-columns:1fr 1fr">
-            ${[['⛽','Fuel Log','/app/fuel'],['🔧','Service','/app/service'],['📅','Maintenance','/app/maintenance'],['📄','Documents','/app/documents'],['🗺️','Trips','/app/trips'],['⚙️','Settings','/app/settings']].map(([ic,lb,hr])=>`<a href="${hr}" class="qlink"><span class="qlink-icon">${ic}</span>${lb}</a>`).join('')}
-          </div>
+          <div class="card-head"><span class="card-title">Next up</span><a href="/app/maintenance" class="card-link">View all →</a></div>
+          ${_nextUp()}
         </div>
       </div>
 
+      ${sixMoCosts.length>0?_costChart():''}
+
       <div class="card">
-        <div class="card-head"><span class="card-title">Vehicle Details</span></div>
+        <div class="card-head"><span class="card-title">Vehicle details</span></div>
         <div class="vd-grid">
           ${[['Make',v.make],['Model',v.model],['Year',v.year],['Colour',v.colour],['Fuel Type',v.fuel_type&&v.fuel_type.length?cap(v.fuel_type):null],['Engine',v.engine_size_cc?v.engine_size_cc+'cc':null],['Transmission',v.transmission&&v.transmission.length?cap(v.transmission):null],['Power',v.power_bhp?v.power_bhp+'bhp':null],['VIN',v.vin]].filter(([,val])=>val).map(([lbl,val])=>`<div><div class="vd-item-label">${lbl}</div><div class="vd-item-val">${val}</div></div>`).join('')}
         </div>
       </div>
     `
+
 
     if(allVehicles.length > 1) {
       const svcPromises = allVehicles.map(v =>
@@ -427,7 +663,7 @@ async function saveVehicle(){
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
           <a href="/app/fuel" class="btn btn-ghost btn-sm">⛽ Log a fill-up</a>
           <a href="/app/service" class="btn btn-ghost btn-sm">🔧 Add a service</a>
-          <a href="/app/documents" class="btn btn-ghost btn-sm">📄 Upload a doc</a>
+          <a href="/app/documents" class="btn btn-ghost btn-sm">📄 View documents</a>
         </div>
       </div>
       <button class="btn btn-ghost btn-sm" onclick="this.closest('.alert-banner').remove()" style="flex-shrink:0;align-self:flex-start">✕</button>`
@@ -438,37 +674,12 @@ async function saveVehicle(){
       }
     }
 
-    // ── Historical data upload banner ─────────────────────────────
-    const histKey='al_history_prompt_'+userId
-    if(!localStorage.getItem(histKey)&&services.length<3){
-      const h=document.createElement('div')
-      h.style.cssText='background:#fff8ed;border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap'
-      h.innerHTML=`<div style="font-size:1.375rem;flex-shrink:0">📂</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:.9rem;font-weight:700;color:var(--text-primary);margin-bottom:2px">Build your full history instantly</div>
-          <div style="font-size:.8125rem;color:var(--text-muted)">Upload past MOT certificates, service receipts or documents.</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <a href="/app/documents" class="btn btn-primary btn-sm">Add past records</a>
-          <button class="btn btn-ghost btn-sm" onclick="dismissHistBanner(this)" style="color:var(--text-muted)">✕</button>
-        </div>`
-      $('content').prepend(h)
-    }
-
   }catch(err){
     console.error('Dashboard error:',err)
     $('content').innerHTML=`<div class="empty"><div class="empty-icon">⚠️</div><h3>Something went wrong</h3><p style="font-size:.875rem;color:var(--text-muted);margin-bottom:16px">${err.message||'Could not load your dashboard. Please check your connection.'}</p><button class="btn btn-primary" onclick="location.reload()">Try again</button></div>`
   }
 })()
 
-function dismissHistBanner(btn){
-  btn.closest('div[style]').remove()
-  const histKey='al_history_prompt_'+userId
-  // Only persist dismissal to localStorage if consent granted
-  if(window.AutoLogConsent&&window.AutoLogConsent.hasAnalyticsConsent()){
-    localStorage.setItem(histKey,'1')
-  }
-}
 </script>
 </body>
 </html>
