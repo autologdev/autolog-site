@@ -41,7 +41,6 @@
   }
   .wrapper { position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 28px 24px 80px; }
 
-  /* Header */
   .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-bright); box-shadow: 0 0 14px var(--teal-bright); animation: pulse 2s ease-in-out infinite; }
@@ -51,27 +50,16 @@
   .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .header-meta { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
 
-  /* Tabs */
   .tabs { display: flex; gap: 4px; }
   .tab { padding: 6px 12px; border-radius: 7px; font-size: .75rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: var(--mono); transition: all .14s; }
   .tab.active-all { border-color: var(--teal); color: var(--teal-bright); background: rgba(45,212,239,0.08); }
-  .tab.active-ios { border-color: var(--ios-color); color: var(--ios-color); background: var(--ios-bg); }
-  .tab.active-web { border-color: var(--web-color); color: var(--web-color); background: var(--web-bg); }
   .tab:hover:not([class*="active"]) { border-color: rgba(255,255,255,.15); color: var(--text); }
   .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; }
   .refresh-btn:hover { border-color: var(--teal); color: var(--teal-bright); }
 
-  /* Badges */
-  .plat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
-  .plat-ios { background: var(--ios-bg); color: var(--ios-color); }
-  .plat-web { background: var(--web-bg); color: var(--web-color); }
-  .plat-legacy { background: rgba(245,158,11,.1); color: var(--amber); }
-
-  /* Section label */
   .section-label { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 36px 0 14px; display: flex; align-items: center; gap: 10px; }
   .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
-  /* KPIs */
   .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
   .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 18px; position: relative; overflow: hidden; transition: border-color .2s; }
   .kpi:hover { border-color: rgba(45,212,239,0.2); }
@@ -79,21 +67,17 @@
   .kpi-label { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 8px; }
   .kpi-value { font-size: 2.25rem; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
   .kpi-sub { font-size: .6875rem; color: var(--muted); margin-top: 6px; }
-  .kpi-delta { font-size: .6875rem; font-weight: 600; margin-top: 5px; }
   .good { color: var(--green); } .warn { color: var(--amber); } .bad { color: var(--red); } .neutral { color: var(--muted); }
 
-  /* Grid layouts */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
   @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } }
 
-  /* Card */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
   .card-title { font-size: .8125rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
   .card-sub { font-size: .6875rem; color: var(--muted); font-weight: 400; margin-bottom: 16px; }
 
-  /* Master funnel */
   .mfunnel { display: flex; flex-direction: column; gap: 0; }
   .mfunnel-row { display: grid; grid-template-columns: 200px 1fr 80px 70px; align-items: center; gap: 14px; padding: 10px 0; }
   .mfunnel-label { font-size: .8125rem; color: var(--text); font-weight: 500; }
@@ -105,19 +89,6 @@
   .mfunnel-drop { grid-column: 1/-1; text-align: right; padding: 0 80px 4px 0; font-size: .625rem; color: var(--red); font-family: var(--mono); opacity: .65; }
   @media (max-width: 700px) { .mfunnel-row { grid-template-columns: 1fr 60px 50px; } .mfunnel-bar-wrap { display: none; } }
 
-  /* Source / campaign table */
-  .src-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
-  .src-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
-  .src-table th.num { text-align: right; }
-  .src-table td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.03); }
-  .src-table td.num { text-align: right; font-family: var(--mono); }
-  .src-table tr:last-child td { border-bottom: none; }
-  .src-name { font-size: .8125rem; color: var(--text); font-weight: 500; }
-  .src-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
-  .src-bar { height: 3px; background: var(--faint); border-radius: 100px; overflow: hidden; margin-top: 4px; max-width: 240px; }
-  .src-bar-fill { height: 100%; background: var(--teal); border-radius: 100px; }
-
-  /* Event rows */
   .event-list { display: flex; flex-direction: column; gap: 5px; }
   .event-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surface2); border-radius: 7px; border: 1px solid transparent; transition: border-color .14s; }
   .event-row:hover { border-color: var(--border); }
@@ -127,7 +98,6 @@
   .event-bar { height: 100%; border-radius: 100px; background: var(--teal); }
   .event-count { font-family: var(--mono); font-size: .8125rem; font-weight: 500; min-width: 30px; text-align: right; }
 
-  /* Timeline */
   .timeline { display: flex; flex-direction: column; }
   .tl-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
   .tl-row:last-child { border-bottom: none; }
@@ -138,12 +108,9 @@
   .ev-vehicle { background: rgba(45,212,239,.1); color: var(--teal-bright); }
   .ev-paywall { background: rgba(245,158,11,.1); color: var(--amber); }
   .ev-action { background: rgba(139,92,246,.1); color: #a78bfa; }
-  .ev-reg { background: rgba(245,200,66,.1); color: #f5c842; }
-  .ev-page { background: rgba(255,255,255,.04); color: var(--muted); }
   .ev-other { background: rgba(255,255,255,.05); color: var(--muted); }
   .ev-tour { background: rgba(45,212,239,.12); color: var(--teal-bright); }
 
-  /* Feature tour funnel — narrower than master funnel because step names are long */
   .tfunnel-row { display: grid; grid-template-columns: 230px 1fr 60px 60px; align-items: center; gap: 12px; padding: 8px 0; }
   .tfunnel-label { font-size: .75rem; color: var(--text); font-weight: 500; }
   .tfunnel-sub { font-size: .625rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
@@ -153,7 +120,6 @@
   .tfunnel-pct { font-family: var(--mono); font-size: .6875rem; color: var(--muted); text-align: right; }
   @media (max-width: 700px) { .tfunnel-row { grid-template-columns: 1fr 50px 50px; } .tfunnel-bar-wrap { display: none; } }
 
-  /* Feature tour per-step table */
   .tstep-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   .tstep-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
   .tstep-table th.num { text-align: right; }
@@ -162,7 +128,6 @@
   .tstep-table tr:last-child td { border-bottom: none; }
   .tl-props { font-size: .6875rem; color: var(--muted); font-family: var(--mono); }
 
-  /* Retention cohort + heatmap */
   .cohort-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
   .cohort-table th { text-align: left; padding: 8px 10px; font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
   .cohort-table td { padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
@@ -185,7 +150,6 @@
   .hm-total-row td { background: rgba(45,212,239,.04); border-top: 1px solid var(--border); border-bottom: none; }
   .hm-total-row .hm-user { color: var(--muted); font-size: .6875rem; }
 
-  /* User detail drill-down */
   .user-row-clickable { cursor: pointer; transition: background .12s; }
   .user-row-clickable:hover td { background: rgba(255,255,255,.025); }
   .user-detail-row { display: none; }
@@ -194,33 +158,81 @@
   .user-event-feed::-webkit-scrollbar { width: 4px; }
   .user-event-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  /* Insight banner */
   .insight { background: rgba(30,122,140,0.07); border: 1px solid rgba(45,212,239,0.13); border-radius: 10px; padding: 14px 18px; margin-top: 10px; font-size: .75rem; color: var(--muted); line-height: 1.6; }
   .insight strong { color: var(--text); }
-  .warn-insight { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); color: rgba(255,255,255,0.7); }
 
-  /* Misc */
   #loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 14px; }
   .spinner { width: 26px; height: 26px; border: 2.5px solid rgba(45,212,239,.15); border-top-color: var(--teal-bright); border-radius: 50%; animation: spin .65s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-family: var(--mono); font-size: .75rem; color: var(--muted); }
   .empty-msg { font-size: .8125rem; color: var(--muted); padding: 12px 0; text-align: center; }
 
-  /* Sparkline */
   .spark-wrap { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 4px; }
-  .spark-bar { flex: 1; background: var(--teal); border-radius: 2px 2px 0 0; min-height: 2px; opacity: .85; transition: opacity .14s; }
+  .spark-bar { flex: 1; background: var(--teal); border-radius: 2px 2px 0 0; min-height: 2px; opacity: .85; transition: opacity .14s; cursor: default; }
   .spark-bar:hover { opacity: 1; }
   .spark-bar.empty { background: var(--faint); opacity: .4; }
-
-  /* Sparkline details */
   .spark-labels { display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--mono); font-size: .5625rem; color: var(--muted); }
+
+  .plat { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-family: var(--mono); font-size: .6875rem; font-weight: 600; }
+  .plat-ios { background: var(--ios-bg); color: var(--ios-color); }
+  .plat-web { background: var(--web-bg); color: var(--web-color); }
+  .plat-legacy { background: rgba(245,158,11,.1); color: var(--amber); }
+
+  /* Broadcast */
+  .broadcast-btn { background: rgba(168,85,247,0.10); border: 1px solid rgba(168,85,247,0.3); color: #c084fc; padding: 6px 12px; border-radius: 7px; font-family: var(--mono); font-size: .75rem; cursor: pointer; transition: all .15s; font-weight: 600; }
+  .broadcast-btn:hover, .broadcast-btn.active { background: rgba(168,85,247,0.18); border-color: #c084fc; }
+  #broadcast-panel { display: none; background: var(--surface); border: 1px solid rgba(168,85,247,0.2); border-radius: 14px; padding: 22px 24px; margin-bottom: 28px; }
+  #broadcast-panel.open { display: block; }
+  .bc-label { font-size: .6875rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .bc-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface2); color: var(--text); font-family: var(--mono); font-size: .875rem; outline: none; transition: border-color .14s; }
+  .bc-input:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-toolbar { display: flex; flex-wrap: wrap; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-bottom: none; border-radius: 9px 9px 0 0; padding: 6px 8px; }
+  .bc-toolbar button { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 3px 10px; font-size: .8rem; cursor: pointer; font-family: var(--sans); transition: background .15s; }
+  .bc-toolbar button:hover { background: rgba(168,85,247,0.18); border-color: #c084fc; }
+  .bc-toolbar-sep { width: 1px; background: var(--border); margin: 2px 4px; align-self: stretch; }
+  .bc-richbody { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 9px 9px; color: var(--text); font-family: var(--sans); font-size: .875rem; padding: 10px 12px; min-height: 110px; box-sizing: border-box; outline: none; line-height: 1.6; }
+  .bc-richbody:focus { border-color: rgba(168,85,247,0.5); }
+  .bc-richbody:empty:before { content: attr(data-placeholder); color: #666; pointer-events: none; }
+  .bc-richbody ul, .bc-richbody ol { padding-left: 1.4em; margin: 4px 0; }
+  .bc-richbody li { margin: 2px 0; }
+  .bc-richbody h3 { font-size: 1rem; font-weight: 700; margin: 6px 0 2px; }
+  .bc-mock-body ul, .bc-mock-body ol { padding-left: 1.2em; margin: 3px 0; }
+  .bc-mock-body li { margin: 1px 0; }
+  .bc-mock-body h3 { font-size: .85rem; font-weight: 700; margin: 4px 0 1px; }
+  .bc-emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .bc-emoji { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 1.1rem; cursor: pointer; transition: all .14s; user-select: none; }
+  .bc-emoji:hover { border-color: rgba(168,85,247,0.4); }
+  .bc-emoji.selected { border-color: #c084fc; background: rgba(168,85,247,0.15); }
+  .bc-send-btn { background: #7c3aed; border: none; color: #fff; padding: 10px 22px; border-radius: 9px; font-family: var(--sans); font-size: .875rem; font-weight: 700; cursor: pointer; transition: background .14s; }
+  .bc-send-btn:hover { background: #6d28d9; }
+  .bc-send-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .bc-msg { font-size: .8125rem; padding: 10px 14px; border-radius: 8px; margin-top: 10px; display: none; }
+  .bc-msg.success { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.2); color: var(--green); }
+  .bc-msg.error   { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);  color: #fca5a5; }
+  .bc-preview-phone { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 260px; }
+  .bc-mock-backdrop { background: rgba(0,0,0,0.38); border-radius: 10px; padding: 18px; width: 100%; max-width: 300px; display: flex; align-items: center; justify-content: center; }
+  .bc-mock-card { background: #ffffff; border-radius: 20px; padding: 22px 20px 18px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,0.35); }
+  .bc-mock-icon { font-size: 36px; text-align: center; margin-bottom: 10px; }
+  .bc-mock-title { font-size: 15px; font-weight: 700; color: #111; text-align: center; margin-bottom: 8px; font-family: var(--sans); line-height: 1.3; }
+  .bc-mock-body { font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 14px; font-family: var(--sans); }
+  .bc-mock-cta { background: #007AFF; color: #fff; border-radius: 10px; padding: 9px 14px; font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 8px; font-family: var(--sans); }
+  .bc-mock-dismiss { background: rgba(0,122,255,0.08); color: #007AFF; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; text-align: center; font-family: var(--sans); border: 1px solid rgba(0,122,255,0.18); }
+  @media (max-width: 800px) { #broadcast-panel > div { grid-template-columns: 1fr !important; } }
+
+  /* Daily activity bar chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; height: 100%; justify-content: flex-end; }
+  .bar-fill { width: 100%; border-radius: 3px 3px 0 0; background: var(--teal); opacity: .85; min-height: 2px; transition: opacity .14s; }
+  .bar-fill:hover { opacity: 1; }
+  .bar-fill.empty { background: var(--faint); opacity: .35; }
+  .bar-label { font-family: var(--mono); font-size: .5rem; color: var(--muted); white-space: nowrap; }
 </style>
 </head>
 <body>
 <div class="wrapper">
 <div id="loading"><div class="spinner"></div><div class="loading-text">Loading analytics\u2026</div></div>
 
-<div id="auth-gate" style="display:none;min-height:100vh;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+<div id="auth-gate" style="display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:20px">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:400px;width:100%;text-align:center">
     <div style="font-size:1.5rem;margin-bottom:12px">&#128274;</div>
     <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:8px">Sign in to view analytics</div>
@@ -238,33 +250,35 @@
 <script>
 const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
-const sb = supabase.createClient(SURL, SKEY)
+const sb = supabase.createClient(SURL, SKEY, { auth: { persistSession: true } })
 const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 
-let allEvents = [], allProfiles = [], allEventsTotal = 0
-let currentPlatform = 'all'
+// ── State ───────────────────────────────────────────────────────────────────
+let summaryRows = []       // analytics_daily_summary rows for current range
+let allProfiles = []       // all profiles (small table, always full fetch)
+let allUserEvents = {}     // per-user events loaded on drill-down click
 let currentRange = '30d'
 let feedLimit = 40
 
-// Feature heatmap definitions — collapse v2 screen_viewed and pre-v2 legacy names
+// Feature heatmap definitions
 const FEATURES = [
-  { key: 'onboarding',  label: 'Onboarded',     match: e => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' },
-  { key: 'vehicle',     label: 'Added vehicle', match: e => e.event_name === 'vehicle_added' },
-  { key: 'action',      label: 'First action',  match: e => e.event_name === 'first_action_taken' },
-  { key: 'fuel',        label: 'Fuel entry',    match: e => e.event_name === 'fuel_entry_added' || e.event_name === 'fuel_added' },
-  { key: 'service',     label: 'Service log',   match: e => e.event_name === 'service_entry_added' || e.event_name === 'service_added' },
-  { key: 'document',    label: 'Doc upload',    match: e => e.event_name === 'document_upload_completed' || e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
-  { key: 'trip',        label: 'Trip logged',   match: e => e.event_name === 'trip_started' },
-  { key: 'costs',       label: 'Costs viewed',  match: e => e.event_name === 'costs_viewed' },
-  { key: 'paywall',     label: 'Saw paywall',   match: e => e.event_name === 'paywall_viewed' },
-  { key: 'subscribe',   label: 'Subscribed',    match: e => e.event_name === 'subscription_started' },
-  { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'dashboard_viewed' },
-  { key: 'docs_view',   label: 'Docs opened',   match: e => e.event_name === 'document_upload_started' || e.event_name === 'document_upload_completed' || e.event_name === 'document_upload_started' },
-  { key: 'tour_saw',    label: 'Saw tour',      match: e => e.event_name === 'feature_tour_started' },
-  { key: 'tour_done',   label: 'Done tour',     match: e => e.event_name === 'feature_tour_completed' },
+  { key: 'onboarding',  label: 'Onboarded',     match: (e,p) => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' || p?.onboarding_completed === true },
+  { key: 'vehicle',     label: 'Added vehicle',  match: e => e.event_name === 'vehicle_added' },
+  { key: 'action',      label: 'First action',   match: (e,p) => e.event_name === 'first_action_taken' || p?.first_action_completed === true },
+  { key: 'fuel',        label: 'Fuel entry',     match: e => e.event_name === 'fuel_entry_added' || e.event_name === 'fuel_added' },
+  { key: 'service',     label: 'Service log',    match: e => e.event_name === 'service_entry_added' || e.event_name === 'service_added' },
+  { key: 'document',    label: 'Doc upload',     match: e => e.event_name === 'document_upload_completed' || e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
+  { key: 'trip',        label: 'Trip logged',    match: e => e.event_name === 'trip_started' },
+  { key: 'costs',       label: 'Costs viewed',   match: e => e.event_name === 'costs_viewed' },
+  { key: 'paywall',     label: 'Saw paywall',    match: e => e.event_name === 'paywall_viewed' },
+  { key: 'subscribe',   label: 'Subscribed',     match: (e,p) => e.event_name === 'subscription_started' || p?.plan === 'paid' },
+  { key: 'dashboard',   label: 'Dashboard',      match: e => e.event_name === 'dashboard_viewed' },
+  { key: 'docs_view',   label: 'Docs opened',    match: e => e.event_name === 'documents_viewed' },
+  { key: 'tour_saw',    label: 'Saw tour',       match: e => e.event_name === 'feature_tour_started' },
+  { key: 'tour_done',   label: 'Done tour',      match: e => e.event_name === 'feature_tour_completed' },
 ]
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return '\u2014'
   const dt = new Date(d)
@@ -278,216 +292,214 @@ function daysSince(d) {
   if (!d) return Infinity
   return Math.floor((Date.now() - new Date(d)) / 86400000)
 }
+function sum(rows, key) { return rows.reduce((a,r) => a + (r[key]||0), 0) }
 function getPlatform(e) {
   if (e.platform && e.platform !== 'legacy') return e.platform
-  // Legacy inference for old rows
   const p = e.properties || {}
   if (p.platform === 'ios') return 'ios'
   if (p.platform === 'web' || p.source === 'web') return 'web'
   if (['onboarding_completed','onboarding_complete','subscription_started'].includes(e.event_name)) return 'ios'
-  if (e.event_name === 'screen_viewed' && p.source === 'web') return 'web'
   return 'unknown'
-}
-function filterEventsByPlatform(events) {
-  if (currentPlatform === 'all') return events
-  return events.filter(e => getPlatform(e) === currentPlatform)
-}
-function filterEventsByRange(events) {
-  // Filtering is now done server-side at fetch time — this is a no-op passthrough
-  return events
-}
-function evBadgeClass(name) {
-  if (name.includes('signup') || name.includes('onboarding')) return 'ev-signup'
-  if (name.includes('vehicle')) return 'ev-vehicle'
-  if (name.includes('paywall') || name.includes('subscription')) return 'ev-paywall'
-  if (name.includes('reg_lookup')) return 'ev-reg'
-  if (name.includes('feature_tour')) return 'ev-tour'
-  if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service') || name.includes('feedback')) return 'ev-action'
-  if (name.includes('page_') || name.includes('scroll') || name.includes('section_')) return 'ev-page'
-  return 'ev-other'
 }
 function platBadge(platform) {
   if (platform === 'ios') return `<span class="plat plat-ios">iOS</span>`
   if (platform === 'web') return `<span class="plat plat-web">Web</span>`
   return `<span class="plat plat-legacy">legacy</span>`
 }
-function setPlatform(p) { currentPlatform = p; render(); window.scrollTo(0,0) }
-function setRange(r)    { currentRange = r; reloadEvents() }
+function evBadgeClass(name) {
+  if (name.includes('signup') || name.includes('onboarding')) return 'ev-signup'
+  if (name.includes('vehicle')) return 'ev-vehicle'
+  if (name.includes('paywall') || name.includes('subscription')) return 'ev-paywall'
+  if (name.includes('feature_tour')) return 'ev-tour'
+  if (name.includes('action') || name.includes('document') || name.includes('fuel') || name.includes('service') || name.includes('feedback')) return 'ev-action'
+  return 'ev-other'
+}
+function rangeStartISO() {
+  if (currentRange === 'all') return null
+  const ms = currentRange === '7d' ? 7 : currentRange === '30d' ? 30 : 90
+  const d = new Date(); d.setDate(d.getDate() - ms)
+  return d.toISOString().split('T')[0]
+}
+function setRange(r) { currentRange = r; loadData() }
 
-function toggleUserDetail(uid) {
+// ── Data loading ─────────────────────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('loading').style.display = 'flex'
+  document.getElementById('main').style.display = 'none'
+
+  // Summary rows for current range (at most 90 rows, usually 7–30)
+  let summaryQuery = sb.from('analytics_daily_summary').select('*').order('day', { ascending: true })
+  const start = rangeStartISO()
+  if (start) summaryQuery = summaryQuery.gte('day', start)
+
+  // Profiles always fully fetched (one row per user, stays small for a long time)
+  const [summaryRes, profilesRes] = await Promise.all([
+    summaryQuery,
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source').order('created_at', { ascending: false })
+  ])
+
+  if (summaryRes.error) throw new Error(summaryRes.error.message)
+  if (profilesRes.error) throw new Error(profilesRes.error.message)
+
+  summaryRows = summaryRes.data || []
+  allProfiles = profilesRes.data || []
+
+  render()
+}
+
+// Lazy-load events for a single user when they expand the drill-down row
+async function loadUserEvents(userId) {
+  if (allUserEvents[userId]) return allUserEvents[userId]
+  const { data } = await sb.from('analytics_events')
+    .select('event_name, properties, created_at, platform')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+  allUserEvents[userId] = data || []
+  return allUserEvents[userId]
+}
+
+async function toggleUserDetail(uid) {
   const row = document.getElementById('detail-' + uid)
   if (!row) return
   const isOpen = row.classList.contains('open')
   document.querySelectorAll('.user-detail-row.open').forEach(r => r.classList.remove('open'))
-  if (!isOpen) row.classList.add('open')
-}
-
-// Normalise UTM source (coalesce referrers into sources)
-function normalizeSource(e) {
-  const p = e.properties || {}
-  if (p.utm_source) return p.utm_source.toLowerCase()
-  if (p.referrer) {
-    try {
-      const host = new URL(p.referrer).hostname.replace(/^www\./, '')
-      if (host.includes('google')) return 'google (organic)'
-      if (host.includes('reddit')) return 'reddit (organic)'
-      if (host.includes('bing')) return 'bing (organic)'
-      if (host.includes('duckduckgo')) return 'duckduckgo (organic)'
-      if (host.includes('facebook') || host.includes('fb.com')) return 'facebook (organic)'
-      if (host.includes('twitter') || host.includes('x.com') || host.includes('t.co')) return 'twitter (organic)'
-      if (host.includes('linkedin')) return 'linkedin (organic)'
-      if (host.includes('pistonheads')) return 'pistonheads (organic)'
-      return host
-    } catch { return 'unknown' }
+  if (!isOpen) {
+    row.classList.add('open')
+    const feed = document.getElementById('feed-' + uid)
+    if (feed && feed.dataset.loaded !== 'true') {
+      feed.innerHTML = '<div style="color:var(--muted);font-size:.75rem;padding:8px 0">Loading\u2026</div>'
+      const events = await loadUserEvents(uid)
+      feed.dataset.loaded = 'true'
+      if (events.length === 0) {
+        feed.innerHTML = '<div style="color:var(--muted);font-size:.8125rem;padding:8px 0">No events.</div>'
+        return
+      }
+      feed.innerHTML = events.map(e => {
+        const pl = getPlatform(e)
+        const props = e.properties || {}
+        const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,40)}`).join(' \u00B7 ')
+        return `<div class="tl-row" style="padding:7px 0">
+          <div class="tl-time" style="min-width:80px;font-size:.625rem">${fmtDate(e.created_at)}</div>
+          <div class="tl-body">
+            ${platBadge(pl)}
+            <span class="ev-badge ${evBadgeClass(e.event_name)}">${e.event_name}</span>
+            ${propStr ? `<span class="tl-props" style="font-size:.625rem">${propStr}</span>` : ''}
+          </div>
+        </div>`
+      }).join('')
+    }
   }
-  return '(direct)'
 }
 
-// ─── Main render ────────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   const rangeLabel = currentRange === 'all' ? 'all time' : currentRange
-  const platformLabel = currentPlatform === 'all' ? 'all platforms' : currentPlatform
 
-  const rangedEvents = filterEventsByRange(allEvents)
-  const events = filterEventsByPlatform(rangedEvents)
-  const webEvents = rangedEvents.filter(e => getPlatform(e) === 'web')
-  const iosEvents = rangedEvents.filter(e => getPlatform(e) === 'ios')
+  // Aggregate summary metrics from rows
+  const totalEvents    = sum(summaryRows, 'total_events')
+  const iosEvents      = sum(summaryRows, 'ios_events')
+  const webEvents      = sum(summaryRows, 'web_events')
+  const totalAppOpens  = sum(summaryRows, 'app_opens')
+  const totalFuel      = sum(summaryRows, 'fuel_entries')
+  const totalService   = sum(summaryRows, 'service_entries')
+  const totalDocs      = sum(summaryRows, 'doc_uploads')
+  const totalTrips     = sum(summaryRows, 'trips_started')
+  const totalPaywalls  = sum(summaryRows, 'paywall_views')
+  const totalSubs      = sum(summaryRows, 'subscriptions_started')
+  const totalOnboard   = sum(summaryRows, 'onboardings')
 
-  const totalUsers = allProfiles.length
+  // Profile-based stats (always all-time — profiles don't have range filter)
+  const totalUsers         = allProfiles.length
   const completedOnboarding = allProfiles.filter(p => p.onboarding_completed).length
-  const tookFirstAction = allProfiles.filter(p => p.first_action_completed).length
-  const paidUsers = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
-  const isSmallBase = totalUsers < 20
+  const tookFirstAction    = allProfiles.filter(p => p.first_action_completed).length
+  const paidUsers          = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  const isSmallBase        = totalUsers < 20
 
-  // ── App session stats (iOS) ──
-  const appOpenEvents = iosEvents.filter(e => e.event_name === 'app_opened')
-  const appOpenUsers = new Set(appOpenEvents.filter(e => e.user_id).map(e => e.user_id)).size
+  // DAU (today from summary rows)
   const todayKey = new Date().toISOString().split('T')[0]
-  const dau = new Set(appOpenEvents.filter(e => e.created_at?.startsWith(todayKey) && e.user_id).map(e => e.user_id)).size
+  const todayRow = summaryRows.find(r => r.day === todayKey)
+  const dau = todayRow?.dau || 0
 
-  // ── Web visitor funnel ──
-  const uniqueAnonymous = new Set(webEvents.filter(e => e.anonymous_id).map(e => e.anonymous_id)).size
-  const uniqueSessions = new Set(webEvents.filter(e => e.session_id).map(e => e.session_id)).size
-  const pageViews = webEvents.filter(e => e.event_name === 'page_viewed').length
-  const regLookupAttempts = webEvents.filter(e => e.event_name === 'reg_lookup_attempted').length
-  const regLookupSuccesses = webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').length
-  const regCtaClicks = webEvents.filter(e => e.event_name === 'reg_lookup_cta_clicked').length
-
-
-  // ── Event counts (filtered) ──
-  const counts = {}
-  events.forEach(e => { counts[e.event_name] = (counts[e.event_name]||0) + 1 })
-  const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1])
-  const maxCount = sortedCounts[0]?.[1] || 1
-
-  // ── Reg lookup breakdown: makes / failures ──
-  const regMakes = {}
-  const regFailReasons = {}
-  webEvents.filter(e => e.event_name === 'reg_lookup_succeeded').forEach(e => {
-    const mk = (e.properties?.make || 'unknown').toLowerCase()
-    regMakes[mk] = (regMakes[mk]||0) + 1
-  })
-  webEvents.filter(e => e.event_name === 'reg_lookup_failed').forEach(e => {
-    const r = e.properties?.reason || 'unknown'
-    regFailReasons[r] = (regFailReasons[r]||0) + 1
-  })
-
-  // ── Traffic sources ──
-  const sourceCounts = {}
-  webEvents.filter(e => e.event_name === 'page_viewed').forEach(e => {
-    const src = normalizeSource(e)
-    if (!sourceCounts[src]) sourceCounts[src] = { pageviews: 0, anonymous: new Set() }
-    sourceCounts[src].pageviews++
-    if (e.anonymous_id) sourceCounts[src].anonymous.add(e.anonymous_id)
-  })
-  const sortedSources = Object.entries(sourceCounts)
-    .map(([src, d]) => ({ src, pageviews: d.pageviews, visitors: d.anonymous.size }))
-    .sort((a,b) => b.pageviews - a.pageviews)
-  const maxSourcePV = sortedSources[0]?.pageviews || 1
-
-  // ── Section visibility ──
-  const sectionCounts = {}
-  webEvents.filter(e => e.event_name === 'section_viewed').forEach(e => {
-    const s = e.properties?.section || 'unknown'
-    sectionCounts[s] = (sectionCounts[s]||0) + 1
-  })
-  const sortedSections = Object.entries(sectionCounts).sort((a,b) => b[1]-a[1])
-  const maxSectionCount = sortedSections[0]?.[1] || 1
-
-  // ── Sparkline (14 day) ──
-  const sparkBuckets = []
+  // Sparkline: last 14 days from summaryRows
+  const spark14 = []
   for (let i = 13; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i)
     const key = d.toISOString().split('T')[0]
-    sparkBuckets.push({ key, count: allEvents.filter(e => e.created_at?.startsWith(key)).length, label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
+    const row = summaryRows.find(r => r.day === key)
+    spark14.push({ key, count: row?.total_events || 0, label: d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }) })
   }
-  const sparkMax = Math.max(...sparkBuckets.map(b => b.count), 1)
+  const sparkMax = Math.max(...spark14.map(b => b.count), 1)
 
-  // ── Retention cohort ──
+  // Feature activity bar chart (using summary metrics for current range)
+  const activityMetrics = [
+    { label: 'Fuel', value: totalFuel, color: 'var(--teal)' },
+    { label: 'Service', value: totalService, color: 'var(--teal)' },
+    { label: 'Docs', value: totalDocs, color: 'var(--teal)' },
+    { label: 'Trips', value: totalTrips, color: 'var(--teal)' },
+    { label: 'Paywall', value: totalPaywalls, color: 'var(--amber)' },
+    { label: 'Subs', value: totalSubs, color: 'var(--green)' },
+  ]
+  const actMax = Math.max(...activityMetrics.map(m => m.value), 1)
+
+  // Retention cohort — needs per-user event data from the heatmap
+  // We use profiles only for the cohort table (last seen from allUserEvents if loaded, else show join date)
   const retentionRows = allProfiles.map(p => {
-    const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
-    const firstSeen = ue[0]?.created_at || p.created_at
-    const lastSeen = ue[ue.length-1]?.created_at || null
-    const daysOld = daysSince(firstSeen)
-    const daysAgo = daysSince(lastSeen)
-    const firstDate = new Date(firstSeen)
+    const ue = allUserEvents[p.id] || []
+    const lastSeen = ue.length ? ue[0]?.created_at : null
+    const daysOld = daysSince(p.created_at)
+    const daysAgo = lastSeen ? daysSince(lastSeen) : null
     const activeDays = new Set(ue.map(e => e.created_at?.split('T')[0])).size
-    const d1  = ue.filter(e => new Date(e.created_at) - firstDate <= 864e5).length > 0
-    const d7  = ue.filter(e => new Date(e.created_at) - firstDate <= 7*864e5).length > 0
-    const d30 = ue.filter(e => new Date(e.created_at) - firstDate <= 30*864e5).length > 0
-    return { profile: p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
-  }).sort((a,b) => new Date(b.firstSeen) - new Date(a.firstSeen))
+    const firstDate = new Date(p.created_at)
+    const d1  = ue.some(e => new Date(e.created_at) - firstDate <= 864e5)
+    const d7  = ue.some(e => new Date(e.created_at) - firstDate <= 7*864e5)
+    const d30 = ue.some(e => new Date(e.created_at) - firstDate <= 30*864e5)
+    return { profile: p, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
+  }).sort((a,b) => new Date(b.profile.created_at) - new Date(a.profile.created_at))
 
-  // ── Heatmap ──
+  // Heatmap — requires per-user events; show skeleton if not loaded
   const heatmapRows = allProfiles.map(p => {
-    const ue = allEvents.filter(e => e.user_id === p.id)
-    const lastSeen = ue.sort((a,b) => new Date(b.created_at)-new Date(a.created_at))[0]?.created_at
+    const ue = allUserEvents[p.id] || []
+    const lastSeen = ue.length ? ue[0]?.created_at : null
     const featureMap = {}
-    FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e)) })
+    FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e, p)) || f.match({event_name:''}, p) })
     const score = Object.values(featureMap).filter(Boolean).length
     return { profile: p, featureMap, score, lastSeen, totalEvents: ue.length }
   }).sort((a,b) => b.score - a.score)
   const featureAdoption = {}
   FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
 
-  // ── Feature tour analytics ──
-  // All tour events across all time (tour lifecycle is cross-range by nature).
-  // The tour has 11 sub-steps under 7 stops — this order matches FeatureTour.steps in iOS.
+  // Tour analytics from summary-range events — not available in summary table,
+  // so we note it needs a drill-down and show placeholder until events are loaded
+  const allLoadedEvents = Object.values(allUserEvents).flat()
   const TOUR_STEPS = [
-    { id: 'garage',                     stop: 1, label: 'Stop 1 · Garage' },
-    { id: 'dashboard_top',              stop: 2, label: 'Stop 2a · Dashboard top' },
-    { id: 'dashboard_costs',            stop: 2, label: 'Stop 2b · Dashboard costs' },
-    { id: 'dashboard_quick_actions',    stop: 2, label: 'Stop 2c · Quick actions' },
-    { id: 'fuel',                       stop: 3, label: 'Stop 3 · Fuel log' },
-    { id: 'documents',                  stop: 4, label: 'Stop 4 · Documents' },
-    { id: 'trips_auto_detect',          stop: 5, label: 'Stop 5a · Auto-detect' },
-    { id: 'trips_list',                 stop: 5, label: 'Stop 5b · Trips list' },
-    { id: 'service_add',                stop: 6, label: 'Stop 6a · Service add' },
-    { id: 'service_history',            stop: 6, label: 'Stop 6b · Service history' },
-    { id: 'costs',                      stop: 7, label: 'Stop 7 · Costs detail' },
+    { id: 'garage',                  stop: 1, label: 'Stop 1 \u00B7 Garage' },
+    { id: 'dashboard_top',           stop: 2, label: 'Stop 2a \u00B7 Dashboard top' },
+    { id: 'dashboard_costs',         stop: 2, label: 'Stop 2b \u00B7 Dashboard costs' },
+    { id: 'dashboard_quick_actions', stop: 2, label: 'Stop 2c \u00B7 Quick actions' },
+    { id: 'fuel',                    stop: 3, label: 'Stop 3 \u00B7 Fuel log' },
+    { id: 'documents',               stop: 4, label: 'Stop 4 \u00B7 Documents' },
+    { id: 'trips_auto_detect',       stop: 5, label: 'Stop 5a \u00B7 Auto-detect' },
+    { id: 'trips_list',              stop: 5, label: 'Stop 5b \u00B7 Trips list' },
+    { id: 'service_add',             stop: 6, label: 'Stop 6a \u00B7 Service add' },
+    { id: 'service_history',         stop: 6, label: 'Stop 6b \u00B7 Service history' },
+    { id: 'costs',                   stop: 7, label: 'Stop 7 \u00B7 Costs detail' },
   ]
-
-  // Use rangedEvents so the section respects the range filter — lets Marius
-  // compare tour v1 vs v2 performance over time by switching ranges.
-  const tourEvents = rangedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
+  const tourEvents = allLoadedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
   const tourStarted = tourEvents.filter(e => e.event_name === 'feature_tour_started')
   const tourCompleted = tourEvents.filter(e => e.event_name === 'feature_tour_completed')
   const tourSkipped = tourEvents.filter(e => e.event_name === 'feature_tour_skipped')
   const tourSkippedImmediate = tourSkipped.filter(e => e.properties?.skip_type === 'immediate')
   const tourSkippedMidway = tourSkipped.filter(e => e.properties?.skip_type === 'midway')
   const tourReplayed = tourEvents.filter(e => e.event_name === 'feature_tour_replayed')
-
-  const startedCount = tourStarted.length
-  const completedCount = tourCompleted.length
-  const skippedCount = tourSkipped.length
+  const startedCount = new Set(tourStarted.map(e => e.user_id).filter(Boolean)).size
+  const completedUserIds = new Set(tourCompleted.map(e => e.user_id).filter(Boolean))
+  const completedCount = completedUserIds.size
+  const skippedCount = new Set(tourSkipped.map(e => e.user_id).filter(id => id && !completedUserIds.has(id))).size
   const completionRate = startedCount > 0 ? Math.round(completedCount / startedCount * 100) : 0
   const skipRate = startedCount > 0 ? Math.round(skippedCount / startedCount * 100) : 0
-
-  // Median total duration of completed tours (ms)
   const durations = tourCompleted.map(e => e.properties?.total_duration_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
   const medianDurationMs = durations.length ? durations[Math.floor(durations.length/2)] : 0
-
-  // Per-step stats: viewed count, completed count, median time on step (ms)
   const stepStats = TOUR_STEPS.map(s => {
     const viewed = tourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id).length
     const completedEvs = tourEvents.filter(e => e.event_name === 'feature_tour_step_completed' && e.properties?.step_name === s.id)
@@ -498,44 +510,115 @@ function render() {
     return { ...s, viewed, completed, medianTimeMs, stepCompletionPct }
   })
   const tourMaxStepViews = Math.max(startedCount, ...stepStats.map(s => s.viewed), 1)
-
   function fmtMs(ms) {
-    if (!ms) return '—'
+    if (!ms) return '\u2014'
     if (ms < 1000) return ms + 'ms'
     if (ms < 60000) return (ms/1000).toFixed(1) + 's'
     return Math.floor(ms/60000) + 'm ' + Math.round((ms%60000)/1000) + 's'
   }
   function stepTimeColor(ms) {
     if (!ms) return 'var(--muted)'
-    if (ms < 800) return 'var(--red)'      // skimmed — maybe copy unclear
-    if (ms > 8000) return 'var(--amber)'   // stuck — maybe copy too long
+    if (ms < 800) return 'var(--red)'
+    if (ms > 8000) return 'var(--amber)'
     return 'var(--text)'
   }
 
-  // ─── Render DOM ───────────────────────────────────────────────────────────
+  const summaryUpdated = summaryRows.length ? fmtDate(summaryRows[summaryRows.length-1].updated_at) : 'n/a'
+
   document.getElementById('loading').style.display = 'none'
   const mainEl = document.getElementById('main')
   mainEl.style.display = 'block'
-  const lastEvent = allEvents[0]?.created_at ? fmtDate(allEvents[0].created_at) : 'None yet'
 
   mainEl.innerHTML = `
   <!-- HEADER -->
   <div class="header">
-    <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics v2</div></div>
+    <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics</div></div>
     <div class="header-right">
-      <div class="header-meta">Last event: ${lastEvent}</div>
+      <div class="header-meta">Summary updated: ${summaryUpdated}</div>
       <div class="tabs">
         <div class="tab ${currentRange==='7d'?'active-all':''}"  onclick="setRange('7d')">7d</div>
         <div class="tab ${currentRange==='30d'?'active-all':''}" onclick="setRange('30d')">30d</div>
         <div class="tab ${currentRange==='90d'?'active-all':''}" onclick="setRange('90d')">90d</div>
         <div class="tab ${currentRange==='all'?'active-all':''}" onclick="setRange('all')">All</div>
       </div>
-      <div class="tabs">
-        <div class="tab ${currentPlatform==='all'?'active-all':''}" onclick="setPlatform('all')">All</div>
-        <div class="tab ${currentPlatform==='web'?'active-web':''}" onclick="setPlatform('web')">Web</div>
-        <div class="tab ${currentPlatform==='ios'?'active-ios':''}" onclick="setPlatform('ios')">iOS</div>
+      <button class="refresh-btn" onclick="loadData()">\u21BB Refresh</button>
+      <button class="broadcast-btn" id="broadcast-toggle-btn" onclick="toggleBroadcastPanel()">&#128226; Broadcast</button>
+    </div>
+  </div>
+
+  <!-- BROADCAST PANEL -->
+  <div id="broadcast-panel">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start">
+      <div>
+        <div style="font-size:.9375rem;font-weight:700;color:var(--text);margin-bottom:18px;letter-spacing:-.01em">&#128226; Send Broadcast</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div class="bc-label">Icon (optional)</div>
+            <div class="bc-emoji-row" id="bc-emoji-row">
+              <div class="bc-emoji" data-emoji="&#128276;" onclick="selectEmoji(this)">&#128276;</div>
+              <div class="bc-emoji" data-emoji="&#128226;" onclick="selectEmoji(this)">&#128226;</div>
+              <div class="bc-emoji" data-emoji="&#9888;&#65039;" onclick="selectEmoji(this)">&#9888;&#65039;</div>
+              <div class="bc-emoji" data-emoji="&#127881;" onclick="selectEmoji(this)">&#127881;</div>
+              <div class="bc-emoji" data-emoji="&#128663;" onclick="selectEmoji(this)">&#128663;</div>
+              <div class="bc-emoji" data-emoji="&#10024;" onclick="selectEmoji(this)">&#10024;</div>
+            </div>
+          </div>
+          <div>
+            <div class="bc-label">Title *</div>
+            <input class="bc-input" id="bc-title" placeholder="Broadcast title&hellip;" oninput="updateBroadcastPreview()" />
+          </div>
+          <div>
+            <div class="bc-label">Message *</div>
+            <div class="bc-toolbar">
+              <button type="button" onclick="bcFormat('bold')" title="Bold"><b>B</b></button>
+              <button type="button" onclick="bcFormat('italic')" title="Italic"><i>I</i></button>
+              <button type="button" onclick="bcFormat('underline')" title="Underline"><u>U</u></button>
+              <span class="bc-toolbar-sep"></span>
+              <button type="button" onclick="bcFormat('insertUnorderedList')" title="Bullet list">&#8226; List</button>
+              <button type="button" onclick="bcFormat('insertOrderedList')" title="Numbered list">1. List</button>
+              <span class="bc-toolbar-sep"></span>
+              <button type="button" onclick="bcFormatBlock('h3')" title="Heading">H</button>
+              <button type="button" onclick="bcFormatBlock('p')" title="Normal">&para;</button>
+            </div>
+            <div class="bc-richbody" id="bc-body" contenteditable="true" data-placeholder="Write your message\u2026" oninput="updateBroadcastPreview()"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <div class="bc-label">Button label (optional)</div>
+              <input class="bc-input" id="bc-cta-label" placeholder="e.g. Learn more" oninput="updateBroadcastPreview()" />
+            </div>
+            <div>
+              <div class="bc-label">Button URL (optional)</div>
+              <input class="bc-input" id="bc-cta-url" placeholder="https://&hellip;" oninput="updateBroadcastPreview()" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.75rem;color:var(--muted);cursor:pointer;user-select:none">
+              <input type="checkbox" id="bc-test-mode" style="accent-color:#7c3aed;width:14px;height:14px;" />
+              Test mode \u2014 send to me only
+            </label>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button class="bc-send-btn" id="bc-send-btn" onclick="sendBroadcast()">Send Broadcast &rarr;</button>
+            <button onclick="toggleBroadcastPanel()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:9px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Cancel</button>
+          </div>
+          <div class="bc-msg" id="bc-msg"></div>
+        </div>
       </div>
-      <button class="refresh-btn" onclick="location.reload()">\u21BB Refresh</button>
+      <div>
+        <div class="bc-label" style="margin-bottom:12px">Live preview</div>
+        <div class="bc-preview-phone">
+          <div class="bc-mock-backdrop">
+            <div class="bc-mock-card">
+              <div class="bc-mock-icon" id="prev-icon" style="display:none"></div>
+              <div class="bc-mock-title" id="prev-title" style="color:#888;font-weight:400">Your title appears here</div>
+              <div class="bc-mock-body" id="prev-body" style="color:#aaa">Your message appears here&hellip;</div>
+              <div class="bc-mock-cta" id="prev-cta" style="display:none"></div>
+              <div class="bc-mock-dismiss">Got it</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -543,64 +626,60 @@ function render() {
   <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Unique visitors</div>
-      <div class="kpi-value">${uniqueAnonymous}</div>
-      <div class="kpi-sub">${uniqueSessions} sessions \u00B7 ${pageViews} pageviews</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Reg lookups</div>
-      <div class="kpi-value">${regLookupAttempts}</div>
-      <div class="kpi-sub">${regLookupSuccesses} succeeded \u00B7 ${regCtaClicks} clicked CTA</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Paid subscribers</div>
-      <div class="kpi-value">${paidUsers}</div>
-      <div class="kpi-sub">${totalUsers > 0 ? (paidUsers/totalUsers*100).toFixed(1) : 0}% conversion rate</div>
-    </div>
-    <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
       <div class="kpi-value">${totalUsers}</div>
       <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Events (${rangeLabel})</div>
-      <div class="kpi-value">${rangedEvents.length}</div>
-      <div class="kpi-sub">Web ${webEvents.length} &middot; iOS ${iosEvents.length} &middot; ${allEventsTotal} total</div>
+      <div class="kpi-value">${totalEvents.toLocaleString()}</div>
+      <div class="kpi-sub">iOS ${iosEvents.toLocaleString()} \u00B7 Web ${webEvents.toLocaleString()}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">App opens</div>
-      <div class="kpi-value">${appOpenEvents.length}</div>
-      <div class="kpi-sub">${appOpenUsers} users &middot; ${dau} DAU today</div>
+      <div class="kpi-value">${totalAppOpens}</div>
+      <div class="kpi-sub">${dau} DAU today</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Onboardings</div>
+      <div class="kpi-value">${totalOnboard}</div>
+      <div class="kpi-sub">${completedOnboarding} total all-time</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Paid users</div>
+      <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'}">${paidUsers}</div>
+      <div class="kpi-sub">${totalSubs} new subs ${rangeLabel}</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">First actions taken</div>
+      <div class="kpi-value">${tookFirstAction}</div>
+      <div class="kpi-sub">${totalUsers > 0 ? Math.round(tookFirstAction/totalUsers*100) : 0}% of accounts</div>
     </div>
   </div>
 
   <!-- DAILY SPARKLINE -->
-  <div class="section-label">Daily activity \u2014 last 14 days (all events)</div>
+  <div class="section-label">Daily events \u2014 last 14 days</div>
   <div class="card">
     <div class="spark-wrap">
-      ${sparkBuckets.map(b => `<div class="spark-bar ${b.count===0?'empty':''}" title="${b.label}: ${b.count} events" style="height:${Math.max(b.count/sparkMax*44,b.count>0?4:2)}px"></div>`).join('')}
+      ${spark14.map(b => `<div class="spark-bar ${b.count===0?'empty':''}" title="${b.label}: ${b.count} events" style="height:${Math.max(b.count/sparkMax*44,b.count>0?4:2)}px"></div>`).join('')}
     </div>
     <div class="spark-labels">
-      <span>${sparkBuckets[0].label}</span>
+      <span>${spark14[0].label}</span>
       <span>today</span>
     </div>
   </div>
 
-  <!-- MASTER FUNNEL: visitor \u2192 activation -->
-  <div class="section-label">Master funnel \u2014 ${rangeLabel}</div>
+  <!-- ACTIVATION FUNNEL -->
+  <div class="section-label">Activation funnel \u2014 ${rangeLabel}</div>
   <div class="card">
-    <div class="card-sub">End-to-end: anonymous visitor \u2192 reg lookup \u2192 CTA \u2192 account \u2192 onboarding \u2192 activated \u2192 paid. Drop-off between steps is where your conversion bleeds.</div>
+    <div class="card-sub">Account creation \u2192 onboarding \u2192 first action \u2192 paid. Drop-offs show where activation bleeds.</div>
     <div class="mfunnel">
     ${(() => {
       const steps = [
-        ['Unique web visitors',      uniqueAnonymous,      'anonymous_id tracked'],
-        ['Reg lookup attempted',     regLookupAttempts,    'typed a plate'],
-        ['Reg lookup succeeded',     regLookupSuccesses,   'DVLA returned data'],
-        ['Clicked CTA after lookup', regCtaClicks,         'high-intent signal'],
-        ['Created account',          totalUsers,           'signed up in app'],
-        ['Completed onboarding',     completedOnboarding,  'added vehicle'],
-        ['Took first action',        tookFirstAction,      'logged real data'],
-        ['Converted to paid',        paidUsers,            'AutoLog+ subscriber']
+        ['Created account',       totalUsers,            'signed up in app'],
+        ['Completed onboarding',  completedOnboarding,   'added vehicle'],
+        ['Took first action',     tookFirstAction,       'logged real data'],
+        ['Converted to paid',     paidUsers,             'AutoLog+ subscriber']
       ]
       const topN = Math.max(...steps.map(s => s[1]), 1)
       return steps.map(([label, n, sub], i) => {
@@ -618,105 +697,27 @@ function render() {
       }).join('')
     })()}
     </div>
-    ${isSmallBase ? `<div class="insight">
-      <strong>Early stage</strong> \u2014 ${totalUsers} accounts total. Drop-off percentages are informational until you cross ~20 users. Data is being collected correctly.
-    </div>` : ''}
+    ${isSmallBase ? `<div class="insight"><strong>Early stage</strong> \u2014 ${totalUsers} accounts. Percentages are directional until ~20 users.</div>` : ''}
   </div>
 
-  <!-- TRAFFIC SOURCES -->
-  <div class="section-label">Traffic sources \u2014 where visitors come from</div>
-  <div class="card">
-    <div class="card-sub">Each row shows one source (UTM or referrer). "(direct)" means no referrer and no UTM. Organic sources inferred from referrer domain. Shows where your real users are coming from.</div>
-    ${sortedSources.length === 0 ? `<div class="empty-msg">No traffic data yet \u2014 start sharing links with UTM parameters to see source attribution.</div>` : `
-    <table class="src-table">
-      <thead><tr>
-        <th>Source</th>
-        <th class="num">Visitors</th>
-        <th class="num">Pageviews</th>
-      </tr></thead>
-      <tbody>
-        ${sortedSources.map(s => `<tr>
-          <td>
-            <div class="src-name">${s.src}</div>
-            <div class="src-bar"><div class="src-bar-fill" style="width:${s.pageviews/maxSourcePV*100}%"></div></div>
-          </td>
-          <td class="num">${s.visitors}</td>
-          <td class="num">${s.pageviews}</td>
-        </tr>`).join('')}
-      </tbody>
-    </table>`}
-  </div>
-
-  <!-- REG LOOKUP INTELLIGENCE -->
-  <div class="two-col" style="margin-top:18px">
-    <div class="card">
-      <div class="card-title">Reg lookup \u2014 vehicle makes</div>
-      <div class="card-sub">What cars do your visitors drive? Useful for ASO keywords, forum targeting, and Reddit subreddit selection.</div>
-      ${Object.keys(regMakes).length === 0 ? `<div class="empty-msg">No successful reg lookups yet.</div>` : `
-      <div class="event-list">
-        ${Object.entries(regMakes).sort((a,b) => b[1]-a[1]).slice(0, 12).map(([mk,n]) => `
-          <div class="event-row">
-            <div class="event-name">${mk}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regMakes))*100}%"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-    <div class="card">
-      <div class="card-title">Reg lookup \u2014 failure reasons</div>
-      <div class="card-sub">Where the hero widget fails. High "not_found" \u2192 visitors trying non-UK plates. High "api_error" \u2192 worker reliability issue.</div>
-      ${Object.keys(regFailReasons).length === 0 ? `<div class="empty-msg">No failures recorded.</div>` : `
-      <div class="event-list">
-        ${Object.entries(regFailReasons).sort((a,b) => b[1]-a[1]).map(([r,n]) => `
-          <div class="event-row">
-            <div class="event-name">${r}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/Math.max(...Object.values(regFailReasons))*100}%;background:var(--red)"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-  </div>
-
-  <!-- SECTION VISIBILITY + EVENT BREAKDOWN -->
-  <div class="two-col" style="margin-top:18px">
-    <div class="card">
-      <div class="card-title">Section visibility \u2014 how far down the page people get</div>
-      <div class="card-sub">Each section fires once when it enters the viewport. Shows engagement depth on the homepage.</div>
-      ${sortedSections.length === 0 ? `<div class="empty-msg">No section views yet.</div>` : `
-      <div class="event-list">
-        ${sortedSections.map(([s,n]) => `
-          <div class="event-row">
-            <div class="event-name">${s}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${n/maxSectionCount*100}%"></div></div>
-              <div class="event-count">${n}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
-    <div class="card">
-      <div class="card-title">All events \u2014 ${rangeLabel} \u00B7 ${platformLabel}</div>
-      <div class="card-sub">Every event name in the selected range. Click refresh to reload data.</div>
-      ${sortedCounts.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : `
-      <div class="event-list">
-        ${sortedCounts.map(([name, count]) => `
-          <div class="event-row">
-            <div class="event-name">${name}</div>
-            <div class="event-right">
-              <div class="event-bar-wrap"><div class="event-bar" style="width:${count/maxCount*100}%"></div></div>
-              <div class="event-count">${count}</div>
-            </div>
-          </div>`).join('')}
-      </div>`}
-    </div>
+  <!-- FEATURE ACTIVITY (from summary) -->
+  <div class="section-label">Feature activity \u2014 ${rangeLabel}</div>
+  <div class="kpi-grid">
+    ${[
+      { label: 'Fuel entries',    val: totalFuel },
+      { label: 'Service logs',    val: totalService },
+      { label: 'Doc uploads',     val: totalDocs },
+      { label: 'Trips started',   val: totalTrips },
+      { label: 'Paywall views',   val: totalPaywalls },
+      { label: 'New subs',        val: totalSubs, highlight: totalSubs > 0 },
+    ].map(m => `<div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">${m.label}</div>
+      <div class="kpi-value" style="${m.highlight?'color:var(--amber)':''}">${m.val}</div>
+    </div>`).join('')}
   </div>
 
   <!-- RETENTION COHORT -->
-  <div class="section-label">User retention \u2014 who comes back</div>
+  <div class="section-label">User retention \u2014 who comes back <span style="font-size:.6rem;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0">(expand a user below to load their events)</span></div>
   <div class="card">
     <table class="cohort-table">
       <thead><tr>
@@ -732,19 +733,19 @@ function render() {
       </tr></thead>
       <tbody>
       ${retentionRows.map(r => {
-        const { profile:p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents } = r
+        const { profile:p, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: te } = r
         let statusLabel, statusStyle
-        if (!lastSeen || totalEvents === 0) { statusLabel = 'No events'; statusStyle = 'color:var(--muted)' }
-        else if (daysAgo <= 3) { statusLabel = '\u25CF Active'; statusStyle = 'color:var(--green);font-weight:700' }
-        else if (daysAgo <= 14) { statusLabel = '\u25CF Recent'; statusStyle = 'color:var(--amber);font-weight:700' }
-        else { statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-weight:700' }
+        if (te === 0) { statusLabel = 'No events loaded'; statusStyle = 'color:var(--muted)' }
+        else if (daysAgo <= 3)  { statusLabel = '\u25CF Active';    statusStyle = 'color:var(--green);font-weight:700' }
+        else if (daysAgo <= 14) { statusLabel = '\u25CF Recent';    statusStyle = 'color:var(--amber);font-weight:700' }
+        else                    { statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-weight:700' }
         const retCell = (active, applicable) => applicable ? (active ? `<span class="ret-cell ret-active">\u2713</span>` : `<span class="ret-cell ret-cold">\u2715</span>`) : `<span class="ret-cell ret-none">n/a</span>`
         return `<tr>
           <td><div>${p.display_name||'(no name)'}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${p.plan||'free'}</div></td>
-          <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${fmtDateShort(firstSeen)}</td>
+          <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${fmtDateShort(p.created_at)}</td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${lastSeen?fmtDateShort(lastSeen):'\u2014'}</td>
-          <td style="text-align:center;font-family:var(--mono);font-weight:700">${activeDays}</td>
-          <td style="text-align:center;font-family:var(--mono);color:${totalEvents>0?'var(--text)':'var(--muted)'}">${totalEvents}</td>
+          <td style="text-align:center;font-family:var(--mono);font-weight:700">${activeDays||'\u2014'}</td>
+          <td style="text-align:center;font-family:var(--mono);color:${te>0?'var(--text)':'var(--muted)'}">${te||'\u2014'}</td>
           <td style="text-align:center">${retCell(d1, daysOld >= 1)}</td>
           <td style="text-align:center">${retCell(d7, daysOld >= 7)}</td>
           <td style="text-align:center">${retCell(d30, daysOld >= 30)}</td>
@@ -789,41 +790,39 @@ function render() {
         </tbody>
       </table>
     </div>
+    <div class="insight" style="margin-top:14px">Heatmap scores update as you expand users in the accounts table below. Expand all users to see full adoption data.</div>
   </div>
 
-  <!-- FEATURE TOUR ANALYTICS -->
-  <div class="section-label">Feature tour — first-open guided walkthrough</div>
+  <!-- FEATURE TOUR -->
+  <div class="section-label">Feature tour \u2014 first-open guided walkthrough</div>
+  ${startedCount === 0 ? `<div class="card"><div class="empty-msg">Expand user rows below to load tour events.</div></div>` : `
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Tour started</div>
       <div class="kpi-value">${startedCount}</div>
-      <div class="kpi-sub">${tourReplayed.length} replays from Settings</div>
+      <div class="kpi-sub">${tourReplayed.length} replays</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Completion rate</div>
       <div class="kpi-value" style="color:${completionRate >= 70 ? 'var(--green)' : completionRate >= 40 ? 'var(--amber)' : 'var(--red)'}">${completionRate}%</div>
-      <div class="kpi-sub">${completedCount} of ${startedCount} finished the tour</div>
+      <div class="kpi-sub">${completedCount} of ${startedCount} finished</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Skip rate</div>
       <div class="kpi-value" style="color:${skipRate <= 20 ? 'var(--green)' : skipRate <= 40 ? 'var(--amber)' : 'var(--red)'}">${skipRate}%</div>
-      <div class="kpi-sub">${tourSkippedImmediate.length} bailed immediately · ${tourSkippedMidway.length} mid-tour</div>
+      <div class="kpi-sub">${tourSkippedImmediate.length} immediate \u00B7 ${tourSkippedMidway.length} mid-tour</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Median duration</div>
       <div class="kpi-value">${fmtMs(medianDurationMs)}</div>
-      <div class="kpi-sub">end-to-end, completed tours only</div>
+      <div class="kpi-sub">completed tours only</div>
     </div>
   </div>
-
-  <!-- TOUR FUNNEL -->
   <div class="card" style="margin-top:18px">
     <div class="card-title">Step-by-step funnel</div>
-    <div class="card-sub">Views per sub-step. Drop-offs reveal where the tour loses attention — a sharp cliff means that step's copy or target is confusing.</div>
-    ${startedCount === 0 ? `<div class="empty-msg">No tour starts in this range yet. Tour events begin firing once the iOS build with this feature ships.</div>` : `
     <div>
       <div class="tfunnel-row" style="border-bottom:1px dashed var(--border)">
-        <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div><div class="tfunnel-sub">feature_tour_started</div></div>
+        <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div></div>
         <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:100%"></div></div>
         <div class="tfunnel-n">${startedCount}</div>
         <div class="tfunnel-pct">100%</div>
@@ -834,8 +833,7 @@ function render() {
         const prevCount = i === 0 ? startedCount : stepStats[i-1].viewed
         const drop = Math.max(0, prevCount - s.viewed)
         const dpct = prevCount > 0 ? Math.round(drop / prevCount * 100) : 0
-        return `
-          ${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">▼ dropped ${drop} (${dpct}%)</div>` : ''}
+        return `${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">\u25BC dropped ${drop} (${dpct}%)</div>` : ''}
           <div class="tfunnel-row">
             <div><div class="tfunnel-label">${s.label}</div><div class="tfunnel-sub">${s.id}</div></div>
             <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${pct}%"></div></div>
@@ -843,48 +841,29 @@ function render() {
             <div class="tfunnel-pct">${ofStarted}%</div>
           </div>`
       }).join('')}
-      <div class="tfunnel-row" style="border-top:1px dashed var(--border);margin-top:6px;padding-top:12px">
-        <div><div class="tfunnel-label" style="color:var(--green)">Tour completed</div><div class="tfunnel-sub">feature_tour_completed</div></div>
-        <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${startedCount > 0 ? Math.round(completedCount/startedCount*100) : 0}%;background:var(--green)"></div></div>
-        <div class="tfunnel-n">${completedCount}</div>
-        <div class="tfunnel-pct">${startedCount > 0 ? Math.round(completedCount/startedCount*100) : 0}%</div>
-      </div>
     </div>
-    ${startedCount < 10 ? `<div class="insight">
-      <strong>Early data</strong> — ${startedCount} tour starts so far. Drop-off percentages become meaningful above ~20 starts.
-    </div>` : ''}`}
   </div>
-
-  <!-- PER-STEP TIMING TABLE -->
   <div class="card" style="margin-top:18px">
     <div class="card-title">Per-step timing</div>
-    <div class="card-sub">Median time on each step. <span style="color:var(--red)">&lt;0.8s</span> = skimmed (copy may be unclear or too short). <span style="color:var(--amber)">&gt;8s</span> = stuck (copy may be too long or confusing).</div>
-    ${startedCount === 0 ? `<div class="empty-msg">No step timing data yet.</div>` : `
+    <div class="card-sub"><span style="color:var(--red)">&lt;0.8s</span> = skimmed. <span style="color:var(--amber)">&gt;8s</span> = stuck.</div>
     <table class="tstep-table">
       <thead><tr>
-        <th>Step</th>
-        <th class="num">Viewed</th>
-        <th class="num">Completed</th>
-        <th class="num">Step completion</th>
-        <th class="num">Median time</th>
+        <th>Step</th><th class="num">Viewed</th><th class="num">Completed</th><th class="num">Step %</th><th class="num">Median time</th>
       </tr></thead>
       <tbody>
         ${stepStats.map(s => `<tr>
-          <td>
-            <div>${s.label}</div>
-            <div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div>
-          </td>
+          <td><div>${s.label}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div></td>
           <td class="num">${s.viewed}</td>
           <td class="num">${s.completed}</td>
-          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '—'}</td>
+          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '\u2014'}</td>
           <td class="num" style="color:${stepTimeColor(s.medianTimeMs)}">${fmtMs(s.medianTimeMs)}</td>
         </tr>`).join('')}
       </tbody>
-    </table>`}
-  </div>
+    </table>
+  </div>`}
 
-  <!-- PER-USER DRILL DOWN -->
-  <div class="section-label">All accounts \u2014 click a row for full event history</div>
+  <!-- ALL ACCOUNTS DRILL-DOWN -->
+  <div class="section-label">All accounts \u2014 click a row to load full event history</div>
   <div class="card" style="padding:0;overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:.8125rem">
       <thead><tr style="border-bottom:1px solid var(--border)">
@@ -893,26 +872,11 @@ function render() {
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">UTM source</th>
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Onboarded</th>
         <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">First action</th>
-        <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Events</th>
         <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Joined</th>
       </tr></thead>
       <tbody>
       ${allProfiles.map(p => {
-        const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(b.created_at)-new Date(a.created_at))
         const planColor = ['paid','business'].includes(p.plan) ? 'var(--amber)' : 'var(--muted)'
-        const eventHistory = ue.slice(0, 40).map(e => {
-          const props = e.properties || {}
-          const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,40)}`).join(' \u00B7 ')
-          const pl = getPlatform(e)
-          return `<div class="tl-row" style="padding:7px 0">
-            <div class="tl-time" style="min-width:80px;font-size:.625rem">${fmtDate(e.created_at)}</div>
-            <div class="tl-body">
-              ${platBadge(pl)}
-              <span class="ev-badge ${evBadgeClass(e.event_name)}">${e.event_name}</span>
-              ${propStr ? `<span class="tl-props" style="font-size:.625rem">${propStr}</span>` : ''}
-            </div>
-          </div>`
-        }).join('')
         return `
         <tr class="user-row-clickable" onclick="toggleUserDetail('${p.id}')">
           <td style="padding:11px 16px;color:var(--text);font-weight:500">
@@ -922,16 +886,15 @@ function render() {
           <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${p.utm_source||'\u2014'}</td>
           <td style="padding:11px 16px">${p.onboarding_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
           <td style="padding:11px 16px">${p.first_action_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
-          <td style="padding:11px 16px;text-align:right;font-family:var(--mono);color:${ue.length>0?'var(--text)':'var(--muted)'}">${ue.length}</td>
           <td style="padding:11px 16px;text-align:right;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${p.created_at?fmtDateShort(p.created_at):'\u2014'}</td>
         </tr>
         <tr id="detail-${p.id}" class="user-detail-row">
-          <td colspan="7" style="padding:0 16px 12px;background:rgba(45,212,239,.02)">
+          <td colspan="6" style="padding:0 16px 12px;background:rgba(45,212,239,.02)">
             <div style="border-left:2px solid var(--teal);padding-left:14px;margin-top:4px">
               <div style="font-size:.6875rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">
-                ${p.display_name||'User'} \u2014 last ${Math.min(ue.length,40)} events${ue.length>40?` <span style="color:var(--muted);font-weight:400">(${ue.length-40} older not shown)</span>`:''}
+                ${p.display_name||'User'} \u2014 last 100 events
               </div>
-              ${ue.length === 0 ? `<div style="color:var(--muted);font-size:.8125rem;padding:8px 0">No events.</div>` : `<div class="user-event-feed timeline">${eventHistory}</div>`}
+              <div class="user-event-feed timeline" id="feed-${p.id}"></div>
             </div>
           </td>
         </tr>`
@@ -940,40 +903,112 @@ function render() {
     </table>
   </div>
 
-
-
-  <!-- ACTIVITY FEED -->
-  <div class="section-label">Recent activity \u2014 ${platformLabel}</div>
-  <div class="card">
-    <div class="timeline">
-      ${events.slice(0, feedLimit).map(e => {
-        const plat = getPlatform(e)
-        const props = e.properties || {}
-        const propStr = Object.entries(props).filter(([k]) => !['platform','source','device_type','viewport_w','viewport_h'].includes(k)).map(([k,v]) => `${k}: ${String(v).slice(0,50)}`).join(' \u00B7 ')
-        const profile = allProfiles.find(p => p.id === e.user_id)
-        return `<div class="tl-row">
-          <div class="tl-time">${fmtDate(e.created_at)}</div>
-          <div class="tl-body">
-            <span style="font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${profile?.display_name || (e.anonymous_id ? '(anon)' : '(\u2014)')}</span>
-            ${platBadge(plat)}
-            <span class="ev-badge ${evBadgeClass(e.event_name)}">${e.event_name}</span>
-            ${propStr ? `<span class="tl-props">${propStr}</span>` : ''}
-          </div>
-        </div>`
-      }).join('')}
-      ${events.length === 0 ? `<div class="empty-msg">No events in this range.</div>` : ''}
-    </div>
-    ${events.length > feedLimit ? `<div style="text-align:center;padding:12px 0"><button onclick="feedLimit+=40;render()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 18px;border-radius:8px;font-family:var(--mono);font-size:.75rem;cursor:pointer">Load more (${events.length-feedLimit} remaining)</button></div>` : ''}
-  </div>
-
   <div style="margin-top:28px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:.75rem;color:var(--muted);line-height:1.8">
-    <strong style="color:var(--text)">v2 dashboard</strong> \u00B7 Events collected via consent-gated AutoLogTrack module.
-    Direct Supabase inserts from the public site (anon role, <code style="color:var(--teal-bright)">user_id IS NULL</code>, <code style="color:var(--teal-bright)">anonymous_id</code> required).
-    Legacy events preserved with <code style="color:var(--teal-bright)">properties.migrated_from</code>.
+    <strong style="color:var(--text)">Analytics v3</strong> \u00B7 KPIs sourced from <code style="color:var(--teal-bright)">analytics_daily_summary</code> (pre-aggregated, nightly cron).
+    Per-user events loaded on demand from <code style="color:var(--teal-bright)">analytics_events</code> (max 100 per user).
     &nbsp;\u00B7&nbsp;
     <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright)" target="_blank">Open SQL Editor \u2192</a>
   </div>
   `
+}
+
+// ─── Broadcast Admin ────────────────────────────────────────────────────────
+let selectedBroadcastEmoji = null
+
+function toggleBroadcastPanel() {
+  const panel = document.getElementById('broadcast-panel')
+  const btn = document.getElementById('broadcast-toggle-btn')
+  const isOpen = panel.classList.contains('open')
+  panel.classList.toggle('open', !isOpen)
+  btn.classList.toggle('active', !isOpen)
+  if (!isOpen) { updateBroadcastPreview() }
+}
+
+function selectEmoji(el) {
+  const emoji = el.dataset.emoji
+  if (selectedBroadcastEmoji === emoji) {
+    selectedBroadcastEmoji = null; el.classList.remove('selected')
+  } else {
+    document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
+    selectedBroadcastEmoji = emoji; el.classList.add('selected')
+  }
+  updateBroadcastPreview()
+}
+
+function updateBroadcastPreview() {
+  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
+  const body     = document.getElementById('bc-body')?.innerHTML?.trim()   || ''
+  const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
+  const iconEl   = document.getElementById('prev-icon')
+  const titleEl  = document.getElementById('prev-title')
+  const bodyEl   = document.getElementById('prev-body')
+  const ctaEl    = document.getElementById('prev-cta')
+  if (!iconEl) return
+  if (selectedBroadcastEmoji) { iconEl.textContent = selectedBroadcastEmoji; iconEl.style.display = 'block' }
+  else { iconEl.style.display = 'none' }
+  if (title) { titleEl.textContent = title; titleEl.style.color = '#111'; titleEl.style.fontWeight = '700' }
+  else { titleEl.textContent = 'Your title appears here'; titleEl.style.color = '#888'; titleEl.style.fontWeight = '400' }
+  if (body) { bodyEl.innerHTML = body; bodyEl.style.color = '#555' }
+  else { bodyEl.innerHTML = 'Your message appears here\u2026'; bodyEl.style.color = '#aaa' }
+  if (ctaLabel) { ctaEl.textContent = ctaLabel; ctaEl.style.display = 'block' }
+  else { ctaEl.style.display = 'none' }
+}
+
+function bcFormat(cmd) {
+  document.getElementById('bc-body').focus()
+  document.execCommand(cmd, false, null)
+  updateBroadcastPreview()
+}
+function bcFormatBlock(tag) {
+  document.getElementById('bc-body').focus()
+  document.execCommand('formatBlock', false, tag)
+  updateBroadcastPreview()
+}
+
+async function sendBroadcast() {
+  const title    = document.getElementById('bc-title')?.value?.trim()     || ''
+  const body     = document.getElementById('bc-body')?.innerHTML?.trim()  || ''
+  const ctaLabel = document.getElementById('bc-cta-label')?.value?.trim() || ''
+  const ctaUrl   = document.getElementById('bc-cta-url')?.value?.trim()   || ''
+  const msgEl    = document.getElementById('bc-msg')
+  const btnEl    = document.getElementById('bc-send-btn')
+  msgEl.style.display = 'none'; msgEl.className = 'bc-msg'
+  if (!title || !body) {
+    msgEl.textContent = 'Title and message are required.'; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'; return
+  }
+  btnEl.disabled = true; btnEl.textContent = 'Sending\u2026'
+  const testMode = document.getElementById('bc-test-mode')?.checked
+  const payload = { title, body,
+    ...(selectedBroadcastEmoji ? { icon: selectedBroadcastEmoji } : {}),
+    ...(ctaLabel ? { cta_label: ctaLabel } : {}),
+    ...(ctaUrl   ? { cta_url: ctaUrl }     : {}),
+    ...(testMode ? { target_user_id: OWNER_ID } : {})
+  }
+  try {
+    const { data: { session } } = await sb.auth.getSession()
+    if (!session) throw new Error('Not authenticated \u2014 please refresh and log in again')
+    const res = await fetch(SURL + '/functions/v1/send-broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify(payload)
+    })
+    if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)) }
+    msgEl.textContent = 'Broadcast sent \u2713'; msgEl.className = 'bc-msg success'; msgEl.style.display = 'block'
+    document.getElementById('bc-title').value = ''
+    document.getElementById('bc-body').innerHTML = ''
+    document.getElementById('bc-cta-label').value = ''
+    document.getElementById('bc-cta-url').value = ''
+    selectedBroadcastEmoji = null
+    document.querySelectorAll('.bc-emoji').forEach(e => e.classList.remove('selected'))
+    updateBroadcastPreview()
+    setTimeout(() => {
+      document.getElementById('broadcast-panel').classList.remove('open')
+      document.getElementById('broadcast-toggle-btn').classList.remove('active')
+      msgEl.style.display = 'none'
+    }, 2200)
+  } catch (err) {
+    msgEl.textContent = 'Error: ' + err.message; msgEl.className = 'bc-msg error'; msgEl.style.display = 'block'
+  } finally { btnEl.disabled = false; btnEl.textContent = 'Send Broadcast \u2192' }
 }
 
 async function doSignIn() {
@@ -986,74 +1021,16 @@ async function doSignIn() {
   btn.disabled = true
   const { error } = await sb.auth.signInWithPassword({ email, password: pass })
   if (error) {
-    err.textContent = error.message
-    err.style.display = 'block'
-    btn.textContent = 'Sign In'
-    btn.disabled = false
+    err.textContent = error.message; err.style.display = 'block'
+    btn.textContent = 'Sign In'; btn.disabled = false
     return
   }
   document.getElementById('auth-gate').style.display = 'none'
   document.getElementById('loading').style.display = 'flex'
-  main()
+  loadData()
 }
 
-async function reloadEvents() {
-  document.getElementById('loading').style.display = 'flex'
-  document.getElementById('main').style.display = 'none'
-  await fetchAndRender()
-}
-
-function getRangeFilter() {
-  if (currentRange === 'all') return null
-  const ms = currentRange === '7d' ? 7 : currentRange === '30d' ? 30 : 90
-  const d = new Date()
-  d.setDate(d.getDate() - ms)
-  return d.toISOString()
-}
-
-async function fetchAndRender() {
-  const rangeStart = getRangeFilter()
-  let eventsQuery = sb.from('analytics_events')
-    .select('event_name, properties, created_at, user_id, anonymous_id, session_id, platform, url_path, country')
-    .order('created_at', { ascending: false })
-
-  // Apply server-side date filter — keeps payload small regardless of total row count
-  if (rangeStart) eventsQuery = eventsQuery.gte('created_at', rangeStart)
-
-  // Supabase PostgREST default max is 1000 — override with Range header via limit
-  // We use 5000 as a safe upper bound per range window; at launch scale this is fine
-  eventsQuery = eventsQuery.limit(5000)
-
-  const [eventsRes, profilesRes, totalRes] = await Promise.all([
-    eventsQuery,
-    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, utm_medium, utm_campaign').order('created_at', { ascending: false }),
-    sb.from('analytics_events').select('id', { count: 'exact', head: true })
-  ])
-  if (eventsRes.error) throw new Error(eventsRes.error.message)
-  allEvents        = eventsRes.data   || []
-  allProfiles      = profilesRes.data || []
-  allEventsTotal   = totalRes.count   || 0
-  document.getElementById('loading').style.display = 'none'
-  render()
-}
-
-async function main() {
-  const { data: { session } } = await sb.auth.getSession()
-  if (!session || session.user.id !== OWNER_ID) {
-    document.getElementById('loading').style.display = 'none'
-    const gate = document.getElementById('auth-gate')
-    gate.style.display = 'flex'
-    gate.style.flexDirection = 'column'
-    gate.style.alignItems = 'center'
-    gate.style.justifyContent = 'center'
-    gate.style.minHeight = '100vh'
-    return
-  }
-
-  await fetchAndRender()
-}
-
-main().catch(err => {
+loadData().catch(err => {
   document.getElementById('loading').innerHTML = `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px 20px;color:#fca5a5;font-size:.875rem;max-width:500px">Failed to load: ${err.message}</div>`
 })
 </script>
