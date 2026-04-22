@@ -291,18 +291,18 @@ let feedLimit = 40
 
 // Feature heatmap definitions — collapse v2 screen_viewed and pre-v2 legacy names
 const FEATURES = [
-  { key: 'onboarding',  label: 'Onboarded',     match: e => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' },
+  { key: 'onboarding',  label: 'Onboarded',     match: (e, p) => e.event_name === 'onboarding_completed' || e.event_name === 'onboarding_complete' || p?.onboarding_completed === true },
   { key: 'vehicle',     label: 'Added vehicle', match: e => e.event_name === 'vehicle_added' },
-  { key: 'action',      label: 'First action',  match: e => e.event_name === 'first_action_taken' },
+  { key: 'action',      label: 'First action',  match: (e, p) => e.event_name === 'first_action_taken' || p?.first_action_completed === true },
   { key: 'fuel',        label: 'Fuel entry',    match: e => e.event_name === 'fuel_entry_added' || e.event_name === 'fuel_added' },
   { key: 'service',     label: 'Service log',   match: e => e.event_name === 'service_entry_added' || e.event_name === 'service_added' },
   { key: 'document',    label: 'Doc upload',    match: e => e.event_name === 'document_upload_completed' || e.event_name === 'document_uploaded' || e.event_name === 'document_added' },
   { key: 'trip',        label: 'Trip logged',   match: e => e.event_name === 'trip_started' },
   { key: 'costs',       label: 'Costs viewed',  match: e => e.event_name === 'costs_viewed' },
   { key: 'paywall',     label: 'Saw paywall',   match: e => e.event_name === 'paywall_viewed' },
-  { key: 'subscribe',   label: 'Subscribed',    match: e => e.event_name === 'subscription_started' },
+  { key: 'subscribe',   label: 'Subscribed',    match: (e, p) => e.event_name === 'subscription_started' || p?.plan === 'paid' },
   { key: 'dashboard',   label: 'Dashboard',     match: e => e.event_name === 'dashboard_viewed' },
-  { key: 'docs_view',   label: 'Docs opened',   match: e => e.event_name === 'document_upload_started' || e.event_name === 'document_upload_completed' || e.event_name === 'document_upload_started' },
+  { key: 'docs_view',   label: 'Docs opened',   match: e => e.event_name === 'documents_viewed' },
   { key: 'tour_saw',    label: 'Saw tour',      match: e => e.event_name === 'feature_tour_started' },
   { key: 'tour_done',   label: 'Done tour',     match: e => e.event_name === 'feature_tour_completed' },
 ]
@@ -486,16 +486,16 @@ function render() {
   // ── Retention cohort ──
   const retentionRows = allProfiles.map(p => {
     const ue = allEvents.filter(e => e.user_id === p.id).sort((a,b) => new Date(a.created_at)-new Date(b.created_at))
-    const firstSeen = ue[0]?.created_at || p.created_at
+    const signupDate = p.created_at  // canonical account creation date
     const lastSeen = ue[ue.length-1]?.created_at || null
-    const daysOld = daysSince(firstSeen)
+    const daysOld = daysSince(signupDate)
     const daysAgo = daysSince(lastSeen)
-    const firstDate = new Date(firstSeen)
+    const firstDate = new Date(signupDate)
     const activeDays = new Set(ue.map(e => e.created_at?.split('T')[0])).size
     const d1  = ue.filter(e => new Date(e.created_at) - firstDate <= 864e5).length > 0
     const d7  = ue.filter(e => new Date(e.created_at) - firstDate <= 7*864e5).length > 0
     const d30 = ue.filter(e => new Date(e.created_at) - firstDate <= 30*864e5).length > 0
-    return { profile: p, firstSeen, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
+    return { profile: p, firstSeen: signupDate, lastSeen, daysOld, daysAgo, activeDays, d1, d7, d30, totalEvents: ue.length }
   }).sort((a,b) => new Date(b.firstSeen) - new Date(a.firstSeen))
 
   // ── Heatmap ──
@@ -503,7 +503,7 @@ function render() {
     const ue = allEvents.filter(e => e.user_id === p.id)
     const lastSeen = ue.sort((a,b) => new Date(b.created_at)-new Date(a.created_at))[0]?.created_at
     const featureMap = {}
-    FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e)) })
+    FEATURES.forEach(f => { featureMap[f.key] = ue.some(e => f.match(e, p)) || f.match({event_name:''}, p) })
     const score = Object.values(featureMap).filter(Boolean).length
     return { profile: p, featureMap, score, lastSeen, totalEvents: ue.length }
   }).sort((a,b) => b.score - a.score)
@@ -537,9 +537,11 @@ function render() {
   const tourSkippedMidway = tourSkipped.filter(e => e.properties?.skip_type === 'midway')
   const tourReplayed = tourEvents.filter(e => e.event_name === 'feature_tour_replayed')
 
-  const startedCount = tourStarted.length
-  const completedCount = tourCompleted.length
-  const skippedCount = tourSkipped.length
+  const startedCount = new Set(tourStarted.map(e => e.user_id).filter(Boolean)).size
+  const completedCount = new Set(tourCompleted.map(e => e.user_id).filter(Boolean)).size
+  // A user who both completed AND skipped (e.g. re-ran the tour) counts as completed, not skipped
+  const completedUserIds = new Set(tourCompleted.map(e => e.user_id).filter(Boolean))
+  const skippedCount = new Set(tourSkipped.map(e => e.user_id).filter(id => id && !completedUserIds.has(id))).size
   const completionRate = startedCount > 0 ? Math.round(completedCount / startedCount * 100) : 0
   const skipRate = startedCount > 0 ? Math.round(skippedCount / startedCount * 100) : 0
 
@@ -1301,3 +1303,4 @@ main().catch(err => {
 </script>
 </body>
 </html>
+
