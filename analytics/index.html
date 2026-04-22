@@ -281,7 +281,7 @@
 <script>
 const SURL = 'https://dkpvxlxarsmiljnvnbck.supabase.co'
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrcHZ4bHhhcnNtaWxqbnZuYmNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzM4MzIsImV4cCI6MjA5MDAwOTgzMn0.WJTRE_xmudj--jWSoA3e4ggYVORrFpoarBUkeaQN1Bw'
-const sb = supabase.createClient(SURL, SKEY, { auth: { persistSession: false } })
+const sb = supabase.createClient(SURL, SKEY, { auth: { persistSession: true } })
 const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 
 let allEvents = [], allProfiles = [], allWaitlist = []
