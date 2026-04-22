@@ -120,55 +120,6 @@
     .btn-appstore-text { display: flex; flex-direction: column; line-height: 1.2; }
     .btn-appstore-text .small { font-size: 0.6875rem; font-weight: 500; color: #475569; }
     .btn-appstore-text .large { font-size: 1rem; font-weight: 700; }
-    /* ── Waitlist widget ──────────────────────────────── */
-    .hero-waitlist { margin-top: 8px; }
-    .wl-incentive {
-      font-size: 0.8125rem;
-      color: rgba(255,255,255,0.45);
-      margin-bottom: 14px;
-    }
-    .wl-incentive strong { color: #4DB8CC; font-weight: 600; }
-    #wl-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .wl-input {
-      flex: 1; min-width: 220px;
-      padding: 13px 16px;
-      background: rgba(255,255,255,0.08);
-      border: 1.5px solid rgba(255,255,255,0.15);
-      border-radius: 11px;
-      color: #fff;
-      font-size: 0.9375rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .wl-input::placeholder { color: rgba(255,255,255,0.35); }
-    .wl-input:focus { border-color: #4DB8CC; background: rgba(255,255,255,0.11); }
-    .wl-btn {
-      background: #1E7A8C; color: #fff; border: none;
-      border-radius: 11px; padding: 13px 22px;
-      font-size: 0.9375rem; font-weight: 700;
-      font-family: inherit; cursor: pointer; white-space: nowrap;
-      transition: background 0.15s, transform 0.12s;
-    }
-    .wl-btn:hover { background: #155F6E; }
-    .wl-btn:active { transform: translateY(1px); }
-    .wl-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .wl-msg { font-size: 0.8125rem; margin-top: 8px; display: block; min-height: 18px; }
-    .wl-msg-err { color: #f87171; }
-    #wl-success {
-      display: none;
-      background: rgba(52,199,89,0.12);
-      border: 1px solid rgba(52,199,89,0.25);
-      border-radius: 11px; padding: 14px 18px;
-    }
-    #wl-success-msg { font-size: 0.9375rem; font-weight: 600; color: #4ade80; margin-top: 4px; }
-    .wl-appstore-fallback { margin-top: 16px; }
-    .wl-appstore-fallback a {
-      font-size: 0.8rem; color: rgba(255,255,255,0.35);
-      text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
-      transition: color 0.15s;
-    }
-    .wl-appstore-fallback a:hover { color: rgba(255,255,255,0.6); }
     /* ── Reg lookup widget ────────────────────────────── */
     .rl-widget {
       background: rgba(255,255,255,0.05);
@@ -344,14 +295,6 @@
     }
     .rl-result-signin a { color: #4DB8CC; text-decoration: none; }
     .rl-result-signin a:hover { text-decoration: underline; }
-    .rl-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 24px 0 20px;
-    }
-    .rl-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
-    .rl-divider-text { font-size: 0.75rem; color: rgba(255,255,255,0.3); white-space: nowrap; }
 
 
 
@@ -944,7 +887,7 @@
         </div>
         <div class="nav-cta">
           <a href="/app/dashboard" class="btn btn-outline" style="margin-right:8px">Dashboard</a>
-          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Get Early Access</a>
+          <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Download</a>
         </div>
         <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
           <span></span><span></span><span></span>
@@ -982,24 +925,16 @@
             <div id="rl-loading"><div class="rl-spin"></div><span>Checking DVLA database&#8230;</span></div>
             <div id="rl-result"></div>
           </div>
-          <div class="rl-divider"><div class="rl-divider-line"></div><div class="rl-divider-text">or get early access</div><div class="rl-divider-line"></div></div>
-          <div class="hero-waitlist">
-            <p class="wl-incentive">Join early access &#8212; <strong>get AutoLog on your iPhone today via TestFlight.</strong></p>
-            <div id="wl-form">
-              <input class="wl-input" type="email" id="wl-email" placeholder="your@email.com" onkeydown="wlKeydown(event)">
-              <button class="wl-btn" id="wl-btn" type="button" onclick="joinWaitlist()">Join Early Access &#8594;</button>
-            </div>
-            <span class="wl-msg" id="wl-msg"></span>
-            <div id="wl-success">
-              <div>&#x2705;</div>
-              <div id="wl-success-msg"></div>
-            </div>
-            <div class="wl-appstore-fallback">
-              <a href="https://apps.apple.com/gb/app/autolog/id6746798513">
-                <svg width="11" height="13" viewBox="0 0 20 24" fill="currentColor"><path d="M16.55 12.76c-.03-3.27 2.67-4.85 2.79-4.93-1.52-2.22-3.88-2.52-4.72-2.56-2-.2-3.93 1.18-4.95 1.18-1.02 0-2.58-1.16-4.25-1.13C3.14 5.36 1.1 6.52.09 8.38c-2.04 3.54-.52 8.77 1.45 11.64 1 1.41 2.15 3 3.68 2.94 1.49-.06 2.05-.95 3.85-.95 1.79 0 2.31.95 3.88.92 1.59-.03 2.6-1.44 3.57-2.86 1.13-1.63 1.59-3.22 1.61-3.3-.04-.02-3.08-1.18-3.11-4.66zM13.37 3.44c.82-1 1.37-2.39 1.22-3.78-1.18.05-2.62.79-3.47 1.78-.76.87-1.43 2.28-1.25 3.62 1.32.1 2.67-.67 3.5-1.62z"/></svg>
-                Already have AutoLog? Download on the App Store
-              </a>
-            </div>
+          <div class="hero-actions" style="margin-top:28px">
+            <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn-appstore">
+              <svg width="20" height="24" viewBox="0 0 20 24" fill="none">
+                <path d="M16.55 12.76c-.03-3.27 2.67-4.85 2.79-4.93-1.52-2.22-3.88-2.52-4.72-2.56-2-.2-3.93 1.18-4.95 1.18-1.02 0-2.58-1.16-4.25-1.13C3.14 5.36 1.1 6.52.09 8.38c-2.04 3.54-.52 8.77 1.45 11.64 1 1.41 2.15 3 3.68 2.94 1.49-.06 2.05-.95 3.85-.95 1.79 0 2.31.95 3.88.92 1.59-.03 2.6-1.44 3.57-2.86 1.13-1.63 1.59-3.22 1.61-3.3-.04-.02-3.08-1.18-3.11-4.66zM13.37 3.44c.82-1 1.37-2.39 1.22-3.78-1.18.05-2.62.79-3.47 1.78-.76.87-1.43 2.28-1.25 3.62 1.32.1 2.67-.67 3.5-1.62z" fill="currentColor"/>
+              </svg>
+              <div class="btn-appstore-text">
+                <span class="small">Download on the</span>
+                <span class="large">App Store</span>
+              </div>
+            </a>
           </div>
         </div>
         <div class="hero-phones">
@@ -1082,7 +1017,6 @@
           <p>MOT expiry, tax status and full MOT test history fetched automatically from official government sources the moment you add your registration.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-tag">AI Powered</div>
           <div class="feature-icon-wrap">📄</div>
           <h3>Smart Document Scanning</h3>
           <p>Photograph your MOT certificate, service invoice or insurance document. AutoLog reads it automatically and files it — no typing required.</p>
@@ -1260,7 +1194,7 @@
             <li><span class="check">✓</span> Full MOT history from DVSA</li>
             <li><span class="check">✓</span> Service history</li>
             <li><span class="check">✓</span> Fuel &amp; cost log</li>
-            <li><span class="check">✓</span> Document scanning</li>
+            <li><span class="check">✓</span> Document scanning (80/year)</li>
             <li><span class="check">✓</span> Maintenance schedules</li>
             <li><span class="check">✓</span> Trip tracking</li>
             <li><span class="check">✓</span> Mechanic share link</li>
@@ -1282,10 +1216,12 @@
           <ul class="pricing-features">
             <li><span class="check">✓</span> Everything in free, plus:</li>
             <li><span class="check">✓</span> Unlimited vehicles</li>
-            <li><span class="check">✓</span> Detailed vehicle spec lookup</li>
-            <li><span class="check">✓</span> CarPlay auto trip detection</li>
-            <li><span class="check">✓</span> 200 AI actions/year per vehicle</li>
-            <li><span class="check">✓</span> Priority support</li>
+            <li><span class="check">✓</span> Full trip history</li>
+            <li><span class="check">✓</span> HMRC mileage tracking &amp; calculator</li>
+            <li><span class="check">✓</span> Enhanced document scanning</li>
+            <li><span class="check">✓</span> 120 uploads/year per vehicle</li>
+            <li><span class="check">✓</span> PDF vehicle history export</li>
+            <li><span class="check">✓</span> CarPlay automatic trip detection</li>
           </ul>
           <a href="https://apps.apple.com/gb/app/autolog/id6746798513" class="btn btn-primary">Get AutoLog+</a>
         </div>
@@ -1324,7 +1260,7 @@
           Unlike generic car maintenance apps, AutoLog is built exclusively for the UK market. It understands UK registration formats, pulls live data from official government sources, and gives you MOT reminders, service scheduling and fuel cost tracking in one place. You can also share a secure read-only vehicle history link directly with your mechanic &mdash; no account required on their end.
         </p>
         <p style="font-size:1rem;line-height:1.8;color:var(--text-body);margin-bottom:18px;">
-          The AutoLog app includes automatic trip tracking via Bluetooth, AI-powered document scanning for MOT certificates and service invoices, manufacturer maintenance schedules loaded for your specific vehicle, and a full cost breakdown showing exactly what your car costs per month and per mile. A companion web dashboard at <strong>autologapp.co.uk</strong> lets you view your vehicle records from any browser.
+          The AutoLog app includes automatic trip tracking via Bluetooth, document scanning for MOT certificates and service invoices, manufacturer maintenance schedules loaded for your specific vehicle, and a full cost breakdown showing exactly what your car costs per month and per mile. A companion web dashboard at <strong>autologapp.co.uk</strong> lets you view and manage your vehicle records from any browser.
         </p>
         <p style="font-size:1rem;line-height:1.8;color:var(--text-body);">
           AutoLog is free to download with one vehicle included. <a href="#pricing" style="color:var(--teal);text-decoration:none;font-weight:600;">AutoLog+</a> unlocks unlimited vehicles, detailed vehicle spec lookups, and extended AI features. AutoLog is the only vehicle management app built from the ground up for UK drivers, using UK government data, available at autologapp.co.uk.
