@@ -286,6 +286,7 @@ const OWNER_ID = '5501db10-cfff-4b9e-959c-54eb023ddd36'
 
 // ── State ───────────────────────────────────────────────────────────────────
 let summaryRows = []       // analytics_daily_summary rows for current range
+let liveToday = null       // live today snapshot built fresh on every page load
 let allProfiles = []       // all profiles (small table, always full fetch)
 let allUserEvents = {}     // per-user events loaded on drill-down click
 let allNotes = []          // analytics_notes rows (newest first)
@@ -475,13 +476,12 @@ async function loadData() {
       allUserEvents[e.user_id].push(e)
     })
 
-    // Always replace today's summary row with a live count derived from actual events.
-    // The 30-min cron keeps it fresh, but this ensures every page load shows real-time data.
+    // Build a live today snapshot from raw events — used exclusively for KPI display.
+    // summaryRows is left untouched so sparklines/trends use stable cron-aggregated data.
     const todayKey = new Date().toISOString().split('T')[0]
     const todayEvents = allEventsData.filter(e => (e.created_at || '').startsWith(todayKey))
     const dauSet = new Set(todayEvents.map(e => e.user_id).filter(Boolean))
-    const liveRow = {
-      day: todayKey,
+    liveToday = {
       total_events: todayEvents.length,
       ios_events: todayEvents.filter(e => e.platform === 'ios').length,
       web_events: todayEvents.filter(e => e.platform === 'web').length,
@@ -493,11 +493,8 @@ async function loadData() {
       service_entries: todayEvents.filter(e => e.event_name === 'service_entry_added').length,
       doc_uploads: todayEvents.filter(e => e.event_name === 'document_uploaded').length,
       trips_started: todayEvents.filter(e => e.event_name === 'trip_started').length,
-      dau: dauSet.size,
-      _live: true
+      dau: dauSet.size
     }
-    // Remove any existing today row from the summary (stale cron data) and inject live one
-    summaryRows = [...summaryRows.filter(r => r.day !== todayKey), liveRow]
   }
 
   render()
@@ -552,7 +549,7 @@ async function toggleUserDetail(uid) {
 function render() {
   const rangeLabel = currentRange === 'all' ? 'all time' : currentRange
 
-  // Aggregate summary metrics from rows
+  // Aggregate summary metrics from rows (stable cron data, used for trends/sparklines)
   const totalEvents    = sum(summaryRows, 'total_events')
   const iosEvents      = sum(summaryRows, 'ios_events')
   const webEvents      = sum(summaryRows, 'web_events')
@@ -565,6 +562,17 @@ function render() {
   const totalSubs      = sum(summaryRows, 'subscriptions_started')
   const totalOnboard   = sum(summaryRows, 'onboardings')
 
+  // Live today snapshot — overlays the KPI cards with real-time counts on every refresh.
+  // summaryRows is untouched; liveToday is a separate object built from raw events.
+  const live = liveToday || {}
+  const liveTotal     = live.total_events      ?? totalEvents
+  const liveIos       = live.ios_events        ?? iosEvents
+  const liveWeb       = live.web_events        ?? webEvents
+  const liveAppOpens  = live.app_opens         ?? totalAppOpens
+  const liveDau       = live.dau               ?? 0
+  const liveSubs      = live.subscriptions_started ?? totalSubs
+  const liveOnboard   = live.onboardings       ?? totalOnboard
+
   // Profile-based stats (always all-time — profiles don't have range filter)
   const totalUsers         = allProfiles.length
   const completedOnboarding = allProfiles.filter(p => p.onboarding_completed).length
@@ -572,10 +580,10 @@ function render() {
   const paidUsers          = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase        = totalUsers < 20
 
-  // DAU (today from summary rows)
+  // DAU — use liveToday if available, fall back to summary row
   const todayKey = new Date().toISOString().split('T')[0]
   const todayRow = summaryRows.find(r => r.day === todayKey)
-  const dau = todayRow?.dau || 0
+  const dau = liveDau || todayRow?.dau || 0
 
   // Sparkline: last 14 days from summaryRows
   const spark14 = []
@@ -844,7 +852,7 @@ function render() {
   </div>
 
   <!-- KPIs -->
-  <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
+  <div class="section-label">Snapshot \u00B7 ${rangeLabel} <span style="font-size:.6rem;color:var(--teal-bright);margin-left:6px;font-family:var(--mono);font-weight:600;">\u25CF LIVE TODAY</span></div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
@@ -852,24 +860,24 @@ function render() {
       <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Events (${rangeLabel})</div>
-      <div class="kpi-value">${totalEvents.toLocaleString()}</div>
-      <div class="kpi-sub">iOS ${iosEvents.toLocaleString()} \u00B7 Web ${webEvents.toLocaleString()}</div>
+      <div class="kpi-label">Events today <span style="color:var(--teal-bright)">\u25CF</span></div>
+      <div class="kpi-value">${liveTotal.toLocaleString()}</div>
+      <div class="kpi-sub">iOS ${liveIos.toLocaleString()} \u00B7 Web ${liveWeb.toLocaleString()}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">App opens</div>
-      <div class="kpi-value">${totalAppOpens}</div>
-      <div class="kpi-sub">${dau} DAU today</div>
+      <div class="kpi-label">App opens today <span style="color:var(--teal-bright)">\u25CF</span></div>
+      <div class="kpi-value">${liveAppOpens}</div>
+      <div class="kpi-sub">${liveDau} DAU today</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Onboardings</div>
-      <div class="kpi-value">${totalOnboard}</div>
+      <div class="kpi-label">Onboardings today <span style="color:var(--teal-bright)">\u25CF</span></div>
+      <div class="kpi-value">${liveOnboard}</div>
       <div class="kpi-sub">${completedOnboarding} total all-time</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Paid users</div>
       <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'}">${paidUsers}</div>
-      <div class="kpi-sub">${totalSubs} new subs ${rangeLabel}</div>
+      <div class="kpi-sub">${liveSubs} new subs today</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">First actions taken</div>
