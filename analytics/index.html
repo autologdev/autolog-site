@@ -301,7 +301,7 @@ let tourViewMode = 'users' // 'users' | 'all' — first-run only vs all runs
 let currentRange = '30d'
 let feedLimit = 40
 let excludeAdmin = true    // exclude OWNER_ID from all metrics (toggle in header)
-let preLaunchMode = true   // flag paid/conversion data as pre-launch noise
+let postLaunchMode = false  // when true: zeros pre-launch grants, shows clean post-launch numbers
 
 // Feature heatmap definitions
 const FEATURES = [
@@ -371,7 +371,7 @@ function rangeStartISO() {
 }
 function setRange(r) { currentRange = r; loadData() }
 function toggleExcludeAdmin() { excludeAdmin = !excludeAdmin; render() }
-function togglePreLaunch() { preLaunchMode = !preLaunchMode; render() }
+function togglePostLaunch() { postLaunchMode = !postLaunchMode; render() }
 
 // ── Notes ──────────────────────────────────────────────────────────────────
 function setNotesFilter(f) { notesFilter = f; render() }
@@ -607,10 +607,10 @@ function render() {
   const totalDocs      = sum(summaryRows, 'doc_uploads')
   const totalTrips     = sum(summaryRows, 'trips_started')
   // In pre-launch mode, paywall views and subscription metrics are noise
-  const totalPaywalls  = preLaunchMode ? 0 : sum(summaryRows, 'paywall_views')
+  const totalPaywalls  = !postLaunchMode ? 0 : sum(summaryRows, 'paywall_views')
   const totalOnboard   = sum(summaryRows, 'onboardings')
   // In pre-launch mode subscriptions_started events are all sandbox — zero them
-  const totalSubs      = preLaunchMode ? 0 : sum(summaryRows, 'subscriptions_started')
+  const totalSubs      = !postLaunchMode ? 0 : sum(summaryRows, 'subscriptions_started')
 
   // Live today snapshot — overlays the KPI cards with real-time counts on every refresh.
   // summaryRows is untouched; liveToday is a separate object built from raw events.
@@ -620,7 +620,7 @@ function render() {
   const liveWeb       = live.web_events        ?? webEvents
   const liveAppOpens  = live.app_opens         ?? totalAppOpens
   const liveDau       = live.dau               ?? 0
-  const liveSubs      = preLaunchMode ? 0 : (live.subscriptions_started ?? totalSubs)
+  const liveSubs      = !postLaunchMode ? 0 : (live.subscriptions_started ?? totalSubs)
   const liveOnboard   = live.onboardings       ?? totalOnboard
 
   // Profile-based stats (always all-time — profiles don't have range filter)
@@ -629,7 +629,7 @@ function render() {
   const tookFirstAction    = profiles.filter(p => p.first_action_completed).length
   // In pre-launch mode, paid users = only those who paid post-launch (pre_launch_grant = false)
   // Before launch this will always be 0, which is correct
-  const paidUsers          = preLaunchMode
+  const paidUsers          = !postLaunchMode
     ? profiles.filter(p => (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
     : profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase        = totalUsers < 20
@@ -788,11 +788,11 @@ function render() {
 
   // Paywall → conversion
   // In pre-launch mode: zero everything — sandbox views and manual grants are noise
-  const paywallUserIds = preLaunchMode
+  const paywallUserIds = !postLaunchMode
     ? new Set()
     : new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
   const paywallCount = paywallUserIds.size
-  const convertedFromPaywall = preLaunchMode
+  const convertedFromPaywall = !postLaunchMode
     ? 0
     : profiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
   const paywallConvRate = paywallCount > 0 ? Math.round(convertedFromPaywall / paywallCount * 100) : 0
@@ -842,9 +842,9 @@ function render() {
         <input type="checkbox" ${excludeAdmin?'checked':''} onchange="toggleExcludeAdmin()" style="accent-color:var(--teal-bright);width:12px;height:12px;cursor:pointer" />
         Excl. admin
       </label>
-      <label title="Flag paid/conversion data as pre-launch noise" style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6875rem;color:${preLaunchMode?'var(--amber)':'var(--muted)'};cursor:pointer;padding:5px 10px;border-radius:7px;border:1px solid ${preLaunchMode?'rgba(245,158,11,.4)':'var(--border)'};background:${preLaunchMode?'rgba(245,158,11,.07)':'var(--surface2)'};transition:all .15s">
-        <input type="checkbox" ${preLaunchMode?'checked':''} onchange="togglePreLaunch()" style="accent-color:var(--amber);width:12px;height:12px;cursor:pointer" />
-        Pre-launch
+      <label title="Switch to post-launch view: zeros pre-launch grants, shows clean numbers" style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6875rem;color:${postLaunchMode?'var(--amber)':'var(--muted)'};cursor:pointer;padding:5px 10px;border-radius:7px;border:1px solid ${postLaunchMode?'rgba(245,158,11,.4)':'var(--border)'};background:${postLaunchMode?'rgba(245,158,11,.07)':'var(--surface2)'};transition:all .15s">
+        <input type="checkbox" ${postLaunchMode?'checked':''} onchange="togglePostLaunch()" style="accent-color:var(--amber);width:12px;height:12px;cursor:pointer" />
+        Post-launch
       </label>
       <div class="tabs">
         <div class="tab ${currentRange==='7d'?'active-all':''}"  onclick="setRange('7d')">7d</div>
@@ -991,7 +991,7 @@ function render() {
 
   <!-- KPIs — range totals -->
   <div class="section-label">Snapshot · ${rangeLabel}${excludeAdmin?' <span style="font-size:.6rem;color:var(--teal-bright);font-weight:400;text-transform:none;letter-spacing:0">(admin excluded)</span>':''}</div>
-  ${!preLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Launch mode</strong> — paid users and conversion metrics show post-launch numbers only. Manual grants and sandbox purchases are excluded. Toggle "Pre-launch" on to see testing-phase data.</div>` : ''}
+  ${postLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Launch mode</strong> — paid users and conversion metrics show post-launch numbers only. Manual grants and sandbox purchases are excluded. Toggle "Post-launch" off to see testing-phase data.</div>` : ''}
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
@@ -1010,13 +1010,13 @@ function render() {
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Onboardings</div>
-      <div class="kpi-value">${totalOnboard}</div>
-      <div class="kpi-sub">${completedOnboarding} total all-time</div>
+      <div class="kpi-value">${completedOnboarding}</div>
+      <div class="kpi-sub">completed onboarding all-time</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Paid users${!preLaunchMode?' ⚠':''}</div>
-      <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'};${!preLaunchMode?'opacity:.55':''}">${paidUsers}</div>
-      <div class="kpi-sub">${!preLaunchMode?'post-launch only — excl. grants':totalSubs>0?totalSubs+' new subs '+rangeLabel:'incl. pre-launch grants'}</div>
+      <div class="kpi-label">Paid users${postLaunchMode?' ⚠':''}</div>
+      <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'};${postLaunchMode?'opacity:.55':''}">${paidUsers}</div>
+      <div class="kpi-sub">${postLaunchMode?'post-launch only — excl. grants':totalSubs>0?totalSubs+' new subs '+rangeLabel:'incl. pre-launch grants'}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">First actions taken</div>
@@ -1044,9 +1044,9 @@ function render() {
       <div class="kpi-sub">all-time: ${completedOnboarding}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">New subs today${!preLaunchMode?' ⚠':''}</div>
-      <div class="kpi-value" style="color:${liveSubs>0?'var(--amber)':'inherit'};${!preLaunchMode?'opacity:.55':''}">${liveSubs}</div>
-      <div class="kpi-sub">${!preLaunchMode?'post-launch only':'all-time paid: '+paidUsers}</div>
+      <div class="kpi-label">New subs today${postLaunchMode?' ⚠':''}</div>
+      <div class="kpi-value" style="color:${liveSubs>0?'var(--amber)':'inherit'};${postLaunchMode?'opacity:.55':''}">${liveSubs}</div>
+      <div class="kpi-sub">${postLaunchMode?'post-launch only':'all-time paid: '+paidUsers}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Fuel entries today</div>
@@ -1076,14 +1076,15 @@ function render() {
   <div class="section-label">Activation funnel \u2014 ${rangeLabel}</div>
   <div class="card">
     <div class="card-sub">Account creation \u2192 onboarding \u2192 first action \u2192 paid. Drop-offs show where activation bleeds.</div>
-    ${!preLaunchMode ? `<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:.75rem;color:var(--amber)"><strong>Launch mode:</strong> "Converted to paid" shows post-launch purchases only. Pre-launch grants are excluded.</div>` : ''}
+    ${postLaunchMode ? `<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:.75rem;color:var(--amber)"><strong>Launch mode:</strong> "Converted to paid" shows post-launch purchases only. Pre-launch grants are excluded.</div>` : ''}
     <div class="mfunnel">
     ${(() => {
       const steps = [
         ['Created account',       totalUsers,            'signed up in app'],
         ['Completed onboarding',  completedOnboarding,   'added vehicle'],
         ['Took first action',     tookFirstAction,       'logged real data'],
-        ['Converted to paid',     paidUsers,             'AutoLog+ subscriber']
+        // Always exclude pre-launch grants from conversion — only real post-launch purchases count
+        ['Converted to paid',     profiles.filter(p => (p.plan==='paid'||p.plan==='business') && !p.pre_launch_grant).length, 'AutoLog+ subscriber']
       ]
       const topN = Math.max(...steps.map(s => s[1]), 1)
       return steps.map(([label, n, sub], i) => {
@@ -1287,9 +1288,9 @@ function render() {
   </div>`}
 
   <!-- PAYWALL → CONVERSION -->
-  <div class="section-label">Paywall — views → conversions${!preLaunchMode?' <span style="font-size:.6rem;color:var(--amber);font-weight:400;text-transform:none;letter-spacing:0">⚠ launch mode</span>':''}</div>
-  ${!preLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Launch mode</strong> — showing post-launch conversions only. All zeroes until real-money purchases begin. Toggle "Pre-launch" on to see testing data.</div>` : ''}
-  <div class="kpi-grid" style="${!preLaunchMode?'opacity:.6':''}">
+  <div class="section-label">Paywall — views → conversions${postLaunchMode?' <span style="font-size:.6rem;color:var(--amber);font-weight:400;text-transform:none;letter-spacing:0">⚠ launch mode</span>':''}</div>
+  ${postLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Launch mode</strong> — showing post-launch conversions only. All zeroes until real-money purchases begin. Toggle "Post-launch" off to see testing data.</div>` : ''}
+  <div class="kpi-grid" style="${postLaunchMode?'opacity:.6':''}">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Saw paywall</div>
       <div class="kpi-value">${paywallCount}</div>
@@ -1302,13 +1303,13 @@ function render() {
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Paywall conv. rate</div>
-      <div class="kpi-value" style="color:${!preLaunchMode?'var(--muted)':paywallConvRate >= 10 ? 'var(--green)' : paywallConvRate >= 3 ? 'var(--amber)' : 'var(--muted)'}">${!preLaunchMode?'n/a':paywallConvRate+'%'}</div>
+      <div class="kpi-value" style="color:${postLaunchMode?'var(--muted)':paywallConvRate >= 10 ? 'var(--green)' : paywallConvRate >= 3 ? 'var(--amber)' : 'var(--muted)'}">${postLaunchMode?'n/a':paywallConvRate+'%'}</div>
       <div class="kpi-sub">industry avg ~3–8%</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Never saw paywall</div>
-      <div class="kpi-value">${totalUsers - paywallCount}</div>
-      <div class="kpi-sub">of ${totalUsers} total users</div>
+      <div class="kpi-value">${profiles.filter(p => !p.pre_launch_grant && !paywallUserIds.has(p.id)).length}</div>
+      <div class="kpi-sub">post-launch users only</div>
     </div>
   </div>
 
