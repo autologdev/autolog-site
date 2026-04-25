@@ -372,11 +372,7 @@ function setNotesFilter(f) { notesFilter = f; render() }
 function setTourViewMode(m) { tourViewMode = m; render() }
 
 async function refreshNotes() {
-  const { data, error } = await sb.from('analytics_notes').select('*').order('created_at', { ascending: false }),
-    sb.from('feedback').select('id, type, description, context, app_version, created_at, user_id').order('created_at', { ascending: false }).limit(50),
-    sb.from('deletion_requests').select('id, user_id, created_at').order('created_at', { ascending: false }),
-    sb.from('api_usage').select('service, call_count, user_id, created_at'),
-    sb.from('vehicle_shares').select('id, created_at')
+  const { data, error } = await sb.from('analytics_notes').select('*').order('created_at', { ascending: false })
   if (!error) { allNotes = data || []; render() }
 }
 
@@ -1546,5 +1542,6 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
 
 
