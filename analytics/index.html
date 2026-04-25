@@ -298,6 +298,8 @@ let notesFilter = 'active' // 'active' | 'resolved' | 'all'
 let tourViewMode = 'users' // 'users' | 'all' — first-run only vs all runs
 let currentRange = '30d'
 let feedLimit = 40
+let excludeAdmin = true    // exclude OWNER_ID from all metrics (toggle in header)
+let preLaunchMode = true   // flag paid/conversion data as pre-launch noise
 
 // Feature heatmap definitions
 const FEATURES = [
@@ -366,6 +368,8 @@ function rangeStartISO() {
   return d.toISOString().split('T')[0]
 }
 function setRange(r) { currentRange = r; loadData() }
+function toggleExcludeAdmin() { excludeAdmin = !excludeAdmin; render() }
+function togglePreLaunch() { preLaunchMode = !preLaunchMode; render() }
 
 // ── Notes ──────────────────────────────────────────────────────────────────
 function setNotesFilter(f) { notesFilter = f; render() }
@@ -505,8 +509,8 @@ async function loadData() {
     const dauSet = new Set(todayEvents.map(e => e.user_id).filter(Boolean))
     liveToday = {
       total_events: todayEvents.length,
-      ios_events: todayEvents.filter(e => e.platform === 'ios').length,
-      web_events: todayEvents.filter(e => e.platform === 'web').length,
+      ios_events: todayEvents.filter(e => getPlatform(e) === 'ios').length,
+      web_events: todayEvents.filter(e => getPlatform(e) === 'web').length,
       app_opens: todayEvents.filter(e => e.event_name === 'app_opened').length,
       onboardings: todayEvents.filter(e => e.event_name === 'onboarding_completed').length,
       subscriptions_started: todayEvents.filter(e => e.event_name === 'subscription_started').length,
@@ -571,6 +575,13 @@ async function toggleUserDetail(uid) {
 function render() {
   const rangeLabel = currentRange === 'all' ? 'all time' : currentRange
 
+  // Apply admin exclusion filter
+  const profiles = excludeAdmin ? allProfiles.filter(p => p.id !== OWNER_ID) : allProfiles
+  const loadedEvents = excludeAdmin
+    ? Object.fromEntries(Object.entries(allUserEvents).filter(([uid]) => uid !== OWNER_ID))
+    : allUserEvents
+  const allLoadedEvents = Object.values(loadedEvents).flat()
+
   // Aggregate summary metrics from rows (stable cron data, used for trends/sparklines)
   const totalEvents    = sum(summaryRows, 'total_events')
   const iosEvents      = sum(summaryRows, 'ios_events')
@@ -596,10 +607,10 @@ function render() {
   const liveOnboard   = live.onboardings       ?? totalOnboard
 
   // Profile-based stats (always all-time — profiles don't have range filter)
-  const totalUsers         = allProfiles.length
-  const completedOnboarding = allProfiles.filter(p => p.onboarding_completed).length
-  const tookFirstAction    = allProfiles.filter(p => p.first_action_completed).length
-  const paidUsers          = allProfiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  const totalUsers         = profiles.length
+  const completedOnboarding = profiles.filter(p => p.onboarding_completed).length
+  const tookFirstAction    = profiles.filter(p => p.first_action_completed).length
+  const paidUsers          = profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase        = totalUsers < 20
 
   // DAU — use liveToday if available, fall back to summary row
@@ -630,7 +641,7 @@ function render() {
 
   // Retention cohort — needs per-user event data from the heatmap
   // We use profiles only for the cohort table (last seen from allUserEvents if loaded, else show join date)
-  const retentionRows = allProfiles.map(p => {
+  const retentionRows = profiles.map(p => {
     const ue = allUserEvents[p.id] || []
     const realEvents = ue.filter(e => !e.properties?.synthetic)
     const lastSeen = realEvents.length ? realEvents.reduce((a, e) => (e.created_at > a ? e.created_at : a), realEvents[0].created_at) : null
@@ -645,7 +656,7 @@ function render() {
   }).sort((a,b) => safeParse(b.profile.created_at) - safeParse(a.profile.created_at))
 
   // Heatmap — requires per-user events; show skeleton if not loaded
-  const heatmapRows = allProfiles.map(p => {
+  const heatmapRows = profiles.map(p => {
     const ue = allUserEvents[p.id] || []
     const realEvents = ue.filter(e => !e.properties?.synthetic)
     const lastSeen = realEvents.length ? realEvents.reduce((a, e) => (e.created_at > a ? e.created_at : a), realEvents[0].created_at) : null
@@ -658,7 +669,6 @@ function render() {
   FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
 
   // ── Tour analytics ───────────────────────────────────────────────────────
-  const allLoadedEvents = Object.values(allUserEvents).flat()
   const TOUR_STEPS = [
     { id: 'garage',                  stop: 1, label: 'Stop 1 · Garage' },
     { id: 'dashboard_top',           stop: 2, label: 'Stop 2a · Dashboard top' },
@@ -747,7 +757,7 @@ function render() {
 
   // ── Extra metrics ─────────────────────────────────────────────────────────
   // Events per user (using all loaded events)
-  const eventsPerUserData = allProfiles.map(p => ({
+  const eventsPerUserData = profiles.map(p => ({
     name: p.display_name || '(no name)',
     count: (allUserEvents[p.id] || []).length
   })).filter(u => u.count > 0).sort((a,b) => b.count - a.count)
@@ -758,7 +768,7 @@ function render() {
   // Paywall → conversion
   const paywallUserIds = new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
   const paywallCount = paywallUserIds.size
-  const convertedFromPaywall = allProfiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business')).length
+  const convertedFromPaywall = profiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business')).length
   const paywallConvRate = paywallCount > 0 ? Math.round(convertedFromPaywall / paywallCount * 100) : 0
 
   // Share/invite
@@ -766,7 +776,7 @@ function render() {
   const acceptedInvites = allLoadedEvents.filter(e => e.event_name === 'share_invite_accepted').length
 
   // Trips
-  const tripsEnabledCount = allProfiles.filter(p => p.trips_enabled).length
+  const tripsEnabledCount = profiles.filter(p => p.trips_enabled).length
   const tripsActiveCount = new Set(allLoadedEvents.filter(e => e.event_name === 'trip_started').map(e => e.user_id).filter(Boolean)).size
 
   // OCR / API usage
@@ -802,6 +812,14 @@ function render() {
     <div class="logo"><div class="logo-dot"></div><div class="logo-name">Auto<span>Log</span> Analytics</div></div>
     <div class="header-right">
       <div class="header-meta">Summary updated: ${summaryUpdated}</div>
+      <label title="Exclude your admin account from all metrics" style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6875rem;color:${excludeAdmin?'var(--teal-bright)':'var(--muted)'};cursor:pointer;padding:5px 10px;border-radius:7px;border:1px solid ${excludeAdmin?'var(--teal)':'var(--border)'};background:${excludeAdmin?'rgba(45,212,239,.07)':'var(--surface2)'};transition:all .15s">
+        <input type="checkbox" ${excludeAdmin?'checked':''} onchange="toggleExcludeAdmin()" style="accent-color:var(--teal-bright);width:12px;height:12px;cursor:pointer" />
+        Excl. admin
+      </label>
+      <label title="Flag paid/conversion data as pre-launch noise" style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6875rem;color:${preLaunchMode?'var(--amber)':'var(--muted)'};cursor:pointer;padding:5px 10px;border-radius:7px;border:1px solid ${preLaunchMode?'rgba(245,158,11,.4)':'var(--border)'};background:${preLaunchMode?'rgba(245,158,11,.07)':'var(--surface2)'};transition:all .15s">
+        <input type="checkbox" ${preLaunchMode?'checked':''} onchange="togglePreLaunch()" style="accent-color:var(--amber);width:12px;height:12px;cursor:pointer" />
+        Pre-launch
+      </label>
       <div class="tabs">
         <div class="tab ${currentRange==='7d'?'active-all':''}"  onclick="setRange('7d')">7d</div>
         <div class="tab ${currentRange==='30d'?'active-all':''}" onclick="setRange('30d')">30d</div>
@@ -946,12 +964,13 @@ function render() {
   </div>
 
   <!-- KPIs — range totals -->
-  <div class="section-label">Snapshot \u00B7 ${rangeLabel}</div>
+  <div class="section-label">Snapshot \u00B7 ${rangeLabel}${excludeAdmin?' <span style="font-size:.6rem;color:var(--teal-bright);font-weight:400;text-transform:none;letter-spacing:0">(admin excluded)</span>':''}</div>
+  ${preLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Pre-launch mode on</strong> — paid users and conversion metrics include sandbox purchases, manually granted premium, and TestFlight accounts. These numbers are not meaningful until launch.</div>` : ''}
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total accounts</div>
       <div class="kpi-value">${totalUsers}</div>
-      <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 ${paidUsers} paid</div>
+      <div class="kpi-sub">${completedOnboarding} onboarded \u00B7 <span style="color:${preLaunchMode?'var(--amber)':'inherit'}">${paidUsers} ${preLaunchMode?'paid ⚠':'paid'}</span></div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Events (${rangeLabel})</div>
@@ -969,9 +988,9 @@ function render() {
       <div class="kpi-sub">${completedOnboarding} total all-time</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Paid users</div>
-      <div class="kpi-value" style="color:${paidUsers>0?'var(--amber)':'inherit'}">${paidUsers}</div>
-      <div class="kpi-sub">${totalSubs} new subs ${rangeLabel}</div>
+      <div class="kpi-label">Paid users${preLaunchMode?' ⚠':''}</div>
+      <div class="kpi-value" style="color:${preLaunchMode?'var(--amber)':paidUsers>0?'var(--amber)':'inherit'};${preLaunchMode?'opacity:.55':''}">${paidUsers}</div>
+      <div class="kpi-sub">${preLaunchMode?'pre-launch: includes sandbox':''}${!preLaunchMode?totalSubs+' new subs '+rangeLabel:''}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">First actions taken</div>
@@ -999,9 +1018,9 @@ function render() {
       <div class="kpi-sub">all-time: ${completedOnboarding}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">New subs today</div>
-      <div class="kpi-value" style="color:${liveSubs>0?'var(--amber)':'inherit'}">${liveSubs}</div>
-      <div class="kpi-sub">all-time paid: ${paidUsers}</div>
+      <div class="kpi-label">New subs today${preLaunchMode?' ⚠':''}</div>
+      <div class="kpi-value" style="color:${liveSubs>0?'var(--amber)':'inherit'};${preLaunchMode?'opacity:.55':''}">${liveSubs}</div>
+      <div class="kpi-sub">${preLaunchMode?'pre-launch: not meaningful':'all-time paid: '+paidUsers}</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Fuel entries today</div>
@@ -1031,6 +1050,7 @@ function render() {
   <div class="section-label">Activation funnel \u2014 ${rangeLabel}</div>
   <div class="card">
     <div class="card-sub">Account creation \u2192 onboarding \u2192 first action \u2192 paid. Drop-offs show where activation bleeds.</div>
+    ${preLaunchMode ? `<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:.75rem;color:var(--amber)"><strong>Pre-launch:</strong> "Total accounts" includes testing accounts that will be deleted post-launch. "First actions taken" reflects profile flag accuracy — some testing accounts that took actions may not have the flag set. "Converted to paid" is sandbox/manual only. Onboardings, first actions and total accounts should all align once cleanup is done.</div>` : ''}
     <div class="mfunnel">
     ${(() => {
       const steps = [
@@ -1060,6 +1080,7 @@ function render() {
 
   <!-- FEATURE ACTIVITY (from summary) -->
   <div class="section-label">Feature activity \u2014 ${rangeLabel}</div>
+  <div class="insight" style="margin-bottom:12px">ℹ <strong>Data gap:</strong> Service logs and document uploads created before analytics instrumentation are not counted here. Most testing-phase activity via OCR (documents, fuel, services) predates event tracking. These numbers will become accurate from launch onwards.</div>
   <div class="kpi-grid">
     ${[
       { label: 'Fuel entries',    val: totalFuel },
@@ -1240,8 +1261,9 @@ function render() {
   </div>`}
 
   <!-- PAYWALL → CONVERSION -->
-  <div class="section-label">Paywall — views → conversions</div>
-  <div class="kpi-grid">
+  <div class="section-label">Paywall — views → conversions${preLaunchMode?' <span style="font-size:.6rem;color:var(--amber);font-weight:400;text-transform:none;letter-spacing:0">⚠ pre-launch</span>':''}</div>
+  ${preLaunchMode ? `<div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:.75rem;color:var(--amber);line-height:1.6"><strong>Pre-launch mode</strong> — conversion data includes sandbox StoreKit purchases, manually granted premium accounts, and TestFlight testers. Conversion rate is not meaningful until real-money purchases begin. Toggle off "Pre-launch" in the header when you go live.</div>` : ''}
+  <div class="kpi-grid" style="${preLaunchMode?'opacity:.6':''}">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Saw paywall</div>
       <div class="kpi-value">${paywallCount}</div>
@@ -1254,7 +1276,7 @@ function render() {
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Paywall conv. rate</div>
-      <div class="kpi-value" style="color:${paywallConvRate >= 10 ? 'var(--green)' : paywallConvRate >= 3 ? 'var(--amber)' : 'var(--muted)'}">${paywallConvRate}%</div>
+      <div class="kpi-value" style="color:${preLaunchMode?'var(--muted)':paywallConvRate >= 10 ? 'var(--green)' : paywallConvRate >= 3 ? 'var(--amber)' : 'var(--muted)'}">${preLaunchMode?'n/a':paywallConvRate+'%'}</div>
       <div class="kpi-sub">industry avg ~3–8%</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
@@ -1281,6 +1303,7 @@ function render() {
 
   <!-- SHARING & INVITES -->
   <div class="section-label">Sharing — vehicle shares &amp; invite funnel</div>
+  <div class="insight" style="margin-bottom:12px">⚠ <strong>Data gap:</strong> The <code style="color:var(--teal-bright)">share_invite_accepted</code> analytics event was not fired prior to analytics instrumentation. All 6 known testing shares were accepted, but the event count below will undercount until new shares are created post-instrumentation. Accept rate is not reliable from this data.</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Shares created</div>
@@ -1290,22 +1313,23 @@ function render() {
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Invites accepted</div>
       <div class="kpi-value" style="color:${acceptedInvites > 0 ? 'var(--green)' : 'inherit'}">${acceptedInvites}</div>
-      <div class="kpi-sub">share_invite_accepted events</div>
+      <div class="kpi-sub">⚠ undercounts pre-analytics shares</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Accept rate</div>
-      <div class="kpi-value">${totalShares > 0 ? Math.round(acceptedInvites/totalShares*100) + '%' : '—'}</div>
-      <div class="kpi-sub">of shares sent</div>
+      <div class="kpi-value" style="color:var(--muted)">${totalShares > 0 ? Math.round(acceptedInvites/totalShares*100) + '%' : '—'}</div>
+      <div class="kpi-sub">⚠ not reliable yet</div>
     </div>
   </div>
 
   <!-- TRIPS -->
   <div class="section-label">Trip recording — adoption &amp; activity</div>
+  <div class="insight" style="margin-bottom:12px">ℹ <strong>Data note:</strong> "Trips enabled" reads the <code style="color:var(--teal-bright)">trips_enabled</code> profile field — this may not be set for all users who enabled it before the field was tracked, causing the "Enabled → recording" rate to appear over 100%. "Users with trips" (event-based) is the reliable number.</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Trips enabled</div>
       <div class="kpi-value">${tripsEnabledCount}</div>
-      <div class="kpi-sub">${totalUsers > 0 ? Math.round(tripsEnabledCount/totalUsers*100) : 0}% of all users</div>
+      <div class="kpi-sub">${totalUsers > 0 ? Math.round(tripsEnabledCount/totalUsers*100) : 0}% of all users <span style="color:var(--amber)">⚠ may undercount</span></div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Users with trips</div>
@@ -1314,13 +1338,14 @@ function render() {
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Enabled → recording</div>
-      <div class="kpi-value">${tripsEnabledCount > 0 ? Math.round(tripsActiveCount/tripsEnabledCount*100) : 0}%</div>
-      <div class="kpi-sub">of enabled users active</div>
+      <div class="kpi-value" style="color:${tripsEnabledCount > 0 && tripsActiveCount > tripsEnabledCount ? 'var(--amber)' : 'inherit'}">${tripsEnabledCount > 0 ? Math.round(tripsActiveCount/tripsEnabledCount*100) : 0}%${tripsEnabledCount > 0 && tripsActiveCount > tripsEnabledCount ? ' ⚠' : ''}</div>
+      <div class="kpi-sub">${tripsEnabledCount > 0 && tripsActiveCount > tripsEnabledCount ? 'over 100% = profile field lag' : 'of enabled users active'}</div>
     </div>
   </div>
 
   <!-- OCR / API USAGE -->
   <div class="section-label">Document scanning — OCR / API usage</div>
+  <div class="insight" style="margin-bottom:12px">ℹ <strong>Data gap:</strong> OCR call logging was added mid-testing. All documents, fuel entries, and service records in existing accounts were created via OCR, but calls prior to the <code style="color:var(--teal-bright)">api_usage</code> table going live are not reflected here. Counts will understate real usage until post-launch. The cost figure is a floor estimate only.</div>
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Total OCR calls</div>
@@ -1389,7 +1414,7 @@ function render() {
         <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Joined</th>
       </tr></thead>
       <tbody>
-      ${allProfiles.map(p => {
+      ${profiles.map(p => {
         const planColor = ['paid','business'].includes(p.plan) ? 'var(--amber)' : 'var(--muted)'
         return `
         <tr class="user-row-clickable" onclick="toggleUserDetail('${p.id}')">
@@ -1550,6 +1575,7 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
 
 
 
