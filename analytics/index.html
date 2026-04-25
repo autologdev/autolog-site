@@ -448,19 +448,24 @@ async function loadData() {
   // Profiles always fully fetched (one row per user, stays small for a long time)
   // All-time events fetched once for retention cohort, heatmap, and tour analytics
   // These sections MUST use all-time data regardless of the selected range filter
+  // Wrap each query with a timeout so a hanging fetch can't freeze the page
+  function withTimeout(promise, ms=8000) {
+    return Promise.race([promise, new Promise(r => setTimeout(() => r({ data: [], error: { message: 'timeout' } }), ms))])
+  }
+
   const [summaryRes, profilesRes, allEventsRes, notesRes, feedbackRes, deletionRes, apiUsageRes, sharesRes] = await Promise.all([
     summaryQuery,
     sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, trips_enabled').order('created_at', { ascending: false }),
-    sb.from('analytics_events')
+    withTimeout(sb.from('analytics_events')
       .select('event_name, properties, created_at, platform, user_id')
       .not('user_id', 'is', null)
       .order('created_at', { ascending: true })
-      .limit(10000),
+      .limit(10000)),
     sb.from('analytics_notes').select('*').order('created_at', { ascending: false }),
-    sb.from('feedback').select('id, type, description, context, app_version, created_at, user_id').order('created_at', { ascending: false }).limit(50),
-    sb.from('deletion_requests').select('id, user_id, created_at').order('created_at', { ascending: false }),
-    sb.from('api_usage').select('service, call_count, user_id, created_at'),
-    sb.from('vehicle_shares').select('id, created_at')
+    withTimeout(sb.from('feedback').select('id, type, description, context, app_version, created_at, user_id').order('created_at', { ascending: false }).limit(50)),
+    withTimeout(sb.from('deletion_requests').select('id, user_id, created_at').order('created_at', { ascending: false })),
+    withTimeout(sb.from('api_usage').select('service, call_count, user_id, created_at')),
+    withTimeout(sb.from('vehicle_shares').select('id, created_at'))
   ])
 
   if (summaryRes.error) throw new Error(summaryRes.error.message)
@@ -473,6 +478,9 @@ async function loadData() {
   allDeletionRequests = (deletionRes && !deletionRes.error) ? (deletionRes.data || []) : []
   allApiUsage = (apiUsageRes && !apiUsageRes.error) ? (apiUsageRes.data || []) : []
   allShares = (sharesRes && !sharesRes.error) ? (sharesRes.data || []) : []
+  // Log any non-critical fetch errors without crashing
+  ;[['feedback', feedbackRes], ['deletion_requests', deletionRes], ['api_usage', apiUsageRes], ['vehicle_shares', sharesRes], ['analytics_notes', notesRes]]
+    .forEach(([name, res]) => { if (res?.error) console.warn('[Analytics] ' + name + ' fetch error:', res.error.message) })
 
   // Reset allUserEvents on every load so stale data from previous range
   // switches doesn't accumulate and cause duplicate/wrong retention results.
@@ -1542,6 +1550,7 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
 
 
 
