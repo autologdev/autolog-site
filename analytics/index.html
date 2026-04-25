@@ -290,7 +290,12 @@ let liveToday = null       // live today snapshot built fresh on every page load
 let allProfiles = []       // all profiles (small table, always full fetch)
 let allUserEvents = {}     // per-user events loaded on drill-down click
 let allNotes = []          // analytics_notes rows (newest first)
+let allFeedback = []       // feedback table rows
+let allDeletionRequests = [] // deletion_requests rows
+let allApiUsage = []       // api_usage rows
+let allShares = []         // vehicle_shares rows
 let notesFilter = 'active' // 'active' | 'resolved' | 'all'
+let tourViewMode = 'users' // 'users' | 'all' — first-run only vs all runs
 let currentRange = '30d'
 let feedLimit = 40
 
@@ -364,9 +369,14 @@ function setRange(r) { currentRange = r; loadData() }
 
 // ── Notes ──────────────────────────────────────────────────────────────────
 function setNotesFilter(f) { notesFilter = f; render() }
+function setTourViewMode(m) { tourViewMode = m; render() }
 
 async function refreshNotes() {
-  const { data, error } = await sb.from('analytics_notes').select('*').order('created_at', { ascending: false })
+  const { data, error } = await sb.from('analytics_notes').select('*').order('created_at', { ascending: false }),
+    sb.from('feedback').select('id, type, description, context, app_version, created_at, user_id').order('created_at', { ascending: false }).limit(50),
+    sb.from('deletion_requests').select('id, user_id, created_at').order('created_at', { ascending: false }),
+    sb.from('api_usage').select('service, call_count, user_id, created_at'),
+    sb.from('vehicle_shares').select('id, created_at')
   if (!error) { allNotes = data || []; render() }
 }
 
@@ -442,15 +452,19 @@ async function loadData() {
   // Profiles always fully fetched (one row per user, stays small for a long time)
   // All-time events fetched once for retention cohort, heatmap, and tour analytics
   // These sections MUST use all-time data regardless of the selected range filter
-  const [summaryRes, profilesRes, allEventsRes, notesRes] = await Promise.all([
+  const [summaryRes, profilesRes, allEventsRes, notesRes, feedbackRes, deletionRes, apiUsageRes, sharesRes] = await Promise.all([
     summaryQuery,
-    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, trips_enabled').order('created_at', { ascending: false }),
     sb.from('analytics_events')
       .select('event_name, properties, created_at, platform, user_id')
       .not('user_id', 'is', null)
       .order('created_at', { ascending: true })
       .limit(10000),
-    sb.from('analytics_notes').select('*').order('created_at', { ascending: false })
+    sb.from('analytics_notes').select('*').order('created_at', { ascending: false }),
+    sb.from('feedback').select('id, type, description, context, app_version, created_at, user_id').order('created_at', { ascending: false }).limit(50),
+    sb.from('deletion_requests').select('id, user_id, created_at').order('created_at', { ascending: false }),
+    sb.from('api_usage').select('service, call_count, user_id, created_at'),
+    sb.from('vehicle_shares').select('id, created_at')
   ])
 
   if (summaryRes.error) throw new Error(summaryRes.error.message)
@@ -459,6 +473,10 @@ async function loadData() {
   summaryRows = summaryRes.data || []
   allProfiles = profilesRes.data || []
   allNotes = (notesRes && !notesRes.error) ? (notesRes.data || []) : []
+  allFeedback = (feedbackRes && !feedbackRes.error) ? (feedbackRes.data || []) : []
+  allDeletionRequests = (deletionRes && !deletionRes.error) ? (deletionRes.data || []) : []
+  allApiUsage = (apiUsageRes && !apiUsageRes.error) ? (apiUsageRes.data || []) : []
+  allShares = (sharesRes && !sharesRes.error) ? (sharesRes.data || []) : []
 
   // Reset allUserEvents on every load so stale data from previous range
   // switches doesn't accumulate and cause duplicate/wrong retention results.
@@ -635,49 +653,83 @@ function render() {
   const featureAdoption = {}
   FEATURES.forEach(f => { featureAdoption[f.key] = heatmapRows.filter(r => r.featureMap[f.key]).length })
 
-  // Tour analytics from summary-range events — not available in summary table,
-  // so we note it needs a drill-down and show placeholder until events are loaded
+  // ── Tour analytics ───────────────────────────────────────────────────────
   const allLoadedEvents = Object.values(allUserEvents).flat()
   const TOUR_STEPS = [
-    { id: 'garage',                  stop: 1, label: 'Stop 1 \u00B7 Garage' },
-    { id: 'dashboard_top',           stop: 2, label: 'Stop 2a \u00B7 Dashboard top' },
-    { id: 'dashboard_costs',         stop: 2, label: 'Stop 2b \u00B7 Dashboard costs' },
-    { id: 'dashboard_quick_actions', stop: 2, label: 'Stop 2c \u00B7 Quick actions' },
-    { id: 'fuel',                    stop: 3, label: 'Stop 3 \u00B7 Fuel log' },
-    { id: 'documents',               stop: 4, label: 'Stop 4 \u00B7 Documents' },
-    { id: 'trips_auto_detect',       stop: 5, label: 'Stop 5a \u00B7 Auto-detect' },
-    { id: 'trips_list',              stop: 5, label: 'Stop 5b \u00B7 Trips list' },
-    { id: 'service_add',             stop: 6, label: 'Stop 6a \u00B7 Service add' },
-    { id: 'service_history',         stop: 6, label: 'Stop 6b \u00B7 Service history' },
-    { id: 'costs',                   stop: 7, label: 'Stop 7 \u00B7 Costs detail' },
+    { id: 'garage',                  stop: 1, label: 'Stop 1 · Garage' },
+    { id: 'dashboard_top',           stop: 2, label: 'Stop 2a · Dashboard top' },
+    { id: 'dashboard_costs',         stop: 2, label: 'Stop 2b · Dashboard costs' },
+    { id: 'dashboard_quick_actions', stop: 2, label: 'Stop 2c · Quick actions' },
+    { id: 'fuel',                    stop: 3, label: 'Stop 3 · Fuel log' },
+    { id: 'documents',               stop: 4, label: 'Stop 4 · Documents' },
+    { id: 'trips_auto_detect',       stop: 5, label: 'Stop 5a · Auto-detect' },
+    { id: 'trips_list',              stop: 5, label: 'Stop 5b · Trips list' },
+    { id: 'service_add',             stop: 6, label: 'Stop 6a · Service add' },
+    { id: 'service_history',         stop: 6, label: 'Stop 6b · Service history' },
+    { id: 'costs',                   stop: 7, label: 'Stop 7 · Costs detail' },
   ]
-  const tourEvents = allLoadedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
+  const allTourEvents = allLoadedEvents.filter(e => e.event_name?.startsWith('feature_tour_'))
+  const allTourStarted = allTourEvents.filter(e => e.event_name === 'feature_tour_started')
+  const allTourCompleted = allTourEvents.filter(e => e.event_name === 'feature_tour_completed')
+  const allTourSkipped = allTourEvents.filter(e => e.event_name === 'feature_tour_skipped')
+  const allTourReplayed = allTourEvents.filter(e => e.event_name === 'feature_tour_replayed')
+
+  // Users who replayed — used to filter to first-run only
+  const replayedUserIds = new Set(allTourReplayed.map(e => e.user_id).filter(Boolean))
+  const completedUserIds = new Set(allTourCompleted.map(e => e.user_id).filter(Boolean))
+
+  // In "users" mode: deduplicate by user (unique users, first run only context)
+  // In "all" mode: count every event occurrence (includes replays)
+  const tourEvents = tourViewMode === 'users'
+    ? allTourEvents.filter(e => !replayedUserIds.has(e.user_id))
+    : allTourEvents
+
   const tourStarted = tourEvents.filter(e => e.event_name === 'feature_tour_started')
   const tourCompleted = tourEvents.filter(e => e.event_name === 'feature_tour_completed')
   const tourSkipped = tourEvents.filter(e => e.event_name === 'feature_tour_skipped')
   const tourSkippedImmediate = tourSkipped.filter(e => e.properties?.skip_type === 'immediate')
   const tourSkippedMidway = tourSkipped.filter(e => e.properties?.skip_type === 'midway')
-  const tourReplayed = tourEvents.filter(e => e.event_name === 'feature_tour_replayed')
-  const startedCount = new Set(tourStarted.map(e => e.user_id).filter(Boolean)).size
-  const completedUserIds = new Set(tourCompleted.map(e => e.user_id).filter(Boolean))
+  const tourReplayed = allTourReplayed
+
+  // Unique user counts (always unique regardless of view mode)
+  const startedUserIds = new Set(allTourStarted.map(e => e.user_id).filter(Boolean))
+  const startedCount = startedUserIds.size
+  const startedTotalRuns = allTourStarted.length
+  const replayCount = allTourReplayed.length
+
   const completedCount = completedUserIds.size
-  const skippedCount = new Set(tourSkipped.map(e => e.user_id).filter(id => id && !completedUserIds.has(id))).size
+  const skippedUserCount = new Set(allTourSkipped.map(e => e.user_id).filter(id => id && !completedUserIds.has(id))).size
   const completionRate = startedCount > 0 ? Math.round(completedCount / startedCount * 100) : 0
-  const skipRate = startedCount > 0 ? Math.round(skippedCount / startedCount * 100) : 0
-  const durations = tourCompleted.map(e => e.properties?.total_duration_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
+  const skipRate = startedCount > 0 ? Math.round(skippedUserCount / startedCount * 100) : 0
+  const replayRate = completedCount > 0 ? Math.round(replayCount / completedCount * 100) : 0
+
+  const durations = allTourCompleted.map(e => e.properties?.total_duration_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
   const medianDurationMs = durations.length ? durations[Math.floor(durations.length/2)] : 0
+
+  // Step stats — in users mode use unique user counts, in all mode use event counts
   const stepStats = TOUR_STEPS.map(s => {
-    const viewed = tourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id).length
+    const stepViewEvs = tourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id)
+    const stepViewUsers = new Set(stepViewEvs.map(e => e.user_id).filter(Boolean)).size
+    const viewed = tourViewMode === 'users' ? stepViewUsers : stepViewEvs.length
+    const viewedUnique = stepViewUsers
+
     const completedEvs = tourEvents.filter(e => e.event_name === 'feature_tour_step_completed' && e.properties?.step_name === s.id)
     const completed = completedEvs.length
     const times = completedEvs.map(e => e.properties?.time_on_step_ms).filter(n => typeof n === 'number').sort((a,b) => a-b)
     const medianTimeMs = times.length ? times[Math.floor(times.length/2)] : 0
     const stepCompletionPct = viewed > 0 ? Math.round(completed / viewed * 100) : 0
-    return { ...s, viewed, completed, medianTimeMs, stepCompletionPct }
+
+    // For drop-off: split into first-timers vs replayers
+    const allViewEvs = allTourEvents.filter(e => e.event_name === 'feature_tour_step_viewed' && e.properties?.step_name === s.id)
+    const firstTimerViews = allViewEvs.filter(e => !replayedUserIds.has(e.user_id)).length
+    const replayerViews = allViewEvs.filter(e => replayedUserIds.has(e.user_id)).length
+
+    return { ...s, viewed, viewedUnique, completed, medianTimeMs, stepCompletionPct, firstTimerViews, replayerViews }
   })
-  const tourMaxStepViews = Math.max(startedCount, ...stepStats.map(s => s.viewed), 1)
+  const tourBaseline = tourViewMode === 'users' ? startedCount : startedTotalRuns
+  const tourMaxStepViews = Math.max(tourBaseline, ...stepStats.map(s => s.viewed), 1)
   function fmtMs(ms) {
-    if (!ms) return '\u2014'
+    if (!ms) return '—'
     if (ms < 1000) return ms + 'ms'
     if (ms < 60000) return (ms/1000).toFixed(1) + 's'
     return Math.floor(ms/60000) + 'm ' + Math.round((ms%60000)/1000) + 's'
@@ -688,6 +740,44 @@ function render() {
     if (ms > 8000) return 'var(--amber)'
     return 'var(--text)'
   }
+
+  // ── Extra metrics ─────────────────────────────────────────────────────────
+  // Events per user (using all loaded events)
+  const eventsPerUserData = allProfiles.map(p => ({
+    name: p.display_name || '(no name)',
+    count: (allUserEvents[p.id] || []).length
+  })).filter(u => u.count > 0).sort((a,b) => b.count - a.count)
+  const totalLoadedEvents = eventsPerUserData.reduce((s,u) => s + u.count, 0)
+  const avgEventsPerUser = eventsPerUserData.length > 0 ? Math.round(totalLoadedEvents / eventsPerUserData.length) : 0
+  const maxUserEvents = eventsPerUserData.length > 0 ? eventsPerUserData[0].count : 1
+
+  // Paywall → conversion
+  const paywallUserIds = new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
+  const paywallCount = paywallUserIds.size
+  const convertedFromPaywall = allProfiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business')).length
+  const paywallConvRate = paywallCount > 0 ? Math.round(convertedFromPaywall / paywallCount * 100) : 0
+
+  // Share/invite
+  const totalShares = allShares.length
+  const acceptedInvites = allLoadedEvents.filter(e => e.event_name === 'share_invite_accepted').length
+
+  // Trips
+  const tripsEnabledCount = allProfiles.filter(p => p.trips_enabled).length
+  const tripsActiveCount = new Set(allLoadedEvents.filter(e => e.event_name === 'trip_started').map(e => e.user_id).filter(Boolean)).size
+
+  // OCR / API usage
+  const totalOcrCalls = allApiUsage.filter(r => r.service === 'ocr').reduce((s,r) => s + (r.call_count || 0), 0)
+  const ocrUserCount = new Set(allApiUsage.filter(r => r.service === 'ocr').map(r => r.user_id).filter(Boolean)).size
+  const estimatedOcrCost = (totalOcrCalls * 0.0015).toFixed(2) // rough GPT-4o mini estimate
+
+  // Feedback
+  const feedbackCount = allFeedback.length
+  const feedbackTypes = {}
+  allFeedback.forEach(f => { feedbackTypes[f.type || 'general'] = (feedbackTypes[f.type || 'general'] || 0) + 1 })
+
+  // Deletion requests
+  const deletionCount = allDeletionRequests.length
+  const deletionUniqueUsers = new Set(allDeletionRequests.map(r => r.user_id).filter(Boolean)).size
 
   const summaryUpdated = summaryRows.length ? fmtDate(summaryRows[summaryRows.length-1].updated_at) : 'n/a'
 
@@ -1058,23 +1148,34 @@ function render() {
   </div>
 
   <!-- FEATURE TOUR -->
-  <div class="section-label">Feature tour \u2014 first-open guided walkthrough</div>
-  ${startedCount === 0 ? `<div class="card"><div class="empty-msg">Expand user rows below to load tour events.</div></div>` : `
+  <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <span>Feature tour — first-open guided walkthrough</span>
+    ${startedCount > 0 ? `<div style="display:flex;gap:6px;margin-left:auto">
+      <button onclick="setTourViewMode('users')" style="font-size:.625rem;padding:3px 10px;border-radius:6px;border:1px solid ${tourViewMode==='users'?'var(--teal-bright)':'var(--border)'};background:${tourViewMode==='users'?'rgba(45,212,239,.12)':'transparent'};color:${tourViewMode==='users'?'var(--teal-bright)':'var(--muted)'};cursor:pointer;font-family:var(--mono)">First run only</button>
+      <button onclick="setTourViewMode('all')" style="font-size:.625rem;padding:3px 10px;border-radius:6px;border:1px solid ${tourViewMode==='all'?'var(--teal-bright)':'var(--border)'};background:${tourViewMode==='all'?'rgba(45,212,239,.12)':'transparent'};color:${tourViewMode==='all'?'var(--teal-bright)':'var(--muted)'};cursor:pointer;font-family:var(--mono)">All runs</button>
+    </div>` : ''}
+  </div>
+  ${startedCount === 0 ? `<div class="card"><div class="empty-msg">No tour events loaded yet.</div></div>` : `
   <div class="kpi-grid">
     <div class="kpi"><div class="kpi-glow"></div>
-      <div class="kpi-label">Tour started</div>
+      <div class="kpi-label">Users who started</div>
       <div class="kpi-value">${startedCount}</div>
-      <div class="kpi-sub">${tourReplayed.length} replays</div>
+      <div class="kpi-sub">${startedTotalRuns} total starts · ${replayCount} replays</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Completion rate</div>
       <div class="kpi-value" style="color:${completionRate >= 70 ? 'var(--green)' : completionRate >= 40 ? 'var(--amber)' : 'var(--red)'}">${completionRate}%</div>
-      <div class="kpi-sub">${completedCount} of ${startedCount} finished</div>
+      <div class="kpi-sub">${completedCount} of ${startedCount} users finished</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Skip rate</div>
       <div class="kpi-value" style="color:${skipRate <= 20 ? 'var(--green)' : skipRate <= 40 ? 'var(--amber)' : 'var(--red)'}">${skipRate}%</div>
-      <div class="kpi-sub">${tourSkippedImmediate.length} immediate \u00B7 ${tourSkippedMidway.length} mid-tour</div>
+      <div class="kpi-sub">${tourSkippedImmediate.length} immediate · ${tourSkippedMidway.length} mid-tour</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Replay rate</div>
+      <div class="kpi-value" style="color:${replayRate >= 20 ? 'var(--green)' : 'var(--muted)'}">${replayRate}%</div>
+      <div class="kpi-sub">of completers replayed</div>
     </div>
     <div class="kpi"><div class="kpi-glow"></div>
       <div class="kpi-label">Median duration</div>
@@ -1083,26 +1184,34 @@ function render() {
     </div>
   </div>
   <div class="card" style="margin-top:18px">
-    <div class="card-title">Step-by-step funnel</div>
+    <div class="card-title">Step-by-step funnel
+      <span style="font-size:.6rem;font-weight:400;color:var(--muted);margin-left:8px">— ${tourViewMode === 'users' ? 'unique users (first run only)' : 'all runs including replays'}</span>
+    </div>
     <div>
       <div class="tfunnel-row" style="border-bottom:1px dashed var(--border)">
-        <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div></div>
+        <div><div class="tfunnel-label" style="color:var(--teal-bright)">Tour started</div>
+          <div class="tfunnel-sub">${tourViewMode === 'users' ? startedCount + ' unique users' : startedTotalRuns + ' total runs'}</div>
+        </div>
         <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:100%"></div></div>
-        <div class="tfunnel-n">${startedCount}</div>
+        <div class="tfunnel-n">${tourViewMode === 'users' ? startedCount : startedTotalRuns}</div>
         <div class="tfunnel-pct">100%</div>
       </div>
       ${stepStats.map((s, i) => {
-        const pct = Math.round(s.viewed / tourMaxStepViews * 100)
-        const ofStarted = startedCount > 0 ? Math.round(s.viewed / startedCount * 100) : 0
-        const prevCount = i === 0 ? startedCount : stepStats[i-1].viewed
+        const baseline = tourViewMode === 'users' ? startedCount : startedTotalRuns
+        const pct = Math.round(s.viewed / Math.max(baseline, 1) * 100)
+        const prevCount = i === 0 ? baseline : stepStats[i-1].viewed
         const drop = Math.max(0, prevCount - s.viewed)
         const dpct = prevCount > 0 ? Math.round(drop / prevCount * 100) : 0
-        return `${drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0">\u25BC dropped ${drop} (${dpct}%)</div>` : ''}
+        const dropHtml = drop > 0 ? `<div class="mfunnel-drop" style="padding:0 60px 2px 0;display:flex;justify-content:flex-end;gap:12px">
+          <span>▼ dropped ${drop} (${dpct}%)</span>
+          ${s.firstTimerViews > 0 || s.replayerViews > 0 ? `<span style="color:var(--muted);font-size:.5rem">● first-timers: ${s.firstTimerViews} · replays: ${s.replayerViews}</span>` : ''}
+        </div>` : ''
+        return `${dropHtml}
           <div class="tfunnel-row">
             <div><div class="tfunnel-label">${s.label}</div><div class="tfunnel-sub">${s.id}</div></div>
-            <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${pct}%"></div></div>
+            <div class="tfunnel-bar-wrap"><div class="tfunnel-bar" style="width:${Math.min(pct,100)}%"></div></div>
             <div class="tfunnel-n">${s.viewed}</div>
-            <div class="tfunnel-pct">${ofStarted}%</div>
+            <div class="tfunnel-pct">${pct}%</div>
           </div>`
       }).join('')}
     </div>
@@ -1119,11 +1228,148 @@ function render() {
           <td><div>${s.label}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${s.id}</div></td>
           <td class="num">${s.viewed}</td>
           <td class="num">${s.completed}</td>
-          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '\u2014'}</td>
+          <td class="num" style="color:${s.stepCompletionPct >= 85 ? 'var(--green)' : s.stepCompletionPct >= 60 ? 'var(--amber)' : 'var(--red)'}">${s.viewed > 0 ? s.stepCompletionPct + '%' : '—'}</td>
           <td class="num" style="color:${stepTimeColor(s.medianTimeMs)}">${fmtMs(s.medianTimeMs)}</td>
         </tr>`).join('')}
       </tbody>
     </table>
+  </div>`}
+
+  <!-- PAYWALL → CONVERSION -->
+  <div class="section-label">Paywall — views → conversions</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Saw paywall</div>
+      <div class="kpi-value">${paywallCount}</div>
+      <div class="kpi-sub">${paywallCount} unique users</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Converted</div>
+      <div class="kpi-value" style="color:${convertedFromPaywall > 0 ? 'var(--amber)' : 'inherit'}">${convertedFromPaywall}</div>
+      <div class="kpi-sub">of ${paywallCount} who saw it</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Paywall conv. rate</div>
+      <div class="kpi-value" style="color:${paywallConvRate >= 10 ? 'var(--green)' : paywallConvRate >= 3 ? 'var(--amber)' : 'var(--muted)'}">${paywallConvRate}%</div>
+      <div class="kpi-sub">industry avg ~3–8%</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Never saw paywall</div>
+      <div class="kpi-value">${totalUsers - paywallCount}</div>
+      <div class="kpi-sub">of ${totalUsers} total users</div>
+    </div>
+  </div>
+
+  <!-- EVENTS PER USER -->
+  <div class="section-label">Engagement depth — events per user</div>
+  <div class="card">
+    <div class="card-sub" style="margin-bottom:14px">Avg <strong style="color:var(--text)">${avgEventsPerUser}</strong> events per active user. A skewed distribution means a few power users carry the numbers.</div>
+    ${eventsPerUserData.length === 0 ? '<div class="empty-msg">No event data loaded.</div>' : eventsPerUserData.map(u => {
+      const pct = Math.round(u.count / maxUserEvents * 100)
+      const col = u.count >= avgEventsPerUser * 2 ? 'var(--teal-bright)' : u.count >= avgEventsPerUser ? 'var(--text)' : 'var(--muted)'
+      return `<div style="display:grid;grid-template-columns:130px 1fr 60px;align-items:center;gap:12px;padding:5px 0">
+        <div style="font-size:.75rem;color:${col};font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(u.name)}</div>
+        <div style="height:8px;background:var(--faint);border-radius:100px;overflow:hidden"><div style="height:100%;width:${pct}%;border-radius:100px;background:linear-gradient(90deg,var(--teal),var(--teal-bright));transition:width 1s"></div></div>
+        <div style="font-family:var(--mono);font-size:.75rem;font-weight:700;text-align:right;color:${col}">${u.count}</div>
+      </div>`
+    }).join('')}
+  </div>
+
+  <!-- SHARING & INVITES -->
+  <div class="section-label">Sharing — vehicle shares &amp; invite funnel</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Shares created</div>
+      <div class="kpi-value">${totalShares}</div>
+      <div class="kpi-sub">vehicle_shares rows</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Invites accepted</div>
+      <div class="kpi-value" style="color:${acceptedInvites > 0 ? 'var(--green)' : 'inherit'}">${acceptedInvites}</div>
+      <div class="kpi-sub">share_invite_accepted events</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Accept rate</div>
+      <div class="kpi-value">${totalShares > 0 ? Math.round(acceptedInvites/totalShares*100) + '%' : '—'}</div>
+      <div class="kpi-sub">of shares sent</div>
+    </div>
+  </div>
+
+  <!-- TRIPS -->
+  <div class="section-label">Trip recording — adoption &amp; activity</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Trips enabled</div>
+      <div class="kpi-value">${tripsEnabledCount}</div>
+      <div class="kpi-sub">${totalUsers > 0 ? Math.round(tripsEnabledCount/totalUsers*100) : 0}% of all users</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Users with trips</div>
+      <div class="kpi-value">${tripsActiveCount}</div>
+      <div class="kpi-sub">recorded at least 1 trip</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Enabled → recording</div>
+      <div class="kpi-value">${tripsEnabledCount > 0 ? Math.round(tripsActiveCount/tripsEnabledCount*100) : 0}%</div>
+      <div class="kpi-sub">of enabled users active</div>
+    </div>
+  </div>
+
+  <!-- OCR / API USAGE -->
+  <div class="section-label">Document scanning — OCR / API usage</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Total OCR calls</div>
+      <div class="kpi-value">${totalOcrCalls}</div>
+      <div class="kpi-sub">${ocrUserCount} unique users</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Est. cost</div>
+      <div class="kpi-value" style="color:${parseFloat(estimatedOcrCost) > 1 ? 'var(--amber)' : 'inherit'}">£${estimatedOcrCost}</div>
+      <div class="kpi-sub">∼£0.0015 per call</div>
+    </div>
+    <div class="kpi"><div class="kpi-glow"></div>
+      <div class="kpi-label">Avg per user</div>
+      <div class="kpi-value">${ocrUserCount > 0 ? (totalOcrCalls/ocrUserCount).toFixed(1) : '—'}</div>
+      <div class="kpi-sub">calls per OCR user</div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="section-label">Feedback inbox <span style="font-size:.7rem;font-weight:400;color:${feedbackCount > 0 ? 'var(--teal-bright)' : 'var(--muted)'};text-transform:none;letter-spacing:0">— ${feedbackCount} submission${feedbackCount !== 1 ? 's' : ''}</span></div>
+  ${feedbackCount === 0 ? `<div class="card"><div class="empty-msg">No feedback submissions yet.</div></div>` : `
+  <div class="card" style="padding:0;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:.8125rem">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Type</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Message</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Context</th>
+        <th style="text-align:left;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Version</th>
+        <th style="text-align:right;padding:10px 16px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600">Date</th>
+      </tr></thead>
+      <tbody>
+        ${allFeedback.map(fb => `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 16px"><span class="ev-badge ev-action">${escapeHtml(fb.type||'general')}</span></td>
+          <td style="padding:10px 16px;font-size:.75rem;max-width:340px">${escapeHtml(fb.description||'')}</td>
+          <td style="padding:10px 16px;font-size:.6875rem;color:var(--muted);font-family:var(--mono)">${escapeHtml(fb.context||'—')}</td>
+          <td style="padding:10px 16px;font-size:.6875rem;color:var(--muted);font-family:var(--mono)">${escapeHtml(fb.app_version||'—')}</td>
+          <td style="padding:10px 16px;text-align:right;font-size:.6875rem;color:var(--muted);font-family:var(--mono)">${fmtDateShort(fb.created_at)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`}
+
+  <!-- DELETION REQUESTS -->
+  <div class="section-label">Account deletions <span style="font-size:.7rem;font-weight:400;color:${deletionCount > 0 ? 'var(--red)' : 'var(--muted)'};text-transform:none;letter-spacing:0">— ${deletionCount} request${deletionCount !== 1 ? 's' : ''} · ${deletionUniqueUsers} unique user${deletionUniqueUsers !== 1 ? 's' : ''}</span></div>
+  ${deletionCount === 0 ? `<div class="card"><div class="empty-msg">No deletion requests.</div></div>` : `
+  <div class="card">
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      ${allDeletionRequests.map(r => `<div style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:8px 14px;font-size:.75rem">
+        <div style="font-family:var(--mono);color:var(--muted);font-size:.625rem">${r.user_id?.slice(0,8)}…</div>
+        <div style="color:var(--red);font-family:var(--mono);font-size:.6875rem;margin-top:2px">${fmtDate(r.created_at)}</div>
+      </div>`).join('')}
+    </div>
+    ${deletionCount >= 3 ? `<div class="insight" style="margin-top:12px;border-color:rgba(239,68,68,.2);color:var(--red)"><strong>Note:</strong> ${deletionCount} deletion requests logged. Worth investigating if this spikes.</div>` : ''}
   </div>`}
 
   <!-- ALL ACCOUNTS DRILL-DOWN -->
@@ -1168,7 +1414,7 @@ function render() {
   </div>
 
   <div style="margin-top:28px;padding:18px 22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:.75rem;color:var(--muted);line-height:1.8">
-    <strong style="color:var(--text)">Analytics v3</strong> \u00B7 KPIs sourced from <code style="color:var(--teal-bright)">analytics_daily_summary</code> (pre-aggregated, nightly cron).
+    <strong style="color:var(--text)">Analytics v4</strong> \u00B7 KPIs sourced from <code style="color:var(--teal-bright)">analytics_daily_summary</code> (pre-aggregated, nightly cron).
     Per-user events loaded on demand from <code style="color:var(--teal-bright)">analytics_events</code> (max 100 per user).
     &nbsp;\u00B7&nbsp;
     <a href="https://supabase.com/dashboard/project/dkpvxlxarsmiljnvnbck/editor" style="color:var(--teal-bright)" target="_blank">Open SQL Editor \u2192</a>
@@ -1300,4 +1546,5 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
 
