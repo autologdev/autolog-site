@@ -1073,15 +1073,14 @@ function render() {
   <div class="section-label">Activation funnel \u2014 ${rangeLabel}</div>
   <div class="card">
     <div class="card-sub">Account creation \u2192 onboarding \u2192 first action \u2192 paid. Drop-offs show where activation bleeds.</div>
-    ${postLaunchMode ? `<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:8px;padding:9px 14px;margin-bottom:14px;font-size:.75rem;color:var(--amber)"><strong>Launch mode:</strong> "Converted to paid" shows post-launch purchases only. Pre-launch grants are excluded.</div>` : ''}
     <div class="mfunnel">
     ${(() => {
+      const realPaid = profiles.filter(p => (p.plan==='paid'||p.plan==='business') && !p.pre_launch_grant).length
       const steps = [
-        ['Created account',       totalUsers,            'signed up in app'],
-        ['Completed onboarding',  completedOnboarding,   'added vehicle'],
-        ['Took first action',     tookFirstAction,       'logged real data'],
-        // Always exclude pre-launch grants from conversion — only real post-launch purchases count
-        ['Converted to paid',     profiles.filter(p => (p.plan==='paid'||p.plan==='business') && !p.pre_launch_grant).length, 'AutoLog+ subscriber']
+        ['Created account',       totalUsers,          'signed up in app'],
+        ['Completed onboarding',  completedOnboarding, 'added vehicle'],
+        ['Took first action',     tookFirstAction,     'logged real data'],
+        ['Converted to paid',     realPaid,            'AutoLog+ subscriber']
       ]
       const topN = Math.max(...steps.map(s => s[1]), 1)
       return steps.map(([label, n, sub], i) => {
@@ -1089,12 +1088,19 @@ function render() {
         const prev = i>0 ? steps[i-1][1] : n
         const drop = prev - n
         const dpct = prev > 0 ? Math.round(drop/prev*100) : 0
-        return `${i>0 && drop>0 ? `<div class="mfunnel-drop">\u25BC dropped ${drop} (${dpct}%)</div>` : ''}
+        // Suppress the drop indicator on the last step (paid) when there are no real purchases yet —
+        // all current users have pre_launch_grant so the drop is 100% but not a real signal
+        const isLastStep = i === steps.length - 1
+        const suppressDrop = isLastStep && realPaid === 0
+        const dropHtml = (!suppressDrop && i>0 && drop>0)
+          ? `<div class="mfunnel-drop">\u25BC dropped ${drop} (${dpct}%)</div>`
+          : (suppressDrop ? `<div class="mfunnel-drop" style="color:var(--muted);opacity:.4">\u2014 no real purchases yet</div>` : '')
+        return `${dropHtml}
           <div class="mfunnel-row">
             <div><div class="mfunnel-label">${label}</div><div class="mfunnel-sub">${sub}</div></div>
             <div class="mfunnel-bar-wrap"><div class="mfunnel-bar" style="width:${pct}%"></div></div>
-            <div class="mfunnel-n">${n}</div>
-            <div class="mfunnel-pct">${pct}%</div>
+            <div class="mfunnel-n" style="${isLastStep&&realPaid===0?'color:var(--muted)':''}">${n}</div>
+            <div class="mfunnel-pct" style="${isLastStep&&realPaid===0?'color:var(--muted)':''}">${pct}%</div>
           </div>`
       }).join('')
     })()}
