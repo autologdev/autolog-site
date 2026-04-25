@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /app/
+Disallow: /analytics/
+Disallow: /app/confirm
+Disallow: /app/login
+
+Allow: /guides/
+Allow: /what-is-autolog
+Allow: /
+
+Sitemap: https://www.autologapp.co.uk/sitemap.xml
