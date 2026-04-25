@@ -606,11 +606,10 @@ function render() {
   const totalService   = sum(summaryRows, 'service_entries')
   const totalDocs      = sum(summaryRows, 'doc_uploads')
   const totalTrips     = sum(summaryRows, 'trips_started')
-  // In pre-launch mode, paywall views and subscription metrics are noise
-  const totalPaywalls  = !postLaunchMode ? 0 : sum(summaryRows, 'paywall_views')
+  // postLaunchMode = true → zero paywall/subs for clean launch view
+  const totalPaywalls  = postLaunchMode ? 0 : sum(summaryRows, 'paywall_views')
   const totalOnboard   = sum(summaryRows, 'onboardings')
-  // In pre-launch mode subscriptions_started events are all sandbox — zero them
-  const totalSubs      = !postLaunchMode ? 0 : sum(summaryRows, 'subscriptions_started')
+  const totalSubs      = postLaunchMode ? 0 : sum(summaryRows, 'subscriptions_started')
 
   // Live today snapshot — overlays the KPI cards with real-time counts on every refresh.
   // summaryRows is untouched; liveToday is a separate object built from raw events.
@@ -620,16 +619,15 @@ function render() {
   const liveWeb       = live.web_events        ?? webEvents
   const liveAppOpens  = live.app_opens         ?? totalAppOpens
   const liveDau       = live.dau               ?? 0
-  const liveSubs      = !postLaunchMode ? 0 : (live.subscriptions_started ?? totalSubs)
+  const liveSubs      = postLaunchMode ? 0 : (live.subscriptions_started ?? totalSubs)
   const liveOnboard   = live.onboardings       ?? totalOnboard
 
   // Profile-based stats (always all-time — profiles don't have range filter)
   const totalUsers         = profiles.length
   const completedOnboarding = profiles.filter(p => p.onboarding_completed).length
   const tookFirstAction    = profiles.filter(p => p.first_action_completed).length
-  // In pre-launch mode, paid users = only those who paid post-launch (pre_launch_grant = false)
-  // Before launch this will always be 0, which is correct
-  const paidUsers          = !postLaunchMode
+  // postLaunchMode = true → only count real purchases (no pre_launch_grant); false → show all
+  const paidUsers          = postLaunchMode
     ? profiles.filter(p => (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
     : profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase        = totalUsers < 20
@@ -786,13 +784,12 @@ function render() {
   const avgEventsPerUser = eventsPerUserData.length > 0 ? Math.round(totalLoadedEvents / eventsPerUserData.length) : 0
   const maxUserEvents = eventsPerUserData.length > 0 ? eventsPerUserData[0].count : 1
 
-  // Paywall → conversion
-  // In pre-launch mode: zero everything — sandbox views and manual grants are noise
-  const paywallUserIds = !postLaunchMode
+  // Paywall → conversion: postLaunchMode zeros everything for clean launch view
+  const paywallUserIds = postLaunchMode
     ? new Set()
     : new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
   const paywallCount = paywallUserIds.size
-  const convertedFromPaywall = !postLaunchMode
+  const convertedFromPaywall = postLaunchMode
     ? 0
     : profiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
   const paywallConvRate = paywallCount > 0 ? Math.round(convertedFromPaywall / paywallCount * 100) : 0
