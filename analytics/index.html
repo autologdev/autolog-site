@@ -312,7 +312,7 @@ const FEATURES = [
   { key: 'trip',        label: 'Trip logged',    match: e => e.event_name === 'trip_started' },
   { key: 'costs',       label: 'Costs viewed',   match: e => e.event_name === 'costs_viewed' },
   { key: 'paywall',     label: 'Saw paywall',    match: e => e.event_name === 'paywall_viewed' },
-  { key: 'subscribe',   label: 'Subscribed',     match: (e,p) => e.event_name === 'subscription_started' || p?.plan === 'paid' },
+  { key: 'subscribe',   label: 'Subscribed',     match: (e,p) => e.event_name === 'subscription_started' || (( p?.plan === 'paid') && !p?.pre_launch_grant) },
   { key: 'dashboard',   label: 'Dashboard',      match: e => e.event_name === 'dashboard_viewed' },
   { key: 'docs_view',   label: 'Docs opened',    match: e => e.event_name === 'documents_viewed' },
   { key: 'tour_saw',    label: 'Saw tour',       match: e => e.event_name === 'feature_tour_started' },
@@ -459,7 +459,7 @@ async function loadData() {
 
   const [summaryRes, profilesRes, allEventsRes, notesRes, feedbackRes, deletionRes, apiUsageRes, sharesRes] = await Promise.all([
     summaryQuery,
-    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, trips_enabled').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id, plan, onboarding_completed, first_action_completed, created_at, display_name, utm_source, trips_enabled, pre_launch_grant').order('created_at', { ascending: false }),
     withTimeout(sb.from('analytics_events')
       .select('event_name, properties, created_at, platform, user_id')
       .not('user_id', 'is', null)
@@ -591,9 +591,11 @@ function render() {
   const totalService   = sum(summaryRows, 'service_entries')
   const totalDocs      = sum(summaryRows, 'doc_uploads')
   const totalTrips     = sum(summaryRows, 'trips_started')
-  const totalPaywalls  = sum(summaryRows, 'paywall_views')
-  const totalSubs      = sum(summaryRows, 'subscriptions_started')
+  // In pre-launch mode, paywall views and subscription metrics are noise
+  const totalPaywalls  = preLaunchMode ? 0 : sum(summaryRows, 'paywall_views')
   const totalOnboard   = sum(summaryRows, 'onboardings')
+  // In pre-launch mode subscriptions_started events are all sandbox — zero them
+  const totalSubs      = preLaunchMode ? 0 : sum(summaryRows, 'subscriptions_started')
 
   // Live today snapshot — overlays the KPI cards with real-time counts on every refresh.
   // summaryRows is untouched; liveToday is a separate object built from raw events.
@@ -603,14 +605,18 @@ function render() {
   const liveWeb       = live.web_events        ?? webEvents
   const liveAppOpens  = live.app_opens         ?? totalAppOpens
   const liveDau       = live.dau               ?? 0
-  const liveSubs      = live.subscriptions_started ?? totalSubs
+  const liveSubs      = preLaunchMode ? 0 : (live.subscriptions_started ?? totalSubs)
   const liveOnboard   = live.onboardings       ?? totalOnboard
 
   // Profile-based stats (always all-time — profiles don't have range filter)
   const totalUsers         = profiles.length
   const completedOnboarding = profiles.filter(p => p.onboarding_completed).length
   const tookFirstAction    = profiles.filter(p => p.first_action_completed).length
-  const paidUsers          = profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
+  // In pre-launch mode, paid users = only those who paid post-launch (pre_launch_grant = false)
+  // Before launch this will always be 0, which is correct
+  const paidUsers          = preLaunchMode
+    ? profiles.filter(p => (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
+    : profiles.filter(p => p.plan === 'paid' || p.plan === 'business').length
   const isSmallBase        = totalUsers < 20
 
   // DAU — use liveToday if available, fall back to summary row
@@ -766,9 +772,14 @@ function render() {
   const maxUserEvents = eventsPerUserData.length > 0 ? eventsPerUserData[0].count : 1
 
   // Paywall → conversion
-  const paywallUserIds = new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
+  // In pre-launch mode: zero everything — sandbox views and manual grants are noise
+  const paywallUserIds = preLaunchMode
+    ? new Set()
+    : new Set(allLoadedEvents.filter(e => e.event_name === 'paywall_viewed').map(e => e.user_id).filter(Boolean))
   const paywallCount = paywallUserIds.size
-  const convertedFromPaywall = profiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business')).length
+  const convertedFromPaywall = preLaunchMode
+    ? 0
+    : profiles.filter(p => paywallUserIds.has(p.id) && (p.plan === 'paid' || p.plan === 'business') && !p.pre_launch_grant).length
   const paywallConvRate = paywallCount > 0 ? Math.round(convertedFromPaywall / paywallCount * 100) : 0
 
   // Share/invite
@@ -1120,7 +1131,7 @@ function render() {
         else                    { statusLabel = '\u25CF Gone cold'; statusStyle = 'color:var(--red);font-weight:700' }
         const retCell = (active, applicable) => applicable ? (active ? `<span class="ret-cell ret-active">\u2713</span>` : `<span class="ret-cell ret-cold">\u2715</span>`) : `<span class="ret-cell ret-none">n/a</span>`
         return `<tr>
-          <td><div>${p.display_name||'(no name)'}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${p.plan||'free'}</div></td>
+          <td><div>${p.display_name||'(no name)'}</div><div style="font-size:.625rem;color:var(--muted);font-family:var(--mono);margin-top:2px">${p.plan||'free'}${p.pre_launch_grant ? ' ⚠' : ''}</div></td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${fmtDateShort(p.created_at)}</td>
           <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${lastSeen?fmtDateShort(lastSeen):'\u2014'}</td>
           <td style="text-align:center;font-family:var(--mono);font-weight:700">${activeDays||'\u2014'}</td>
@@ -1421,7 +1432,7 @@ function render() {
           <td style="padding:11px 16px;color:var(--text);font-weight:500">
             <span style="font-size:.625rem;color:var(--muted);margin-right:6px">\u25B6</span>${p.display_name||'(no name)'}
           </td>
-          <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:${planColor}">${p.plan||'free'}</td>
+          <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:${planColor}">${p.plan||'free'}${p.pre_launch_grant ? ' <span style="color:var(--amber);font-size:.6rem" title="Pre-launch manual grant">⚠</span>' : ''}</td>
           <td style="padding:11px 16px;font-family:var(--mono);font-size:.6875rem;color:var(--muted)">${p.utm_source||'\u2014'}</td>
           <td style="padding:11px 16px">${p.onboarding_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
           <td style="padding:11px 16px">${p.first_action_completed?'<span style="color:var(--green)">\u2713</span>':'<span style="color:var(--muted)">\u2014</span>'}</td>
@@ -1575,6 +1586,7 @@ loadData().catch(err => {
 </script>
 </body>
 </html>
+
 
 
 
